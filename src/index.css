@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@theme {
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-accent: #FF9800;
+  --color-bg: #1a1a1a;
+  --color-card: #2a2a2a;
+  --color-border: #3d3d3d;
+  --color-text-muted: #888888;
+  --color-success: #4CAF50;
+  --color-danger: #F44336;
+  --color-warning: #FFC107;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: #e0e0e0;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar for High Density theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111;
+}
+::-webkit-scrollbar-thumb {
+  background: #3d3d3d;
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+.high-density-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .high-density-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    gap: 16px;
+  }
+}
+
+.hd-input {
+  @apply bg-[#2a2a2a] border border-[#3d3d3d] rounded text-sm outline-none transition-all placeholder:text-gray-700 focus:border-orange-500;
+}
+
+.hd-button {
+  @apply bg-orange-500 text-black font-black uppercase tracking-widest text-[0.7rem] px-4 py-2 rounded transition-all active:scale-95;
+}
+
+.hd-button-secondary {
+  @apply bg-[#2a2a2a] border border-[#3d3d3d] text-gray-400 font-black uppercase tracking-widest text-[0.7rem] px-4 py-2 rounded transition-all active:scale-95;
+}
+
+.hd-label {
+  @apply text-[0.65rem] uppercase text-gray-500 font-bold tracking-widest mb-1 block;
+}
