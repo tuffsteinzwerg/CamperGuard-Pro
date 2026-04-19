@@ -136,14 +136,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[#1A1C1E] text-white">
+      <img src="/CamperguardPro_Logo.jpeg" className="print-logo hidden" alt="Logo" />
       <style>{`
         @media print {
           @page { size: A4 landscape; margin: 1cm; }
-          body { background: white !important; color: black !important; }
+          body { background: white !important; color: black !important; font-size: 11pt !important; }
           .no-print { display: none !important; }
           .print-only { display: block !important; }
+          .print-logo { display: block !important; position: fixed; bottom: 10px; left: 10px; width: 150px; z-index: 9999; }
           .high-density-grid, .bg-\\[\\#1A1C1E\\], .bg-\\[\\#2C2E30\\] { background: white !important; border:none; }
-          * { text-shadow: none !important; box-shadow: none !important; }
+          * { text-shadow: none !important; box-shadow: none !important; font-size: 11pt !important; }
           .text-white, .text-\\[\\#FF6600\\] { color: black !important; }
           h1, h2, h3, span, div { color: black !important; }
           .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -151,6 +153,9 @@ export default function App() {
           .print-table td { border: 1px solid #000; padding: 4px; }
           .print-table tr:nth-child(even) { background: #f9f9f9 !important; }
         }
+        .leaflet-container { color: white !important; font-family: inherit !important; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #2C2E30 !important; color: white !important; }
+        .leaflet-popup-content { margin: 8px 12px; }
       `}</style>
       
       <header className="h-[60px] px-4 bg-[#111] border-b-2 border-[#FF6600] sticky top-0 z-40 flex justify-between items-center no-print">
@@ -263,8 +268,14 @@ function StatusView({ state, setState, orientation }: any) {
       if(audioRef.current && audioAssist) {
           const { ctx, osc } = audioRef.current;
           const dist = Math.abs(pitchNormalized) + Math.abs(rollNormalized);
-          const freq = Math.max(300, 1200 - dist * 40); 
-          osc.frequency.setTargetAtTime(freq, ctx.currentTime, 0.1);
+          if (dist < 0.1) {
+              osc.type = 'triangle';
+              osc.frequency.setTargetAtTime(1000, ctx.currentTime, 0.05);
+          } else {
+              osc.type = 'sine';
+              const freq = Math.max(300, 1200 - dist * 40); 
+              osc.frequency.setTargetAtTime(freq, ctx.currentTime, 0.1);
+          }
       }
   }, [pitchNormalized, rollNormalized, audioAssist]);
 
@@ -318,9 +329,15 @@ function StatusView({ state, setState, orientation }: any) {
         </div>
         
         <div className="flex justify-between items-center mb-6 px-2">
-            <div className="text-[10px] font-mono text-white/80 font-black">
-                <span className="opacity-60 uppercase mr-1">ALT:</span>
-                {gpsAlt !== null ? <>{Math.round(gpsAlt)}m <span className="opacity-40 text-[8px]">(+/- 50m)</span></> : '---'}
+            <div className="flex flex-col gap-1 text-[10px] font-mono text-white/80 font-black">
+                <div>
+                   <span className="opacity-60 uppercase mr-1">ALT:</span>
+                   {gpsAlt !== null ? <>{Math.round(gpsAlt)}m <span className="opacity-40 text-[8px]">(+/- 50m)</span></> : '---'}
+                </div>
+                <div>
+                   <span className="opacity-60 uppercase mr-1">HDG:</span>
+                   {Math.round(heading)}°
+                </div>
             </div>
             <button onClick={() => setAudioAssist(!audioAssist)} className={`text-[9px] px-2 py-1 rounded font-black tracking-widest uppercase border ${audioAssist ? 'bg-[#FF6600] text-black border-[#FF6600]' : 'border-[#444] text-white'}`}>
                 AudioAssist {audioAssist ? 'ON' : 'OFF'}
@@ -640,6 +657,33 @@ function LogbuchView({ state, setState }: any) {
   const [logType, setLogType] = useState<'tank' | 'fahrt' | 'spots' | 'archiv'>('tank');
   const [isAdding, setIsAdding] = useState(false);
 
+  const lastKmFuel = state.fuelLog.reduce((max: number, f: any) => Math.max(max, f.km), 0);
+  const lastKmTrip = state.tripLog.reduce((max: number, t: any) => Math.max(max, t.toKm), 0);
+  const lastKm = Math.max(lastKmFuel, lastKmTrip);
+
+  const [tankForm, setTankForm] = useState({ date: new Date().toISOString().split('T')[0], km: '', liters: '', price: '', total: '', fuelType: 'Diesel', currency: 'EUR' });
+  const [tourForm, setTourForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', destination: '', purpose: '' });
+  const [spotForm, setSpotForm] = useState({ name: '', date: new Date().toISOString().split('T')[0], lat: '', lng: '', note: '' });
+
+  const handleTankChange = (e: any) => {
+      const { name, value } = e.target;
+      setTankForm(prev => {
+          const next = { ...prev, [name]: value };
+          if (name === 'liters' || name === 'price') {
+              const l = parseFloat(next.liters.replace(',', '.'));
+              const p = parseFloat(next.price.replace(',', '.'));
+              if (!isNaN(l) && !isNaN(p)) next.total = (l * p).toFixed(2);
+          } else if (name === 'total') {
+              const t = parseFloat(next.total.replace(',', '.'));
+              const l = parseFloat(next.liters.replace(',', '.'));
+              if (!isNaN(t) && !isNaN(l) && l > 0) next.price = (t / l).toFixed(3);
+          }
+          return next;
+      });
+  };
+
+  const tourKmInvalid = tourForm.toKm !== '' && parseFloat(tourForm.toKm) < lastKm;
+
   const currentYear = new Date().getFullYear();
   const currentFuelLog = useMemo(() => state.fuelLog.filter((f:any) => new Date(f.date).getFullYear() === currentYear), [state.fuelLog, currentYear]);
   const currentTripLog = useMemo(() => state.tripLog.filter((t:any) => new Date(t.date).getFullYear() === currentYear), [state.tripLog, currentYear]);
@@ -749,6 +793,20 @@ function LogbuchView({ state, setState }: any) {
                       </div>
                   </Card>
               ))}
+              {state.spots.length > 0 && (
+                  <button onClick={() => {
+                      let gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="CamperGuard Pro">`;
+                      state.spots.forEach((spot:any) => {
+                          gpx += `<wpt lat="${spot.lat}" lon="${spot.lng}"><name>${spot.name}</name><desc>${spot.note}</desc></wpt>`;
+                      });
+                      gpx += `</gpx>`;
+                      const blob = new Blob([gpx], { type: 'application/gpx+xml' });
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `Tour_${new Date().toISOString().split('T')[0]}_Spots.gpx`;
+                      a.click();
+                  }} className="w-full bg-[#111] text-white py-3 border border-[#3d3d3d] rounded text-[10px] font-black uppercase tracking-widest flex justify-center items-center gap-2 mt-4"><FileDown size={14}/> GPX Export</button>
+              )}
           </div>
       )}
 
@@ -811,16 +869,17 @@ function LogbuchView({ state, setState }: any) {
                             
                             {logType === 'tank' ? (
                                 <>
-                                    <input name="km" required type="number" placeholder="KM-Stand" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
+                                    <input name="km" value={tankForm.km} onChange={handleTankChange} required type="number" placeholder="KM-Stand" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
                                     <div className="flex gap-2">
-                                        <input name="liters" required type="number" step="0.01" placeholder="Liter" className="flex-1 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
-                                        <select name="fuelType" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm text-[10px] uppercase font-black">
+                                        <input name="liters" value={tankForm.liters} onChange={handleTankChange} required type="number" step="0.01" placeholder="Liter" className="flex-1 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
+                                        <select name="fuelType" value={tankForm.fuelType} onChange={handleTankChange} className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm text-[10px] uppercase font-black">
                                             {FUEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                                         </select>
                                     </div>
                                     <div className="flex gap-2">
-                                        <input name="price" required type="number" step="0.001" placeholder="Preis/Liter" className="flex-1 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
-                                        <select name="currency" className="w-1/3 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm font-mono font-black">
+                                        <input name="price" value={tankForm.price} onChange={handleTankChange} required type="number" step="0.001" placeholder="Preis/Liter" className="flex-1 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
+                                        <input name="total" value={tankForm.total} onChange={handleTankChange} type="number" step="0.01" placeholder="Gesamt €" className="flex-1 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
+                                        <select name="currency" className="w-[80px] bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm font-mono font-black">
                                             {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                                         </select>
                                     </div>
@@ -828,28 +887,27 @@ function LogbuchView({ state, setState }: any) {
                             ) : logType === 'fahrt' ? (
                                 <>
                                     <div className="flex gap-2">
-                                        <input name="fromKm" required type="number" placeholder="Start KM" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
-                                        <input name="toKm" required type="number" placeholder="Ziel KM" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
+                                        <input name="fromKm" value={tourForm.fromKm} onChange={e => setTourForm({...tourForm, fromKm: e.target.value})} required type="number" placeholder={`Start KM (Letzter: ${lastKm})`} className={`w-1/2 bg-[#111] border text-white p-3 rounded text-sm placeholder:text-gray-500 ${tourForm.fromKm !== '' && parseFloat(tourForm.fromKm) < lastKm ? 'border-red-500 text-red-500' : 'border-[#3d3d3d]'}`} />
+                                        <input name="toKm" value={tourForm.toKm} onChange={e => setTourForm({...tourForm, toKm: e.target.value})} required type="number" placeholder={`Ziel KM (Letzter: ${lastKm})`} className={`w-1/2 bg-[#111] border text-white p-3 rounded text-sm placeholder:text-gray-500 ${tourKmInvalid ? 'border-red-500 text-red-500' : 'border-[#3d3d3d]'}`} />
                                     </div>
-                                    <input name="destination" required placeholder="Zielort" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
-                                    <input name="purpose" placeholder="Zweck" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
+                                    <input name="destination" value={tourForm.destination} onChange={e => setTourForm({...tourForm, destination: e.target.value})} required placeholder="Zielort" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
+                                    <input name="purpose" value={tourForm.purpose} onChange={e => setTourForm({...tourForm, purpose: e.target.value})} placeholder="Zweck" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
                                 </>
                             ) : (
                                 <>
-                                    <input name="name" required placeholder="Spot Name" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
+                                    <input name="name" value={spotForm.name} onChange={e => setSpotForm({...spotForm, name: e.target.value})} required placeholder="Spot Name" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
                                     <div className="flex gap-2 items-center">
-                                        <button type="button" onClick={async (e) => {
-                                            const form = (e.target as any).closest('form');
-                                            try { const p = await getPosition(); form.lat.value = p.lat; form.lng.value = p.lng; } catch(err){ alert("GPS failed"); }
+                                        <button type="button" onClick={async () => {
+                                            try { const p = await getPosition(); setSpotForm({...spotForm, lat: p.lat.toString(), lng: p.lng.toString()}); } catch(err){ alert("GPS failed"); }
                                         }} className="p-3 bg-blue-500 text-white rounded border border-blue-400 font-black"><MapPin size={18}/></button>
-                                        <input name="lat" required type="number" step="any" placeholder="Lat" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
-                                        <input name="lng" required type="number" step="any" placeholder="Lng" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-white" />
+                                        <input name="lat" value={spotForm.lat} onChange={e => setSpotForm({...spotForm, lat: e.target.value})} required type="number" step="any" placeholder="Lat" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
+                                        <input name="lng" value={spotForm.lng} onChange={e => setSpotForm({...spotForm, lng: e.target.value})} required type="number" step="any" placeholder="Lng" className="w-1/2 bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500" />
                                     </div>
-                                    <textarea name="note" placeholder="Notiz" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm h-24 placeholder:text-white" />
+                                    <textarea name="note" value={spotForm.note} onChange={e => setSpotForm({...spotForm, note: e.target.value})} placeholder="Notiz" className="w-full bg-[#111] border border-[#3d3d3d] text-white p-3 rounded text-sm h-24 placeholder:text-gray-500" />
                                 </>
                             )}
                         </div>
-                        <div className="flex gap-3 pt-4"><button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 text-white uppercase text-[10px] tracking-widest font-black border border-white rounded">Abbrechen</button><button type="submit" className="flex-1 bg-[#FF6600] text-black font-black uppercase text-[10px] tracking-widest rounded">Speichern</button></div>
+                        <div className="flex gap-3 pt-4"><button type="button" onClick={() => setIsAdding(false)} className="flex-1 py-3 text-white uppercase text-[10px] tracking-widest font-black border border-white rounded">Abbrechen</button><button type="submit" disabled={logType === 'fahrt' && (tourKmInvalid || (tourForm.fromKm !== '' && parseFloat(tourForm.fromKm) < lastKm))} className="flex-1 bg-[#FF6600] disabled:opacity-50 text-black font-black uppercase text-[10px] tracking-widest rounded">Speichern</button></div>
                     </form>
                 </div>
             </motion.div>
@@ -868,7 +926,7 @@ function ReiseView({ state, setState }: any) {
     const t = setTimeout(() => {
       // @ts-ignore
       if(globalLeafletMap) globalLeafletMap.invalidateSize({debounce: false});
-    }, 250);
+    }, 200);
     return () => clearTimeout(t);
   }, []);
 
@@ -948,9 +1006,33 @@ function ReiseView({ state, setState }: any) {
 
 // --- TAB: PROFIL ---
 
+const APP_FAQS = [
+  { "id": 1, "kategorie": "Sicherheit & Gesundheit", "frage": "Warum ist das Ausfüllen der Medikationsdaten so wichtig?", "antwort": "Im Notfall zählt jede Sekunde. Rettungskräfte müssen sofort wissen, ob lebensnotwendige Medikamente (z. B. für Herz, Blutdruck oder Diabetes) eingenommen werden. Diese Daten sind im Safety Hub optisch hervorgehoben, damit sie auch unter Stress sofort gefunden werden." },
+  { "id": 2, "kategorie": "Sicherheit & Gesundheit", "frage": "Was passiert mit meinen privaten Notfalldaten?", "antwort": "Datenschutz hat oberste Priorität. Alle Informationen im Safety Hub werden ausschließlich lokal auf deinem Gerät gespeichert. Es findet kein Cloud-Sync und keine Übertragung an Dritte statt. Du behältst die volle Kontrolle." },
+  { "id": 3, "kategorie": "Sicherheit & Gesundheit", "frage": "Wofür ist der zweite Notfallkontakt (ICE 2) gedacht?", "antwort": "Sollte dein primärer Ansprechpartner nicht erreichbar sein, bietet CamperGuard Pro die Möglichkeit, eine zweite Vertrauensperson zu hinterlegen, um die Rettungskette lückenlos zu schließen." },
+  { "id": 4, "kategorie": "Fahrzeug & Technik", "frage": "Warum sollte ich meine Fahrzeugdaten (Tachostand etc.) penibel pflegen?", "antwort": "Korrekte Fahrzeugdaten sind die Basis für alle Statistiken. Nur so kann die App den Durchschnittsverbrauch, die Kosten pro Kilometer und anstehende Service-Intervalle präzise berechnen und dich rechtzeitig warnen." },
+  { "id": 5, "kategorie": "Fahrzeug & Technik", "frage": "Die Wasserwaage zeigt Heading und Elevation – was ist das?", "antwort": "Heading gibt deine aktuelle Kompassrichtung an, Elevation deine Höhe über dem Meeresspiegel. Das hilft dir nicht nur beim perfekten Ausrichten für den Satellitenempfang, sondern auch bei der Einschätzung von Wetterlagen in den Bergen." },
+  { "id": 6, "kategorie": "Fahrzeug & Technik", "frage": "Wie funktioniert das akustische Feedback beim Ausrichten?", "antwort": "Ein kontinuierliches Brummen signalisiert die Annäherung an die Waagerechte. Ein klarer 'Success-Chime' ertönt genau bei 0.0°, sodass du das Fahrzeug leveln kannst, ohne das Display im Blick behalten zu müssen." },
+  { "id": 7, "kategorie": "Inventar & Lagerorte", "frage": "Wie organisiere ich meine Ausrüstung in 'Lagerorten'?", "antwort": "Statt einer langen, unübersichtlichen Liste kannst du Bereiche wie 'Heckgarage', 'Küchenzeile' oder 'Außenstaufach' anlegen. Jedem Gegenstand können zudem zwei spezifische Standorte zugewiesen werden (z. B. 'Schublade oben')." },
+  { "id": 8, "kategorie": "Inventar & Lagerorte", "frage": "Was bedeutet die Bestandsmenge '0' im Inventar?", "antwort": "Ein Bestand von '0' markiert Verbrauchsartikel, die aktuell aufgebraucht sind, aber zur Standardausrüstung gehören. So vergisst du beim nächsten Einkauf nicht, wichtige Vorräte oder Gaskartuschen nachzufüllen." },
+  { "id": 9, "kategorie": "Logbuch & Tanken", "frage": "Warum ist das Feld beim Kilometerstand rot markiert?", "antwort": "Das ist eine Sicherheitsfunktion. Wenn du einen Kilometerstand eingibst, der unter dem letzten gespeicherten Wert liegt, wird das Feld rot und die Speicherung blockiert, um Tacho-Fehler in deiner Statistik zu vermeiden." },
+  { "id": 10, "kategorie": "Logbuch & Tanken", "frage": "Wie rechnet die App den Spritpreis aus, wenn ich nur Liter und Gesamtbetrag habe?", "antwort": "Gib einfach die Liter und den Gesamtpreis vom Kassenbon ein. Die App erkennt die fehlende Information automatisch und errechnet den Literpreis für dich nach (2-aus-3-Regel)." },
+  { "id": 11, "kategorie": "Logbuch & Tanken", "frage": "Was passiert mit Touren, wenn ich sie archiviere?", "antwort": "Archivierte Touren werden schreibgeschützt in einen separaten Bereich verschoben. Das hält deine aktuelle Tour-Liste übersichtlich, bewahrt aber alle Kosten und Route-Daten für spätere Auswertungen auf." },
+  { "id": 12, "kategorie": "Karten & Navigation", "frage": "Wie kann ich meine aktuellen Koordinaten für einen POI speichern?", "antwort": "Klicke im POI-Modul einfach auf das Fadenkreuz-Symbol. Die App liest deine exakte GPS-Position aus und fügt Längen- und Breitengrad direkt in den Eintrag ein. GPS muss dafür am Gerät aktiviert sein." },
+  { "id": 13, "kategorie": "Karten & Navigation", "frage": "Was bringt mir der GPX-Export?", "antwort": "Mit dem GPX-Export kannst du deine gesammelten POIs und Routen als Datei speichern und in Profi-Navis (Garmin, TomTom) oder Planungs-Tools wie Google Earth importieren." },
+  { "id": 14, "kategorie": "Karten & Navigation", "frage": "Warum sehe ich auf der Karte nur schwarze Kacheln?", "antwort": "Dies kann bei langsamer Internetverbindung oder nach einem Displaywechsel (z. B. beim Aufklappen des Z-Fold) passieren. Die App führt nach 200ms automatisch eine Neuausrichtung (Re-Render) durch, um die Karte korrekt anzuzeigen." },
+  { "id": 15, "kategorie": "System & Bedienung", "frage": "Ist die App auf Tablets anders aufgebaut?", "antwort": "Ja, auf Geräten ab 10 Zoll nutzt CamperGuard Pro ein Zwei-Spalten-Layout, um mehr Informationen gleichzeitig anzuzeigen und die Bedienung komfortabler zu machen." },
+  { "id": 16, "kategorie": "System & Bedienung", "frage": "Kann ich die App auch ohne Internetverbindung nutzen?", "antwort": "Absolut. Alle Kernfunktionen (Logbuch, Inventar, Safety Hub, Wasserwaage) sind voll offline-fähig. Lediglich für das Laden neuer Kartenkacheln ist eine kurze Online-Verbindung nötig." },
+  { "id": 17, "kategorie": "System & Bedienung", "frage": "Warum ist das Logo auf meinen Ausdrucken unten links?", "antwort": "Dies dient der professionellen Dokumentation und dem Branding deiner Reiseunterlagen. So sehen Export-Berichte (z. B. für die Versicherung oder das Fahrtenbuch) immer offiziell und strukturiert aus." },
+  { "id": 18, "kategorie": "Inventar & Lagerorte", "frage": "Kann ich Lagerorte nachträglich umbenennen?", "antwort": "Ja, durch einfaches Antippen des Namens im Edit-Modus kannst du jeden Bereich (z. B. von 'Küche' zu 'Pantry') individuell anpassen." },
+  { "id": 19, "kategorie": "Sicherheit & Gesundheit", "frage": "Was bedeutet der GPS-Toggle im Safety Hub?", "antwort": "Damit kannst du die GPS-Ortung manuell komplett ausschalten. Das schont den Akku und schützt deine Privatsphäre, wenn du keine Standort-Daten in deinen Notfall-Profilen anzeigen möchtest." },
+  { "id": 20, "kategorie": "Logbuch & Tanken", "frage": "Was trage ich im Feld 'Zweck' bei einer Tour ein?", "antwort": "Das Feld ist ein Freitextfeld. Du kannst dort Notizen wie 'Urlaub Schweden', 'Werkstattbesuch' oder 'Testfahrt nach Umbau' hinterlegen, um deine Touren im Archiv besser zu unterscheiden." }
+];
+
 function ProfilView({ state, setState, demoSeed }: any) {
   const [activeTireProfile, setActiveTireProfile] = useState<TireProfile>('Straße');
   const [showFaqModal, setShowFaqModal] = useState(false);
+  const [faqSearch, setFaqSearch] = useState('');
 
   const hc = (path: string, val: any) => {
     setState((prev:any) => {
@@ -1063,16 +1145,19 @@ function ProfilView({ state, setState, demoSeed }: any) {
       <AnimatePresence>
           {showFaqModal && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex flex-col p-4">
-                 <div className="flex justify-between items-center mb-6 pt-4"><h2 className="text-[#FF6600] font-black tracking-widest uppercase">FAQ Editor</h2><button onClick={()=>setShowFaqModal(false)} className="text-white border px-3 py-1 rounded">X</button></div>
+                 <div className="flex justify-between items-center mb-4 pt-4"><h2 className="text-[#FF6600] font-black tracking-widest uppercase">CamperGuard FAQ</h2><button onClick={()=>setShowFaqModal(false)} className="text-white border px-3 py-1 rounded">X</button></div>
+                 <input type="text" placeholder="Suche..." value={faqSearch} onChange={e => setFaqSearch(e.target.value)} className="w-full bg-[#2C2E30] border border-[#3d3d3d] text-white p-3 rounded text-sm placeholder:text-gray-500 mb-4" />
                  <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-                     {state.faqs.map((f:any, i:number) => (
-                         <Card key={f.id} className="space-y-3 relative">
-                             <button onClick={() => { const nf = [...state.faqs]; nf.splice(i, 1); setState({...state, faqs: nf}); }} className="absolute top-2 right-2 text-red-500 bg-black p-1 rounded-sm"><Trash2 size={14}/></button>
-                             <input value={f.question} onChange={e => { const nf = [...state.faqs]; nf[i].question = e.target.value; setState({...state, faqs: nf})}} className="w-full bg-[#111] border border-[#3d3d3d] text-white p-2 text-sm font-bold rounded" />
-                             <textarea value={f.answer} onChange={e => { const nf = [...state.faqs]; nf[i].answer = e.target.value; setState({...state, faqs: nf})}} className="w-full bg-[#111] border border-[#3d3d3d] text-white p-2 text-xs rounded min-h-[60px]" />
+                     {APP_FAQS.filter(f => f.frage.toLowerCase().includes(faqSearch.toLowerCase()) || f.antwort.toLowerCase().includes(faqSearch.toLowerCase())).map((f:any) => (
+                         <Card key={f.id} className="space-y-2">
+                             <span className="text-[9px] text-[#FF6600] font-black uppercase tracking-widest bg-black/50 px-2 py-0.5 rounded">{f.kategorie}</span>
+                             <h4 className="text-sm font-bold text-white mt-1">{f.frage}</h4>
+                             <p className="text-xs text-gray-300 leading-relaxed border-t border-[#3d3d3d] pt-2 mt-2">{f.antwort}</p>
                          </Card>
                      ))}
-                     <button onClick={() => setState({...state, faqs: [...state.faqs, {id: Date.now().toString(), question: 'Neue Frage', answer: 'Neue Antwort'}]})} className="w-full border border-dashed border-white text-white py-4 rounded text-xs font-black uppercase">+ FAQ</button>
+                     {APP_FAQS.filter(f => f.frage.toLowerCase().includes(faqSearch.toLowerCase()) || f.antwort.toLowerCase().includes(faqSearch.toLowerCase())).length === 0 && (
+                         <div className="text-white text-center text-sm mt-8 opacity-50">Keine Ergebnisse gefunden.</div>
+                     )}
                  </div>
              </motion.div>
           )}
