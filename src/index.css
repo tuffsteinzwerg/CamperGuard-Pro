@@ -1,23 +1,37 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 
 @theme {
-  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  
-  --color-accent: #FF9800;
-  --color-bg: #1a1a1a;
-  --color-card: #2a2a2a;
+  --color-accent: #FF6600;
+  --color-accent-dark: #CC5200;
+  --color-bg: #1A1C1E;
+  --color-card: #2C2E30;
+  --color-input: #111111;
   --color-border: #3d3d3d;
   --color-text-muted: #888888;
-  --color-success: #4CAF50;
-  --color-danger: #F44336;
-  --color-warning: #FFC107;
+  --color-success: #4ADE80;
+  --color-danger: #EF4444;
+  --color-warning: #FBBF24;
+}
+
+:root {
+  --bg-app: #1A1C1E;
+  --bg-card: #2C2E30;
+  --bg-input: #111111;
+  --border: #3d3d3d;
+  --accent: #FF6600;
+  --accent-dark: #CC5200;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-tertiary: rgba(255,255,255,0.3);
+  --status-ok: #4ADE80;
+  --status-warn: #FBBF24;
+  --status-danger: #EF4444;
 }
 
 body {
-  background-color: var(--color-bg);
+  background-color: var(--bg-app);
   color: #e0e0e0;
   font-family: var(--font-sans);
   overflow-x: hidden;
@@ -36,6 +50,155 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
+}
+
+/* === TYPOGRAFIE === */
+.typo-section-title {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+}
+
+.typo-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+}
+
+.typo-value-hero {
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--accent);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.typo-value-large {
+  font-size: 24px;
+  font-weight: 900;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.typo-value-normal {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.typo-value-small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.typo-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+.typo-body {
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+}
+
+.typo-body-dim {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.typo-tiny {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+}
+
+/* === KOMPONENTEN === */
+.card-standard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #333333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-circle svg {
+  color: var(--accent);
+  width: 18px;
+  height: 18px;
+}
+
+.input-standard {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+.input-standard:focus {
+  border-color: var(--accent);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: black;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: white;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: #444444;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
 }
 
 @media print {
@@ -58,18 +221,49 @@ body {
   }
 }
 
-.hd-input {
-  @apply bg-[#2a2a2a] border border-[#3d3d3d] rounded text-sm outline-none transition-all placeholder:text-gray-700 focus:border-orange-500;
+
+
+
+
+.brand-title {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #FF6600;
 }
 
-.hd-button {
-  @apply bg-orange-500 text-black font-black uppercase tracking-widest text-[0.7rem] px-4 py-2 rounded transition-all active:scale-95;
+.brand-big {
+  font-size: 1.18em;
 }
 
-.hd-button-secondary {
-  @apply bg-[#2a2a2a] border border-[#3d3d3d] text-gray-400 font-black uppercase tracking-widest text-[0.7rem] px-4 py-2 rounded transition-all active:scale-95;
+.leaflet-container img, 
+.leaflet-tile, 
+.leaflet-marker-icon, 
+.leaflet-marker-shadow {
+  max-width: none !important;
+}
+@media print {
+  @page { size: A4 landscape; margin: 1cm; }
+  body { background: white !important; color: black !important; }
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  .high-density-grid, .bg-\[\#1A1C1E\], .bg-\[\#2C2E30\] { background: white !important; border:none; }
+  * { text-shadow: none !important; box-shadow: none !important; }
+  .text-white, .text-\[\#FF6600\] { color: black !important; }
+  h1, h2, h3, span, div { color: black !important; font-size: 11pt !important; }
+  .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  .print-table th { background: #eee !important; color: black !important; font-weight: bold; border: 1px solid #000; padding: 4px; text-align: left;}
+  .print-table td { border: 1px solid #000; padding: 4px; }
+  .print-table tr:nth-child(even) { background: #f9f9f9 !important; }
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: #3d3d3d; }
+  50% { border-color: #FF6600; }
+}
+.animate-pulse-border {
+  animation: pulse-border 2.5s ease-in-out infinite;
 }
 
-.hd-label {
-  @apply text-[0.65rem] uppercase text-gray-500 font-bold tracking-widest mb-1 block;
+option {
+  background-color: #2C2E30;
+  color: white;
 }

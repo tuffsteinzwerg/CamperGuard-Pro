@@ -10,13 +10,15 @@ export interface InventoryItem {
   id: string;
   name: string;
   quantity: number;
-  unit: 'g' | 'kg' | 'stk';
+  unit: 'g' | 'kg' | 'stk' | 'gr' | 'Stk';
   category: string;
   subcategory: string;
+  weight?: number;
+  weightUnit?: 'kg' | 'g' | 'gr';
 }
 
-export type FuelType = 'Diesel' | 'Benzin' | 'Super E10' | 'Super E5' | 'AdBlue';
-export type Currency = 'EUR' | 'CHF' | 'TRY' | 'HRK' | 'DKK' | 'SEK' | 'NOK' | 'PLN' | 'GBP';
+export type FuelType = 'Diesel' | 'Benzin' | 'Super E10' | 'Super E5';
+export type Currency = 'EUR' | 'CHF' | 'TRY' | 'DKK' | 'SEK' | 'NOK' | 'PLN' | 'GBP';
 
 export interface FuelEntry {
   id: string;
@@ -54,6 +56,7 @@ export interface SpotEntry {
   lng: number;
   date: string;
   note: string;
+  category?: string;
 }
 
 export interface FAQEntry {
@@ -67,8 +70,9 @@ export type TireProfile = 'Straße' | 'Sand/Dünen' | 'Schlamm/Matsch' | 'Felsge
 export interface EmergencyGear {
   id: string;
   name: string;
-  location: string;
   checked: boolean;
+  count: number;
+  locations: string[];
 }
 
 export interface PharmacyItem {
@@ -82,14 +86,23 @@ export interface PharmacyItem {
 }
 
 export interface SosData {
-  name: string;
-  address: string;
-  iceName: string;
-  icePhone: string;
+  firstName: string;
+  lastName: string;
+  street: string;
+  houseNumber: string;
+  zipCode: string;
+  city: string;
+  country: string;
+  ice1Name: string;
+  ice1Phone: string;
+  ice2Name: string;
+  ice2Phone: string;
   bloodGroup: string;
   medicalConditions: string;
+  medications: string;
   gear: EmergencyGear[];
   pharmacy: PharmacyItem[];
+  gpsEnabled?: boolean;
 }
 
 export interface TirePressures {
@@ -110,8 +123,9 @@ export interface ProfileData {
   maxWeight: number; // zGG
   emptyWeight: number;
   axleLoads: { front: number; rear: number };
-  fuelCapacity: number;
-  adBlueCapacity: number;
+  freshWaterCapacity: number;
+  wasteWaterCapacity: number;
+  dieselCapacity: number;
   isTwinTires: boolean;
   tires: Record<TireProfile, TirePressures>;
 }
@@ -127,6 +141,8 @@ export interface AppState {
   faqs: FAQEntry[];
   checklist: { id: string; label: string; checked: boolean }[];
   waterLevel: number; // 0, 25, 50, 75, 100
+  wasteWaterLevel: number; // 0, 25, 50, 75, 100
+  dieselLevel: number; // 0-100, 10er-Schritte
   maintenance: MaintenanceItem[];
   exchangeRates: Record<string, number>;
   sos: SosData;
@@ -146,8 +162,9 @@ export const INITIAL_STATE: AppState = {
     maxWeight: 0,
     emptyWeight: 0,
     axleLoads: { front: 0, rear: 0 },
-    fuelCapacity: 0,
-    adBlueCapacity: 0,
+    freshWaterCapacity: 0,
+    wasteWaterCapacity: 0,
+    dieselCapacity: 0,
     isTwinTires: false,
     tires: {
       'Straße': { ...DEFAULT_TIRES },
@@ -184,6 +201,8 @@ export const INITIAL_STATE: AppState = {
     { id: 'treppe', label: 'Trittstufe eingefahren', checked: false }
   ],
   waterLevel: 50,
+  wasteWaterLevel: 0,
+  dieselLevel: 50,
   maintenance: [
     { id: 'tuev', name: 'TÜV', date: "" },
     { id: 'gas', name: 'Gasprüfung', date: "" },
@@ -192,12 +211,15 @@ export const INITIAL_STATE: AppState = {
   ],
   exchangeRates: {},
   sos: {
-    name: "", address: "", iceName: "", icePhone: "", bloodGroup: "", medicalConditions: "",
+    firstName: "", lastName: "", street: "", houseNumber: "", zipCode: "", city: "", country: "",
+    ice1Name: "", ice1Phone: "", ice2Name: "", ice2Phone: "", 
+    bloodGroup: "", medicalConditions: "", medications: "",
     gear: [
-      { id: 'g1', name: 'Feuerlöscher', location: '', checked: false },
-      { id: 'g2', name: 'Warnwesten', location: '', checked: false },
-      { id: 'g3', name: 'Erste-Hilfe-Kasten', location: '', checked: false },
-      { id: 'g4', name: 'Warndreieck', location: '', checked: false }
+      { id: 'g1', name: 'Feuerlöscher', count: 0, locations: [], checked: false },
+      { id: 'g2', name: 'Feuerlöschdecke', count: 0, locations: [], checked: false },
+      { id: 'g3', name: 'Warnwesten', count: 0, locations: [], checked: false },
+      { id: 'g4', name: 'Erste-Hilfe-Kasten', count: 0, locations: [], checked: false },
+      { id: 'g5', name: 'Warndreieck', count: 0, locations: [], checked: false }
     ],
     pharmacy: []
   }
