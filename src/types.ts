@@ -26,6 +26,7 @@ export interface FuelEntry {
   km: number;
   liters: number;
   price: number; // original price in currency
+  vollgetankt: boolean;
   currency: Currency;
   exchangeRateToEur: number; // multiplier to get EUR
   fuelType: FuelType;
@@ -38,6 +39,22 @@ export interface TripEntry {
   toKm: number;
   purpose: string;
   destination: string;
+}
+
+export interface BusinessTripEntry {
+  id: string;
+  date: string;
+  driver: string;
+  fromKm: number;
+  toKm: number;
+  category: string;
+  street: string;
+  houseNumber: string;
+  zip: string;
+  city: string;
+  purpose: string;
+  businessPartner: string;
+  note: string;
 }
 
 export interface YearArchive {
@@ -73,6 +90,8 @@ export interface EmergencyGear {
   checked: boolean;
   count: number;
   locations: string[];
+  weight?: number | string;
+  weightUnit?: string;
 }
 
 export interface PharmacyItem {
@@ -83,9 +102,12 @@ export interface PharmacyItem {
   location: string;
   quantity: number;
   unit: 'stk' | 'ml';
+  weight?: number | string;
+  weightUnit?: string;
 }
 
 export interface SosData {
+  address?: string;
   firstName: string;
   lastName: string;
   street: string;
@@ -126,6 +148,8 @@ export interface ProfileData {
   freshWaterCapacity: number;
   wasteWaterCapacity: number;
   dieselCapacity: number;
+  pitchOffset?: number;
+  rollOffset?: number;
   isTwinTires: boolean;
   tires: Record<TireProfile, TirePressures>;
 }
@@ -136,6 +160,7 @@ export interface AppState {
   subcategories: Record<string, string[]>;
   fuelLog: FuelEntry[];
   tripLog: TripEntry[];
+  businessTripLog: BusinessTripEntry[];
   archives: YearArchive[];
   spots: SpotEntry[];
   faqs: FAQEntry[];
@@ -165,6 +190,8 @@ export const INITIAL_STATE: AppState = {
     freshWaterCapacity: 0,
     wasteWaterCapacity: 0,
     dieselCapacity: 0,
+    pitchOffset: 0,
+    rollOffset: 0,
     isTwinTires: false,
     tires: {
       'Straße': { ...DEFAULT_TIRES },
@@ -187,6 +214,7 @@ export const INITIAL_STATE: AppState = {
   },
   fuelLog: [],
   tripLog: [],
+  businessTripLog: [],
   archives: [],
   spots: [],
   faqs: [
@@ -211,15 +239,15 @@ export const INITIAL_STATE: AppState = {
   ],
   exchangeRates: {},
   sos: {
-    firstName: "", lastName: "", street: "", houseNumber: "", zipCode: "", city: "", country: "",
+    address: "", firstName: "", lastName: "", street: "", houseNumber: "", zipCode: "", city: "", country: "",
     ice1Name: "", ice1Phone: "", ice2Name: "", ice2Phone: "", 
     bloodGroup: "", medicalConditions: "", medications: "",
     gear: [
-      { id: 'g1', name: 'Feuerlöscher', count: 0, locations: [], checked: false },
-      { id: 'g2', name: 'Feuerlöschdecke', count: 0, locations: [], checked: false },
-      { id: 'g3', name: 'Warnwesten', count: 0, locations: [], checked: false },
-      { id: 'g4', name: 'Erste-Hilfe-Kasten', count: 0, locations: [], checked: false },
-      { id: 'g5', name: 'Warndreieck', count: 0, locations: [], checked: false }
+      { id: 'g1', name: 'Feuerlöscher', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
+      { id: 'g2', name: 'Feuerlöschdecke', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
+      { id: 'g3', name: 'Warnwesten', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
+      { id: 'g4', name: 'Erste-Hilfe-Kasten', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
+      { id: 'g5', name: 'Warndreieck', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' }
     ],
     pharmacy: []
   }

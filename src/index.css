@@ -28,6 +28,18 @@
   --status-ok: #4ADE80;
   --status-warn: #FBBF24;
   --status-danger: #EF4444;
+
+  /* Premium Dark Cockpit Design System */
+  --cg-radius-card: 20px;
+  --cg-radius-panel: 14px;
+  --cg-radius-instrument: 50%;
+  --cg-shadow-card: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px rgba(255, 255, 255, 0.05);
+  --cg-shadow-panel: 0 4px 15px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 255, 255, 0.03);
+  --cg-shadow-instrument: inset 0 4px 20px rgba(0, 0, 0, 1), 0 2px 15px rgba(0, 0, 0, 0.6);
+  --cg-bg-card: linear-gradient(180deg, #2C2E30 0%, #1f2123 100%);
+  --cg-bg-panel: linear-gradient(180deg, #232527 0%, #1a1c1e 100%);
+  --cg-bg-instrument: #0c0d0f;
+  --cg-border: rgba(255, 255, 255, 0.08);
 }
 
 body {
@@ -122,10 +134,54 @@ body {
 
 /* === KOMPONENTEN === */
 .card-standard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--cg-bg-card);
+  border: 1px solid var(--cg-border);
+  border-radius: var(--cg-radius-card);
   padding: 16px;
+  box-shadow: var(--cg-shadow-card);
+}
+
+.cg-card {
+  background: var(--cg-bg-card);
+  border: 1px solid var(--cg-border);
+  border-radius: var(--cg-radius-card);
+  box-shadow: var(--cg-shadow-card);
+}
+
+.cg-panel {
+  background: var(--cg-bg-panel);
+  border: 1px solid var(--cg-border);
+  border-radius: var(--cg-radius-panel);
+  box-shadow: var(--cg-shadow-panel);
+}
+
+.cg-instrument-frame {
+  border-radius: var(--cg-radius-instrument);
+  background: var(--cg-bg-instrument);
+  border: 1px solid #1a1a1c;
+  box-shadow: var(--cg-shadow-instrument);
+}
+
+.cg-instrument-inner {
+  border-radius: var(--cg-radius-instrument);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.cg-dark-field {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.cg-soft-button {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+.cg-soft-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .icon-circle {
@@ -266,4 +322,665 @@ body {
 option {
   background-color: #2C2E30;
   color: white;
+}
+
+/* ==========================================================================
+   CAMPERGUARD MASTER INSTRUMENT SYSTEM
+   Zentrale Style-Quelle, extrahiert aus dem "LAGE & KOMPASS" Instrument.
+   ========================================================================== */
+
+:root {
+  /* Panel Basics */
+  --cg-master-bg-from: #1c1e22;
+  --cg-master-bg-to: #0e1013;
+  --cg-master-border: #000;
+  --cg-master-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.02);
+  --cg-master-radius: 0.75rem;
+
+  /* Inset / Recess (Mulden) */
+  --cg-master-inset-bg-from: #08090a;
+  --cg-master-inset-bg-to: #16181b;
+  --cg-master-inset-shadow: inset 0 12px 24px rgba(0,0,0,1), 0 1px 1px rgba(255,255,255,0.04);
+  --cg-master-inset-border: rgba(0,0,0,0.9);
+
+  /* Title Typo */
+  --cg-master-title-color: #8a939c;
+  --cg-master-title-shadow: 0 -2px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.08), 0 0 4px rgba(0,0,0,0.6);
+
+  /* Screws (Corner Hardware) */
+  --cg-master-screw-bg-from: #444;
+  --cg-master-screw-bg-to: #111;
+  --cg-master-screw-inner-from: #111;
+  --cg-master-screw-inner-to: #2a2c30;
+}
+
+/* Master Instrument Panel */
+.cg-master-instrument-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 1.5rem; /* entspr. p-6 */
+  border-radius: var(--cg-master-radius);
+  background: linear-gradient(to bottom, var(--cg-master-bg-from), var(--cg-master-bg-to));
+  box-shadow: var(--cg-master-shadow);
+  border: 1px solid var(--cg-master-border);
+  z-index: 0;
+}
+
+/* Base Vignette Effect */
+.cg-master-instrument-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Technical Grid & Texture Overlay */
+.cg-master-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+.cg-master-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(255,255,255,0.03), transparent 50%);
+  pointer-events: none;
+}
+
+/* Master Title */
+.cg-master-title {
+  font-size: 13px;
+  color: var(--cg-master-title-color);
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-shadow: var(--cg-master-title-shadow);
+  text-align: center;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 2rem;
+}
+
+/* Instrument Inset (Mulde) */
+.cg-master-inset {
+  background: linear-gradient(to bottom, var(--cg-master-inset-bg-from), var(--cg-master-inset-bg-to));
+  box-shadow: var(--cg-master-inset-shadow);
+  border: 1px solid var(--cg-master-inset-border);
+  border-radius: var(--cg-master-radius);
+  position: relative;
+}
+
+/* Hardware Screws */
+.cg-master-screw {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, var(--cg-master-screw-bg-from), var(--cg-master-screw-bg-to));
+  border: 1px solid #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.8);
+  position: absolute;
+}
+.cg-master-screw::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, var(--cg-master-screw-inner-from), var(--cg-master-screw-inner-to));
+  box-shadow: inset 0 2px 3px rgba(0,0,0,1);
+  position: relative;
+}
+.cg-master-screw::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3.5px;
+  width: 2px;
+  height: 2px;
+  background: rgba(255,255,255,0.4);
+  filter: blur(0.5px);
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   LEGACY DESIGN CLASSES
+   Achtung: Diese Klassen werden sukzessive durch das neue 
+   Master Instrument System ersetzt.
+   ========================================================================== */
+.card-instrument {
+  background: linear-gradient(145deg, #0c0f12 0%, #07090b 100%);
+  border-radius: var(--cg-radius-panel);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.6);
+  border: none;
+  overflow: hidden;
+  position: relative;
+}
+
+.typo-engraved {
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a939c;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  text-shadow: 0 -2px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.08), 0 0 4px rgba(0,0,0,0.6);
+}
+
+.instrument-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.instrument-value-success {
+  background: linear-gradient(180deg, #00ff9c, #00cc7a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 3px rgba(0,255,156,0.25);
+}
+
+.instrument-value-warning {
+  background: linear-gradient(180deg, #ffb300, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 6px rgba(255,179,0,0.4);
+}
+
+.instrument-value-danger {
+  background: linear-gradient(180deg, #ff9a3c, #ff5a00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 8px rgba(255,122,0,0.6), 0 0 16px rgba(255,122,0,0.3);
+}
+
+.cg-inset-panel {
+  background: linear-gradient(180deg, #0b0f14 0%, #070a0d 100%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 8px 20px rgba(0,0,0,0.6), 0 8px 20px rgba(0,0,0,0.6);
+  border-radius: var(--cg-radius-panel);
+}
+
+.cg-technical-label {
+  font-size: 8px;
+  color: #666;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.card-alert {
+  background: linear-gradient(180deg, #0b0f14 0%, #070a0d 100%);
+  border-radius: var(--cg-radius-panel);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.6);
+  padding: 10px 14px;
+  border-left: 3px solid;
+}
+
+.alert-danger {
+  border-left-color: var(--status-danger);
+  color: var(--status-danger);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,0,0,0.25);
+}
+
+.alert-warn {
+  border-left-color: var(--status-warn);
+  color: var(--status-warn);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,180,0,0.25);
+}
+
+/* =========================
+   CAMPERGUARD DESIGN SYSTEM
+   (DO NOT MODIFY)
+========================= */
+
+.cg-panel {
+  background: #0f1114;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 2px 6px rgba(255,255,255,0.03),
+    inset 0 -6px 16px rgba(0,0,0,0.6),
+    0 8px 24px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+.cg-inset {
+  background: #111418;
+  border-radius: 12px;
+  box-shadow:
+    inset 0 1px 3px rgba(255,255,255,0.03),
+    inset 0 -3px 8px rgba(0,0,0,0.6);
+}
+
+.cg-alert {
+  border-left: 3px solid;
+  border-radius: 10px;
+  background: #111418;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.02),
+    inset 0 -3px 8px rgba(0,0,0,0.6);
+}
+
+.cg-alert-red { border-color: #ff4d4d; }
+.cg-alert-yellow { border-color: #ffcc00; }
+.cg-alert-green { border-color: #22c55e; }
+
+.cg-instrument {
+  position: relative;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cg-instrument-inset {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 8px 20px rgba(0,0,0,0.8),
+    inset 0 -4px 10px rgba(255,255,255,0.05);
+}
+
+.cg-instrument-ring {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  box-shadow:
+    0 4px 10px rgba(0,0,0,0.8),
+    inset 0 2px 6px rgba(255,255,255,0.06);
+}
+
+.cg-instrument-inner {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 6px 14px rgba(0,0,0,0.9),
+    inset 0 -2px 6px rgba(255,255,255,0.04);
+}
+
+.cg-instrument-center {
+  position: relative;
+  z-index: 30;
+  text-align: center;
+}
+
+/* ==========================================================================
+   CAMPERGUARD MASTER DESIGN COMPONENTS
+   Additive finale Design-Lock-Klassen für UI Elemente (Safety Hub etc.)
+   ========================================================================== */
+
+.cg-master-shell {
+  background: linear-gradient(to bottom, #08090a, #121418);
+}
+
+.cg-master-action-instrument {
+  position: relative;
+  background: linear-gradient(to bottom, var(--cg-master-inset-bg-from), var(--cg-master-inset-bg-to));
+  border-radius: var(--cg-master-radius);
+  border: 1px solid var(--cg-master-inset-border);
+  box-shadow: var(--cg-master-inset-shadow);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.cg-master-button {
+  background: linear-gradient(to bottom, var(--cg-master-screw-bg-from), var(--cg-master-screw-bg-to));
+  color: var(--text-secondary);
+  border: 1px solid #000;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.cg-master-button svg, 
+.cg-master-button-danger svg,
+.cg-master-control svg,
+.cg-master-control-danger svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke-width: 2px !important;
+}
+.cg-master-button:active {
+  transform: scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.cg-master-button-danger {
+  background: linear-gradient(to bottom, var(--cg-master-screw-bg-from), var(--cg-master-screw-bg-to));
+  color: var(--status-danger);
+  border: 1px solid #000;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.02), 0 1px 2px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.cg-master-button-danger:active {
+  transform: scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+}
+
+.cg-master-input,
+.cg-master-textarea,
+.cg-master-select {
+  width: 100%;
+  background: linear-gradient(to bottom, #08090a, #16181b);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  outline: none;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,1), 0 1px 1px rgba(255,255,255,0.04);
+  transition: border-color 0.2s ease;
+}
+.cg-master-input:focus,
+.cg-master-textarea:focus,
+.cg-master-select:focus {
+  border-color: #FF6600;
+}
+
+.cg-master-input-mini {
+  width: 100%;
+  background: linear-gradient(to bottom, #08090a, #16181b);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  outline: none;
+  box-shadow: inset 0 4px 12px rgba(0,0,0,1), 0 1px 1px rgba(255,255,255,0.04);
+  transition: border-color 0.2s ease;
+}
+.cg-master-input-mini:focus {
+  border-color: #FF6600;
+}
+
+.cg-master-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(to bottom, #08090a, #16181b);
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  border-radius: 4px;
+  box-shadow: inset 0 4px 8px rgba(0,0,0,1), 0 1px 1px rgba(255,255,255,0.04);
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+  outline: none;
+  margin: 0;
+}
+.cg-master-checkbox::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  box-shadow: inset 1em 1em #FF6600;
+  border-radius: 2px;
+}
+.cg-master-checkbox:checked::before {
+  transform: scale(1);
+}
+
+.cg-master-tabs {
+  display: flex;
+  background: linear-gradient(to bottom, #08090a, #16181b);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 4px 12px rgba(0,0,0,1), 0 1px 1px rgba(255,255,255,0.04);
+  gap: 6px;
+}
+
+.cg-master-tab {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.cg-master-tab-active {
+  background: linear-gradient(to bottom, var(--cg-master-screw-bg-from), var(--cg-master-screw-bg-to));
+  color: var(--text-secondary);
+  border: 1px solid #000;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 1px 2px rgba(0,0,0,0.6);
+  text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+}
+
+.cg-master-card-small {
+  background: linear-gradient(to bottom, var(--cg-master-bg-from), var(--cg-master-bg-to));
+  border: 1px solid var(--cg-master-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.03);
+  position: relative;
+  overflow: hidden;
+}
+.cg-master-card-small::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+}
+
+.cg-master-section-title {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--cg-master-title-color);
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: var(--cg-master-title-shadow);
+  margin-bottom: 0.75rem;
+}
+
+.cg-master-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.5rem;
+}
+
+.cg-master-label-mini {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.5rem;
+}
+
+.cg-master-value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+
+.cg-master-muted {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.cg-master-input::placeholder,
+.cg-master-textarea::placeholder,
+.cg-master-select::placeholder,
+.cg-master-value::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.cg-master-control {
+  color: var(--text-tertiary);
+  transition: all 0.2s ease;
+}
+
+.cg-master-control:hover {
+  color: var(--text-secondary);
+}
+
+.cg-master-control-active {
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+.cg-master-control-danger {
+  color: var(--status-danger);
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.cg-master-control-danger:hover {
+  opacity: 1;
+}
+
+/* ==================================================
+   CamperGuard Typography System
+   ================================================== */
+
+.cg-type-page-title {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.cg-type-section-title {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.cg-type-card-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.25;
+  color: white;
+}
+
+.cg-type-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.cg-type-meta {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.cg-type-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: white;
+}
+
+.cg-type-value {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: white;
+  font-variant-numeric: tabular-nums;
+}
+
+.cg-type-value-large {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.cg-type-value-hero {
+  font-family: var(--font-sans);
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.cg-type-tab {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+}
+
+.cg-type-button {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
