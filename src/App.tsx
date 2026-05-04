@@ -265,6 +265,9 @@ export default function App() {
             {activeTab === 'profil' && <ProfilView state={state} setState={setState} demoSeed={demoSeed} />}
           </motion.div>
         </AnimatePresence>
+        <div className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print pointer-events-none">
+          CamperGuard Pro v0.1.0-dev
+        </div>
         <img src="/CHAMPERGUARD-PRO%20LOGO1.png" alt="CamperGuard Pro" className="hidden print-only fixed bottom-4 left-4 w-32 style-print-logo" />
       </main>
 
@@ -2864,22 +2867,22 @@ function ReiseView({ state, setState, orientation }: any) {
     if (['front', 'frontLeft', 'frontRight'].includes(direction)) freqValue = 800;
     else if (['rear', 'rearLeft', 'rearRight'].includes(direction)) freqValue = 300;
 
-    dirOsc.type = 'sine';
+    dirOsc.type = 'triangle';
     const startTime = ctx.currentTime + 0.6;
     dirOsc.frequency.setValueAtTime(freqValue, startTime);
 
     dirPan.pan.setValueAtTime(panValue, startTime);
 
     dirGain.gain.setValueAtTime(0, startTime);
-    dirGain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
-    dirGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+    dirGain.gain.linearRampToValueAtTime(0.1, startTime + 0.02);
+    dirGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
 
     dirOsc.connect(dirGain);
     dirGain.connect(dirPan);
     dirPan.connect(ctx.destination);
 
     dirOsc.start(startTime);
-    dirOsc.stop(startTime + 0.5);
+    dirOsc.stop(startTime + 0.15);
   };
 
   const handleManualSoundTest = async () => {
