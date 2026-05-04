@@ -4,7 +4,7 @@ import {
   Plus, Trash2, ChevronRight, Save, Search, Navigation, AlertTriangle,
   FileDown, ChevronDown, ChevronUp, Printer, MapPin, Volume2, Archive, CheckCircle, Check,
   ShieldPlus, Phone, Truck, Edit2, User, Droplet, HeartPulse, Pill, Fuel, Flame,
-  ArrowLeftRight, ArrowUpDown
+  ArrowLeftRight, ArrowUpDown, Weight, Scale
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
@@ -379,6 +379,39 @@ function StatusView({ state, setState, orientation }: any) {
       }
   });
 
+  // --- Medikamenten Ablauf Logik Start ---
+  const expiredPharmacyItems: any[] = [];
+  const soonExpiringPharmacyItems: any[] = [];
+  (() => {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      (state.sos?.pharmacy || []).forEach((p: any) => {
+          if (!p || !p.name || String(p.name).trim() === '' || typeof p.expiry !== 'string' || !p.expiry) return;
+          const parts = p.expiry.split('-');
+          if (parts.length !== 2) return;
+          const expYear = parseInt(parts[0], 10);
+          const expMonth = parseInt(parts[1], 10);
+          if (isNaN(expYear) || isNaN(expMonth)) return;
+          const expiryDate = new Date(expYear, expMonth, 0);
+          if (expiryDate < today) {
+              expiredPharmacyItems.push(p);
+          } else {
+              const diffTime = expiryDate.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              if (diffDays <= 90) {
+                  soonExpiringPharmacyItems.push(p);
+              }
+          }
+      });
+  })();
+  if (expiredPharmacyItems.length > 0) {
+      warnings.push({ type: 'danger', text: `${expiredPharmacyItems.length === 1 ? '1 Medikament abgelaufen' : `${expiredPharmacyItems.length} Medikamente abgelaufen`} - Safety Hub · Apotheke prüfen` });
+  }
+  if (soonExpiringPharmacyItems.length > 0) {
+      warnings.push({ type: 'warn', text: `${soonExpiringPharmacyItems.length === 1 ? '1 Medikament läuft bald ab' : `${soonExpiringPharmacyItems.length} Medikamente laufen bald ab`} - Safety Hub · Apotheke prüfen` });
+  }
+  // --- Medikamenten Ablauf Logik Ende ---
+
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 pb-24 px-2 pt-4">
       {/* Element 1: SOS-Button */}
@@ -442,6 +475,21 @@ function StatusView({ state, setState, orientation }: any) {
                   {/* Glass highlight top */}
                   <div className="absolute top-[-5%] left-[10%] w-[80%] h-[40%] bg-gradient-to-b from-white/5 to-transparent rounded-[100%] pointer-events-none" />
                   
+                  {/* Status Glow Bottom & Icon */}
+                  {(() => {
+                      const ratio = totalWeight / (state.profile.maxWeight || 3500);
+                      const glowColor = ratio > 1 ? '#ff3b30' : ratio > 0.9 ? '#ffcc00' : '#00ff9c';
+                      return (
+                          <>
+                              <div className="absolute bottom-0 w-full h-[40%] opacity-40 blur-md pointer-events-none" style={{ background: `radial-gradient(ellipse at bottom, ${glowColor} 0%, transparent 70%)` }} />
+                              <div className="absolute bottom-0 left-[20%] w-[60%] h-[3px] blur-[1px] pointer-events-none" style={{ background: glowColor, boxShadow: `0 -2px 8px ${glowColor}` }} />
+                              <div className="absolute bottom-[22px] left-1/2 -translate-x-1/2 pointer-events-none" style={{ color: glowColor, filter: `drop-shadow(0 0 4px ${glowColor}80)` }}>
+                                  <Scale size={18} />
+                              </div>
+                          </>
+                      );
+                  })()}
+                  
                   {/* Grid lines */}
                   <div className="absolute w-[1px] h-full bg-gradient-to-b from-transparent via-[#10b981]/60 to-transparent left-1/2 -translate-x-1/2" />
                   <div className="absolute h-[1px] w-full bg-gradient-to-r from-transparent via-[#10b981]/60 to-transparent top-1/2 -translate-y-1/2" />
@@ -479,7 +527,7 @@ function StatusView({ state, setState, orientation }: any) {
               {/* Center Weight Display */}
               <div className="absolute z-30 flex flex-col items-center justify-center pointer-events-none">
                   <div className="relative flex items-baseline justify-center" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}>
-                      <span className={`instrument-value text-5xl tracking-tighter ${
+                      <span className={`instrument-value text-5xl tracking-normal ${
                           (totalWeight / (state.profile.maxWeight || 3500)) > 1 ? 'instrument-value-danger' :
                           (totalWeight / (state.profile.maxWeight || 3500)) > 0.9 ? 'instrument-value-warning' :
                           'instrument-value-success'
@@ -487,7 +535,7 @@ function StatusView({ state, setState, orientation }: any) {
                           {Math.round(totalWeight)}
                       </span>
                       <div className="w-0">
-                          <span className="instrument-value text-xl opacity-70 ml-1">kg</span>
+                          <span className="instrument-value text-base opacity-40 ml-2">kg</span>
                       </div>
                   </div>
                   
@@ -1081,48 +1129,85 @@ function StatusView({ state, setState, orientation }: any) {
                                  <span className="flex items-center"><Pill size={16} className="mr-2 text-[var(--accent)]"/>Apotheke</span>
                                  <button onClick={() => { const newId = Date.now().toString(); updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); setEditingPharmacyId(newId); }} className="cg-master-button !py-1 !px-2"><Plus size={10}/> Med.</button>
                              </h3>
+
+                             {(expiredPharmacyItems.length > 0 || soonExpiringPharmacyItems.length > 0) && (
+                                 <div className="mb-4 space-y-2">
+                                     {expiredPharmacyItems.length > 0 && (
+                                         <div className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--status-danger)]">
+                                             <div className="text-[var(--status-danger)] font-bold text-sm mb-1">{expiredPharmacyItems.length === 1 ? '1 Medikament abgelaufen' : `${expiredPharmacyItems.length} Medikamente abgelaufen`}</div>
+                                             <div className="space-y-1">
+                                                 {expiredPharmacyItems.slice(0, 3).map((item, idx) => (
+                                                     <div key={idx} className="flex justify-between items-baseline text-xs">
+                                                         <span className="truncate mr-2">{item.name || 'Unbenanntes Medikament'}</span>
+                                                         {item.expiry && <span className="cg-master-muted whitespace-nowrap">Haltbar bis: {item.expiry}</span>}
+                                                     </div>
+                                                 ))}
+                                                 {expiredPharmacyItems.length > 3 && (
+                                                     <div className="text-xs cg-master-muted pt-1">+ {expiredPharmacyItems.length - 3} weitere</div>
+                                                 )}
+                                             </div>
+                                         </div>
+                                     )}
+                                     {soonExpiringPharmacyItems.length > 0 && (
+                                         <div className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--status-warn)]">
+                                             <div className="text-[var(--status-warn)] font-bold text-sm mb-1">{soonExpiringPharmacyItems.length === 1 ? '1 Medikament läuft bald ab' : `${soonExpiringPharmacyItems.length} Medikamente laufen bald ab`}</div>
+                                             <div className="space-y-1">
+                                                 {soonExpiringPharmacyItems.slice(0, 3).map((item, idx) => (
+                                                     <div key={idx} className="flex justify-between items-baseline text-xs">
+                                                         <span className="truncate mr-2">{item.name || 'Unbenanntes Medikament'}</span>
+                                                         {item.expiry && <span className="cg-master-muted whitespace-nowrap">Haltbar bis: {item.expiry}</span>}
+                                                     </div>
+                                                 ))}
+                                                 {soonExpiringPharmacyItems.length > 3 && (
+                                                     <div className="text-xs cg-master-muted pt-1">+ {soonExpiringPharmacyItems.length - 3} weitere</div>
+                                                 )}
+                                             </div>
+                                         </div>
+                                     )}
+                                 </div>
+                             )}
+
                              {(state.sos.pharmacy || []).map((p: any, i: number) => {
                                   if (!p) return null;
                                   const isEditing = editingPharmacyId === String(p.id);
                                   const metaParts: string[] = [];
                                   if (p.purpose) metaParts.push(String(p.purpose));
                                   if (p.location) metaParts.push(String(p.location));
-                                  if (p.expiry) metaParts.push(String(p.expiry));
+                                  if (p.expiry) metaParts.push(`Haltbar bis: ${p.expiry}`);
                                   return (
                                  <div key={p.id} className="cg-master-card-small mb-3 relative">
                                      {isEditing ? (
                                         <>
-                                      <button onClick={() => updateSos('pharmacy', (state.sos.pharmacy || []).filter((_: any, idx: number) => idx !== i))} className="absolute top-2 right-2 cg-master-inset cg-master-control-danger w-8 h-8 rounded flex items-center justify-center z-10"><Trash2 size={14}/></button>
-                                     <div className="flex flex-col gap-3">
-                                         <div className="flex gap-3 pr-8">
-                                             <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className="cg-master-input w-1/2" />
-                                             <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-1/2" />
-                                         </div>
-                                         <div className="flex gap-3">
-                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="cg-master-input w-1/2" />
-                                             <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-1/2" />
-                                         </div>
-                                         <div className="flex gap-3">
-                                             <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-1/2" />
-                                             <select value={p.unit} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, unit: e.target.value } : px))} className="cg-master-select w-1/2">
-                                                 <option value="stk">Stk</option>
-                                                 <option value="ml">ml</option>
-                                                 <option value="l">l</option>
-                                                 <option value="g">g</option>
-                                             </select>
-                                         </div>
-                                         <div className="flex justify-between items-center">
-                                             <span className="cg-master-label !mb-0 whitespace-nowrap">Gewicht/Stk.</span>
-                                             <div className="flex gap-2">
-                                                 <input type="number" step="0.01" min="0" value={p.weight !== undefined ? p.weight : ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weight: e.target.value } : px))} placeholder="Gewicht" className="cg-master-input w-20 !h-8 !p-1 !text-center" />
-                                                 <select value={p.weightUnit || 'kg'} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weightUnit: e.target.value } : px))} className="cg-master-input w-16 !h-8 !p-1 !pl-2">
-                                                     <option value="kg">kg</option>
-                                                     <option value="g">g</option>
-                                                 </select>
+                                     <div className="grid grid-cols-2 gap-3">
+                                         <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className={`cg-master-input w-full ${(!p.name || String(p.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
+                                         <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-full" />
+                                         <div className="relative w-full">
+                                             <div className={`cg-master-input w-full flex items-center ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`}>
+                                                 {p.expiry ? p.expiry : 'Verfallsdatum'}
                                              </div>
+                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                          </div>
-                                         <div className="flex mt-2">
-                                             <button onClick={() => setEditingPharmacyId(null)} className="cg-master-button flex-1 py-1 text-center rounded">Fertig</button>
+                                         <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-full" />
+                                         <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-full" />
+                                         <select value={p.unit} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, unit: e.target.value } : px))} className="cg-master-select w-full">
+                                             <option value="stk">Stk</option>
+                                             <option value="ml">ml</option>
+                                             <option value="l">l</option>
+                                             <option value="g">g</option>
+                                         </select>
+                                         <input type="number" step="0.01" min="0" value={p.weight !== undefined ? p.weight : ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weight: e.target.value } : px))} placeholder="Gewicht/Stk." className="cg-master-input w-full" />
+                                         <select value={p.weightUnit || 'kg'} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weightUnit: e.target.value } : px))} className="cg-master-select w-full">
+                                             <option value="kg">kg</option>
+                                             <option value="g">g</option>
+                                         </select>
+                                         <div className="col-span-2 mt-2">
+                                             {((!p.name || String(p.name).trim() === '') || !p.expiry) && (
+                                                 <div className="text-[var(--status-danger)] text-xs text-center mb-2">Medikament und Verfallsdatum ausfüllen.</div>
+                                             )}
+                                             <button onClick={() => {
+                                                 if ((!p.name || String(p.name).trim() === '') || !p.expiry) return;
+                                                 setEditingPharmacyId(null);
+                                             }} className="cg-master-button w-full py-1 text-center rounded">Fertig</button>
                                          </div>
                                      </div>
                                     </>
@@ -1145,7 +1230,7 @@ function StatusView({ state, setState, orientation }: any) {
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => setEditingPharmacyId(p.id)} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14}/></button>
-                                                <button onClick={() => updateSos('pharmacy', (state.sos.pharmacy || []).filter((_: any, idx: number) => idx !== i))} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
+                                                <button onClick={() => { if(confirm('Medikament wirklich löschen?')) { updateSos('pharmacy', (state.sos.pharmacy || []).filter((_: any, idx: number) => idx !== i)); } }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
                                             </div>
                                         </div>
                                     </div>
@@ -1944,7 +2029,8 @@ function LogbuchView({ state, setState }: any) {
   const parsedPrice = parseFloat(tankForm.price);
   const isPriceValid = tankForm.price === '' || (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice <= 999);
 
-  const isTripValid = tripForm.fromKm === '' || tripForm.toKm === '' || parseFloat(tripForm.toKm) >= parseFloat(tripForm.fromKm);
+  const parsedTripKm = parseFloat(tripForm.fromKm);
+  const isTripValid = tripForm.fromKm !== '' && !isNaN(parsedTripKm) && parsedTripKm >= getLastKnownKm();
   const isBusinessTripValid = businessTripForm.fromKm !== '' && businessTripForm.toKm !== '' && parseFloat(businessTripForm.toKm) >= parseFloat(businessTripForm.fromKm) && parseFloat(businessTripForm.fromKm) >= 0 && parseFloat(businessTripForm.toKm) <= 999999 && parseFloat(businessTripForm.fromKm) <= 999999;
   const isBusinessTripPurposeValid = businessTripForm.purpose.length <= 50;
   const isBusinessTripDriverValid = businessTripForm.driver.trim() !== '';
@@ -2147,7 +2233,7 @@ function LogbuchView({ state, setState }: any) {
                                     {entry.note && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-2">{entry.note}</p>}
                                 </div>
                                 <div className="flex flex-col items-end gap-2 w-1/3">
-                                    <div className="cg-type-value text-[var(--accent)] border px-2 py-0.5">
+                                    <div className="cg-type-value text-[var(--accent)]">
                                         +{(entry.toKm != null && entry.fromKm != null && !isNaN(entry.toKm) && !isNaN(entry.fromKm)) ? Number(entry.toKm - entry.fromKm).toLocaleString('de-DE') : (entry.toKm - entry.fromKm)} <span className="cg-type-label ml-0.5">KM</span>
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
@@ -2202,7 +2288,7 @@ function LogbuchView({ state, setState }: any) {
                                         {entry.businessPartner && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-2">Partner: {entry.businessPartner}</p>}
                                     </div>
                                     <div className="flex flex-col items-end gap-2 w-1/3">
-                                        <div className="cg-type-value whitespace-nowrap border px-2 py-0.5">
+                                        <div className="cg-type-value whitespace-nowrap">
                                             +{(entry.toKm != null && entry.fromKm != null && !isNaN(entry.toKm) && !isNaN(entry.fromKm)) ? Number(entry.toKm - entry.fromKm).toLocaleString('de-DE') : (entry.toKm - entry.fromKm)} <span className="cg-type-label ml-0.5">KM</span>
                                         </div>
                                         {!isLocked && (
@@ -2361,7 +2447,17 @@ function LogbuchView({ state, setState }: any) {
                             if (tripLogMode === 'strict') {
                                 setIsConfirmingBusinessTrip(true);
                             } else {
-                                const entry: any = { id: editingTripId || Date.now().toString(), date: tripForm.date, fromKm: parseFloat(tripForm.fromKm), toKm: parseFloat(tripForm.toKm), purpose: tripForm.purpose, destination: tripForm.destination, category: tripForm.category, note: tripForm.note };
+                                const parsedToKm = parseFloat(tripForm.fromKm);
+                                const entry: any = { 
+                                    id: editingTripId || Date.now().toString(), 
+                                    date: tripForm.date, 
+                                    fromKm: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
+                                    toKm: isNaN(parsedToKm) ? 0 : parsedToKm, 
+                                    purpose: tripForm.purpose, 
+                                    destination: tripForm.destination, 
+                                    category: tripForm.category, 
+                                    note: tripForm.note 
+                                };
                                 if (editingTripId) {
                                     setState({...state, tripLog: state.tripLog.map((t:any) => t.id === editingTripId ? entry : t)});
                                 } else {
@@ -2472,9 +2568,8 @@ function LogbuchView({ state, setState }: any) {
                                     </>
                                 ) : (
                                     <>
-                                        <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Start KM" value={tripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setTripForm({...tripForm, fromKm: digitsOnly}); }} className="cg-master-input w-full" />
-                                        {tripForm.fromKm !== '' && parseFloat(tripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Start-KM kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
-                                        {!isTripValid && tripForm.toKm !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Ziel KM muss größer oder gleich Start KM sein.</span>}
+                                        <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Aktueller Tacho-Stand" value={tripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setTripForm({...tripForm, fromKm: digitsOnly}); }} className="cg-master-input w-full" />
+                                        {tripForm.fromKm !== '' && parseFloat(tripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Tacho-Stand kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
                                         <input name="destination" required placeholder="Zielort" value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})} className="cg-master-input w-full" />
                                         <textarea name="note" placeholder="Notizen" value={tripForm.note} onChange={e => setTripForm({...tripForm, note: e.target.value})} className="cg-master-input w-full h-20" />
                                     </>
@@ -2836,7 +2931,11 @@ function ReiseView({ state, setState, orientation }: any) {
         }
       }
 
-      const delay = Math.max(650, Math.min(2000, 2000 - intensity * 100));
+      let delay = 250;
+      if (intensity > 6) delay = 1200;
+      else if (intensity > 3) delay = 800;
+      else if (intensity > 1) delay = 450;
+
       audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
     };
 
