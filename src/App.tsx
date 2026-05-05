@@ -12,6 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { openDB } from 'idb';
 import { INITIAL_STATE, AppState, InventoryItem, FuelEntry, TripEntry, FuelType, Currency, TireProfile, SpotEntry, FAQEntry, EmergencyGear, PharmacyItem } from './types.ts';
+import { InhaltPrintView } from './print/InhaltPrintView';
 
 // Fix Leaflet icons
 // @ts-ignore
@@ -1771,6 +1772,7 @@ function InhaltView({ state, setState }: any) {
           )}
       </div>
 
+      <div className="no-print">
       {searchTerm ? (
           <div className="space-y-4 print-only print-table">
               <div className="mb-4">
@@ -1871,6 +1873,9 @@ function InhaltView({ state, setState }: any) {
           ))}
           </div>
       )}
+      </div>
+
+      <InhaltPrintView state={state} />
 
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none px-4 flex items-center justify-center gap-3 z-40 no-print">
           <button onClick={() => setIsAddingSub(true)} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Lagerort</button>
@@ -3197,11 +3202,25 @@ function ReiseView({ state, setState, orientation }: any) {
     if (['left', 'frontLeft', 'rearLeft'].includes(direction)) panValue = -1;
     else if (['right', 'frontRight', 'rearRight'].includes(direction)) panValue = 1;
 
+    const isFront = ['front', 'frontLeft', 'frontRight'].includes(direction);
+    const isRear = ['rear', 'rearLeft', 'rearRight'].includes(direction);
+
     const clampedIntensity = Math.max(0, Math.min(15, intensity));
     const closeness = 1 - (clampedIntensity / 15);
     const baseFreq = 260 + closeness * 500;
 
     const startTime = ctx.currentTime;
+
+    let startOffsets = [0, 0.12, 0.24];
+    let noteDurations = [0.12, 0.12, 0.12];
+
+    if (isFront) {
+      startOffsets = [0, 0.055, 0.18];
+      noteDurations = [0.055, 0.10, 0.12];
+    } else if (isRear) {
+      startOffsets = [0, 0.20, 0.34];
+      noteDurations = [0.20, 0.11, 0.11];
+    }
 
     for (let i = 0; i < 3; i++) {
       const dirOsc = ctx.createOscillator();
@@ -3211,21 +3230,22 @@ function ReiseView({ state, setState, orientation }: any) {
       dirOsc.type = 'triangle';
       const multipliers = panValue === 1 ? [1.25, 1.12, 1] : [1, 1.12, 1.25];
       const noteFreq = baseFreq * multipliers[i];
-      const noteStart = startTime + i * 0.12;
+      const noteDur = noteDurations[i];
+      const noteStart = startTime + startOffsets[i];
 
       dirOsc.frequency.setValueAtTime(noteFreq, noteStart);
       dirPan.pan.setValueAtTime(panValue, noteStart);
 
       dirGain.gain.setValueAtTime(0, noteStart);
       dirGain.gain.linearRampToValueAtTime(0.15, noteStart + 0.02);
-      dirGain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.1);
+      dirGain.gain.exponentialRampToValueAtTime(0.001, noteStart + Math.max(0.03, noteDur - 0.02));
 
       dirOsc.connect(dirGain);
       dirGain.connect(dirPan);
       dirPan.connect(ctx.destination);
 
       dirOsc.start(noteStart);
-      dirOsc.stop(noteStart + 0.12);
+      dirOsc.stop(noteStart + noteDur);
     }
   };
 
@@ -3418,10 +3438,6 @@ function ReiseView({ state, setState, orientation }: any) {
                   
                   {/* Center glowing radar circle */}
                   <div className="absolute w-[36px] h-[36px] rounded-full border border-[#10b981]/50 bg-[radial-gradient(circle_at_center,_rgba(16,185,129,0.35)_0%,_transparent_70%)] shadow-[0_0_30px_rgba(16,185,129,0.5),_inset_0_0_15px_rgba(16,185,129,0.3)]" />
-                  
-                  <div className="absolute z-10 text-white/20 drop-shadow-[0_2px_4px_rgba(0,0,0,1)]">
-                      <Truck size={30} style={{ transform: `rotate(${heading}deg)` }} />
-                  </div>
               </div>
 
               {/* Compass marks mounted on the Ring (z-20 so it sits freely above the inner face but inside the 260 box) */}
@@ -3459,7 +3475,7 @@ function ReiseView({ state, setState, orientation }: any) {
                 const rawBubbleX = -rollNormalized * 3.8;
                 const rawBubbleY = -pitchNormalized * 3.8;
                 const distance = Math.sqrt(rawBubbleX * rawBubbleX + rawBubbleY * rawBubbleY);
-                const maxRadius = 76;
+                const maxRadius = 88;
                 
                 let bubbleX = rawBubbleX;
                 let bubbleY = rawBubbleY;
@@ -3870,8 +3886,8 @@ function ProfilView({ state, setState, demoSeed }: any) {
                   { l: 'Kraftstoff', k: 'dieselCapacity' } 
               ].map(d => (
                   <div key={d.k} className="flex justify-between items-center">
-                      <span className="cg-master-label !mb-0">{d.l}</span>
-                      <div className="flex items-baseline gap-2">
+                      <span className="cg-master-label !mb-0 shrink-0">{d.l}</span>
+                      <div className="flex items-center gap-2 shrink-0">
                         <input 
                             type="text" 
                             inputMode="numeric"
@@ -3882,9 +3898,9 @@ function ProfilView({ state, setState, demoSeed }: any) {
                                 if (typeof num === 'number' && num > 2000) num = 2000;
                                 hc(`profile.${d.k}`, num);
                             }} 
-                            className={`cg-master-input w-24 text-center ${!state.profile[d.k as keyof typeof state.profile] ? 'animate-pulse-border text-[var(--text-muted)]' : 'text-white'}`} 
+                            className={`cg-master-input !w-24 !min-w-[6rem] !max-w-[6rem] text-center shrink-0 ${!state.profile[d.k as keyof typeof state.profile] ? 'animate-pulse-border text-[var(--text-muted)]' : 'text-white'}`} 
                         />
-                        <span className="cg-master-muted">L</span>
+                        <span className="cg-master-muted shrink-0 w-4 text-left">L</span>
                       </div>
                   </div>
               ))}
