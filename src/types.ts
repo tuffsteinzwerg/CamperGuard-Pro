@@ -123,6 +123,7 @@ export interface SosData {
   medicalConditions: string;
   medications: string;
   gear: EmergencyGear[];
+  deletedGear?: string[];
   pharmacy: PharmacyItem[];
   gpsEnabled?: boolean;
 }

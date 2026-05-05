@@ -97,6 +97,10 @@ export default function App() {
               if (loadedSos[k] === undefined) loadedSos[k] = "";
            });
 
+           if (!Array.isArray(loadedSos.deletedGear)) {
+               loadedSos.deletedGear = [];
+           }
+
            if (loadedSos.gear) {
                loadedSos.gear = loadedSos.gear.map((g: any) => {
                    const migrated = { ...g };
@@ -116,7 +120,7 @@ export default function App() {
                
                const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnwesten', 'Erste-Hilfe-Kasten', 'Warndreieck'];
                requiredCategories.forEach((cat, idx) => {
-                   if (!loadedSos.gear.some((g: any) => g.name === cat)) {
+                   if (!loadedSos.gear.some((g: any) => g.name === cat) && !loadedSos.deletedGear.includes(cat)) {
                        loadedSos.gear.push({
                            id: `g_new_${idx}`,
                            name: cat,
@@ -270,18 +274,53 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.0-dev
+          CamperGuard Pro v0.1.1-dev
         </div>
 
         {showChangelog && (
-          <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col p-4 overflow-y-auto no-print">
-            <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border)] max-w-2xl mx-auto w-full text-[12px] text-white">
-              <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.0-dev</h2>
-              <p className="text-[var(--text-muted)] mb-4">Stand: 05.05.2026</p>
-              
-              <h3 className="font-bold mb-2">Änderungen:</h3>
-              <ul className="space-y-1 text-gray-300">
-                <li>001. BusinessTripLog im Typensystem ergänzt.</li>
+          <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col p-4 no-print overflow-hidden items-center justify-center">
+            <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
+              <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
+                 <div>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.1-dev</h2>
+                   <p className="text-[var(--text-muted)] !mb-0">Stand: 05.05.2026</p>
+                 </div>
+                 <button 
+                   className="cg-master-button px-4 py-2"
+                   onClick={() => setShowChangelog(false)}
+                 >
+                   Schließen
+                 </button>
+              </div>
+              <div className="p-4 overflow-y-auto flex-1">
+                 <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.1-dev:</h3>
+                 <ul className="space-y-1 text-gray-300 mb-6">
+                    <li>244. Notfall-Suchbuttons im Safety Hub auf feste einheitliche Höhe gesetzt.</li>
+                    <li>243. Google-Maps-Schnellzugriffe für Apotheke, Krankenhaus, Arzt und Polizei ergänzt.</li>
+                    <li>242. Safety Hub / Hilfe um kompakte Notfall-Suchlinks ergänzt.</li>
+                    <li>241. Lagerorte aus der geschlossenen Notfall-Ausrüstungskarte entfernt und in den Detailbereich verlagert.</li>
+                    <li>240. Notfall-Ausrüstungskarten optisch stärker an Inhalt-Schubladenkarten angeglichen.</li>
+                    <li>239. Notfall-Ausrüstung optisch und bedienlogisch weiter an den Tab „Inhalt“ angenähert.</li>
+                    <li>238. Fertig-Button zum Schließen des Notfall-Ausrüstungseditors ergänzt.</li>
+                    <li>237. Notfall-Ausrüstungskarten per Header/Edit-Button aufklappbar gemacht.</li>
+                    <li>236. Redundantes Häkchen-Element aus Notfall-Ausrüstungskarten entfernt.</li>
+                    <li>235. Edit-Button öffnet den bestehenden Inline-Bereich minimal-invasiv über die vorhandene checked-Logik.</li>
+                    <li>234. Gelöschte Default-Notfallausrüstung wird in deletedGear gespeichert und beim Neustart nicht automatisch wiederhergestellt.</li>
+                    <li>233. Löschbestätigung für Notfall-Ausrüstung analog zum Inhalt-Tab ergänzt.</li>
+                    <li>232. Notfall-Ausrüstungskarten im Safety Hub um Löschbutton im Inhalt-Stil ergänzt.</li>
+                    <li>231. Notfall-Ausrüstungskarten im Safety Hub um Bearbeiten-Button im Inhalt-Stil ergänzt.</li>
+                    <li>230. Safety-Gear-Exclusion-Liste deletedGear für dauerhaft gelöschte Default-Notfallausrüstung vorbereitet.</li>
+                    <li>229. Aufgeklappter Notfall-Ausrüstungsbereich mit einheitlicheren Feldhöhen und 2-Spalten-Struktur beruhigt.</li>
+                    <li>228. Notfall-Ausrüstung im Safety Hub optisch ruhiger an Inhalt-/Medikamentenraster angeglichen.</li>
+                    <li>227. Audio-Zielannäherung empfindlicher und schneller abgestimmt.</li>
+                    <li>226. Audio-Pulslogik von groben Stufen auf kontinuierliche Zielannäherung umgestellt.</li>
+                    <li>225. Bubble-Federung beruhigt.</li>
+                    <li>224. Bubble-Zielposition kreisförmig begrenzt.</li>
+                 </ul>
+                 
+                 <h3 className="font-bold mb-2">Änderungen v0.1.0-dev:</h3>
+                 <ul className="space-y-1 text-gray-300">
+                    <li>001. BusinessTripLog im Typensystem ergänzt.</li>
                 <li>002. BusinessTripEntry angelegt.</li>
                 <li>003. BusinessTripEntry um driver: string erweitert.</li>
                 <li>004. businessTripLog im App-State ergänzt.</li>
@@ -503,15 +542,8 @@ export default function App() {
                 <li>220. Offener Sound-Schritt: falls Grundgefühl passt, vorne/hinten über Rhythmusmuster unterscheiden.</li>
                 <li>221. Offener Sound-Schritt: vorne = Doppel-Tack prüfen.</li>
                 <li>222. Offener Sound-Schritt: hinten = längerer Tack prüfen.</li>
-                <li>223. Offener Sound-Schritt: links/rechts weiter über Stereo-Panning prüfen.</li>
-              </ul>
-              
-              <button 
-                className="cg-master-button mt-6 w-full"
-                onClick={() => setShowChangelog(false)}
-              >
-                Schließen
-              </button>
+                 </ul>
+              </div>
             </div>
           </div>
         )}
@@ -542,6 +574,8 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
 // --- SUBVIEWS ---
 function StatusView({ state, setState, orientation }: any) {
   const [editingPharmacyId, setEditingPharmacyId] = useState<string | null>(null);
+  const [editingGearId, setEditingGearId] = useState<string | null>(null);
+  const [deletingGearItem, setDeletingGearItem] = useState<any>(null);
   const [showSos, setShowSos] = useState(false);
   const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
   const [isEditingId, setIsEditingId] = useState(false);
@@ -1073,7 +1107,7 @@ function StatusView({ state, setState, orientation }: any) {
                  </div>
 
                  {sosTab === 'hilfe' && (
-                     <div className="space-y-4 flex-1 relative z-0">
+                     <div className="space-y-4 flex-1 relative z-0 bg-[var(--bg-app)] rounded-2xl p-4 -mx-2 border border-[var(--border)] shadow-inner">
                          <div className="cg-master-card-small relative group">
                              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--accent)] relative z-10" />
                              <div className="flex justify-between items-center mb-3 relative z-10">
@@ -1138,12 +1172,17 @@ function StatusView({ state, setState, orientation }: any) {
                              </a>
                          </div>
 
-                         <a href="https://www.google.com/maps/search/Apotheke" target="_blank" rel="noreferrer" className="cg-master-button w-full mt-4"><MapPin size={14} className="text-[var(--accent)]"/> Nächste Apotheke</a>
+                         <div className="grid grid-cols-2 gap-3 mt-4">
+                             <a href="https://www.google.com/maps/search/Apotheke" target="_blank" rel="noopener noreferrer" className="cg-master-button flex items-center justify-center gap-2 h-12 w-full typo-label"><MapPin size={14} className="text-[var(--accent)] shrink-0"/> Apotheke</a>
+                             <a href="https://www.google.com/maps/search/Krankenhaus" target="_blank" rel="noopener noreferrer" className="cg-master-button flex items-center justify-center gap-2 h-12 w-full typo-label"><MapPin size={14} className="text-[var(--accent)] shrink-0"/> Krankenhaus</a>
+                             <a href="https://www.google.com/maps/search/Arzt" target="_blank" rel="noopener noreferrer" className="cg-master-button flex items-center justify-center gap-2 h-12 w-full typo-label"><MapPin size={14} className="text-[var(--accent)] shrink-0"/> Arzt</a>
+                             <a href="https://www.google.com/maps/search/Polizei" target="_blank" rel="noopener noreferrer" className="cg-master-button flex items-center justify-center gap-2 h-12 w-full typo-label"><ShieldCheck size={14} className="text-[var(--accent)] shrink-0"/> Polizei</a>
+                         </div>
                      </div>
                  )}
 
                  {sosTab === 'id' && (
-  <div className="space-y-4 relative z-10">
+  <div className="space-y-4 relative z-10 bg-[var(--bg-app)] rounded-2xl p-4 -mx-2 border border-[var(--border)] shadow-inner">
 
     <div>
       <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
@@ -1286,88 +1325,105 @@ function StatusView({ state, setState, orientation }: any) {
 )}
 
                  {sosTab === 'inhalt' && (
-                     <div className="space-y-6">
+                     <div className="space-y-6 bg-[var(--bg-app)] rounded-2xl p-4 -mx-2 border border-[var(--border)] shadow-inner">
                          <div>
                              <h3 className="cg-master-section-title !mb-3 !mt-4">Notfall-Ausrüstung</h3>
                              {(state.sos.gear || []).map((g: any, i: number) => {
                                  const validLocations = (g.locations || []).filter((l: string) => l.trim() !== '');
+                                 const hasWeight = g.weight !== undefined && g.weight !== null && g.weight !== '';
+                                 const weightStr = hasWeight ? `${g.weight} ${g.weightUnit || 'kg'}` : '';
+                                 
+                                 const isEditing = editingGearId === g.id;
                                  
                                  return (
                                  <div key={g.id} className="cg-master-card-small mb-3">
-                                     <div className="flex items-center justify-between gap-2">
-                                         <div className="flex-1 min-w-0">
-                                             <div className="typo-card-title truncate">{g.name}</div>
-                                             {g.checked && validLocations.length > 0 && (
-                                                 <div className="typo-body-dim text-[var(--text-tertiary)] !mb-0 truncate">{validLocations.join(', ')}</div>
+                                     <div className="flex justify-between items-center select-none">
+                                         <div className="flex items-start gap-3 flex-1 min-w-0 pr-3 cursor-pointer" onClick={() => {
+                                             if (isEditing) setEditingGearId(null);
+                                             else {
+                                                 setEditingGearId(g.id);
+                                                 if (!g.checked) {
+                                                     let newCount = g.count || 1;
+                                                     let newLocations = (!g.locations || g.locations.length === 0) ? [''] : g.locations;
+                                                     updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, checked: true, count: newCount, locations: newLocations } : gx)); 
+                                                 }
+                                             }
+                                         }}>
+                                             <h3 className="typo-section-title min-w-0 flex-1 line-clamp-2" style={{ color: 'var(--accent)', marginBottom: 0, minHeight: '32px' }}>{g.name}</h3>
+                                             {g.checked && (
+                                                <span className="typo-value-small whitespace-nowrap mt-0.5">
+                                                    {hasWeight ? weightStr : (Number(g.count) > 0 ? `${g.count} Stk` : '')}
+                                                </span>
                                              )}
                                          </div>
-                                         <div className="flex flex-shrink-0 items-center justify-end">
-                                             {g.checked && (
-                                                <div className="text-right whitespace-nowrap mr-3">
-                                                    {Number(g.count) > 0 && (
-                                                        <div><span className="typo-value-normal">{g.count}</span><span className="typo-value-small ml-1">Stk</span></div>
-                                                    )}
-                                                    {g.weight !== undefined && g.weight !== null && g.weight !== '' && (
-                                                        <div className="typo-body-dim !mb-0">{g.weight} {g.weightUnit || 'kg'}</div>
-                                                    )}
-                                                </div>
-                                             )}
-                                             <button 
+                                         <div className="flex flex-shrink-0 items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                         <button 
                                              onClick={() => { 
-                                                 const newChecked = !g.checked;
-                                                 let newCount = g.count;
-                                                 let newLocations = g.locations;
-                                                 if (!newChecked) {
-                                                     newCount = 0;
-                                                 } else if (newCount === 0 || !newCount) {
-                                                     newCount = 1;
-                                                     if (!newLocations || newLocations.length === 0) newLocations = [''];
+                                                 if (isEditing) {
+                                                     setEditingGearId(null);
+                                                 } else {
+                                                     setEditingGearId(g.id);
+                                                     if (!g.checked) {
+                                                         let newCount = g.count || 1;
+                                                         let newLocations = (!g.locations || g.locations.length === 0) ? [''] : g.locations;
+                                                         updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, checked: true, count: newCount, locations: newLocations } : gx)); 
+                                                     }
                                                  }
-                                                 updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, checked: newChecked, count: newCount, locations: newLocations } : gx)); 
                                              }} 
-                                             className={`cg-master-inset w-7 h-7 rounded flex items-center justify-center border border-transparent ${g.checked ? 'cg-master-control-active' : ''}`}
+                                             className={`cg-master-button !p-2 !rounded flex-shrink-0 ${isEditing ? '!bg-[var(--accent)] !text-black' : ''}`}
                                          >
-                                             {g.checked && <Check size={16} />}
+                                             <Edit2 size={14} />
+                                         </button>
+                                         <button 
+                                             onClick={() => setDeletingGearItem(g)}
+                                             className="cg-master-button-danger !p-2 !rounded flex-shrink-0"
+                                         >
+                                             <Trash2 size={14} />
                                          </button>
                                          </div>
                                      </div>
-                                     {g.checked && (
-                                        <div className="mt-3 space-y-4 pt-3 border-t border-[var(--cg-master-border)]">
-                                            <div className="flex justify-between items-center">
-                                                <span className="cg-master-label !mb-0">Menge</span>
-                                                <div className="flex items-center gap-2">
-                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(1, (gx.count||0)-1) } : gx))} className="cg-master-inset cg-master-control w-8 h-8 rounded flex items-center justify-center">
-                                                        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                                    </button>
-                                                    <input type="number" min="1" value={g.count} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: parseInt(e.target.value) || 1 } : gx))} className="cg-master-input !text-center !w-12 !h-8 !p-0" />
-                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1 } : gx))} className="cg-master-inset cg-master-control w-8 h-8 rounded flex items-center justify-center">
-                                                        <Plus size={14}/>
-                                                    </button>
+                                     {isEditing && (
+                                        <div className="mt-3 pt-3 border-t border-[var(--cg-master-border)]">
+                                            <div className="space-y-4 mb-5">
+                                                <div className="flex flex-col space-y-2">
+                                                    <span className="cg-master-label !mb-0">Menge</span>
+                                                    <div className="flex h-[42px] items-center gap-2">
+                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(1, (gx.count||0)-1) } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
+                                                            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                        </button>
+                                                        <input type="number" min="1" value={g.count} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: parseInt(e.target.value) || 1 } : gx))} className="cg-master-input flex-1 w-full !h-full !text-center !px-2" />
+                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1 } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
+                                                            <Plus size={14}/>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="cg-master-label !mb-0 whitespace-nowrap">Gewicht/Stk.</span>
-                                                <div className="flex gap-2">
-                                                    <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="Gewicht" className="cg-master-input w-20 !h-8 !p-1 !text-center" />
-                                                    <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-16 !h-8 !p-1 !pl-2">
-                                                        <option value="kg">kg</option>
-                                                        <option value="g">g</option>
-                                                    </select>
+                                                <div className="flex flex-col space-y-2">
+                                                    <span className="cg-master-label !mb-0 whitespace-nowrap">Gewicht/Stk.</span>
+                                                    <div className="flex h-[42px] gap-2">
+                                                        <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="Gewicht" className="cg-master-input flex-1 w-full !h-full !pl-3 !pr-2" />
+                                                        <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-[80px] !h-full !px-2 shrink-0">
+                                                            <option value="kg">kg</option>
+                                                            <option value="g">g</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div>
                                                 <div className="flex justify-between items-center mb-2">
-                                                    <span className="cg-master-label !mb-0 text-[var(--accent)]">Lagerorte</span>
+                                                    <span className="cg-master-label !mb-0">Lagerorte</span>
                                                     <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [...(gx.locations || []), ''] } : gx))} className="cg-master-button !py-1 !px-2"><Plus size={10}/> Ort</button>
                                                 </div>
                                                 <div className="space-y-2">
                                                     {(g.locations || []).map((loc: string, locIdx: number) => (
                                                         <div key={locIdx} className="flex items-center gap-2">
-                                                            <input value={loc} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).map((l: string, lIdx: number) => lIdx === locIdx ? e.target.value : l) } : gx))} placeholder={`Lagerort ${locIdx + 1}`} className="cg-master-input w-full" />
-                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).filter((_: any, lIdx: number) => lIdx !== locIdx) } : gx))} className="cg-master-inset cg-master-control-danger w-10 h-[42px] rounded flex items-center justify-center"><Trash2 size={16} /></button>
+                                                            <input value={loc} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).map((l: string, lIdx: number) => lIdx === locIdx ? e.target.value : l) } : gx))} placeholder={`Lagerort ${locIdx + 1}`} className="cg-master-input w-full !h-[42px]" />
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).filter((_: any, lIdx: number) => lIdx !== locIdx) } : gx))} className="cg-master-inset cg-master-control-danger w-10 h-[42px] rounded flex items-center justify-center shrink-0"><Trash2 size={16} /></button>
                                                         </div>
                                                     ))}
                                                 </div>
+                                            </div>
+                                            <div className="mt-4">
+                                                 <button onClick={() => setEditingGearId(null)} className="cg-master-button w-full py-1 text-center rounded">Fertig</button>
                                             </div>
                                         </div>
                                      )}
@@ -1494,6 +1550,40 @@ function StatusView({ state, setState, orientation }: any) {
                  )}
               </motion.div>
           )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deletingGearItem && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+                <div className="cg-master-card-small w-full max-w-sm">
+                    <h2 className="typo-section-title mb-2 flex items-center gap-2" style={{ color: 'var(--status-danger)' }}><AlertTriangle size={18}/> Ausrüstung löschen</h2>
+                    <p className="typo-body">Willst du <strong>{deletingGearItem.name}</strong> wirklich löschen?</p>
+                    <div className="flex gap-3 mt-6">
+                        <button onClick={() => setDeletingGearItem(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
+                        <button onClick={() => {
+                            const deletedName = deletingGearItem.name;
+                            const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnwesten', 'Erste-Hilfe-Kasten', 'Warndreieck'];
+                            const newDeletedGear = [...(state.sos.deletedGear || [])];
+                            if (requiredCategories.includes(deletedName) && !newDeletedGear.includes(deletedName)) {
+                                newDeletedGear.push(deletedName);
+                            }
+                            
+                            const newGear = (state.sos.gear || []).filter((gx: any) => gx.id !== deletingGearItem.id);
+                            
+                            setState({
+                                ...state,
+                                sos: {
+                                    ...state.sos,
+                                    gear: newGear,
+                                    deletedGear: newDeletedGear
+                                }
+                            });
+                            setDeletingGearItem(null);
+                        }} className="cg-master-button-danger flex-1 py-3">Löschen</button>
+                    </div>
+                </div>
+            </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -3182,10 +3272,11 @@ function ReiseView({ state, setState, orientation }: any) {
         }
       }
 
-      let delay = 120;
-      if (intensity > 6) delay = 500;
-      else if (intensity > 3) delay = 350;
-      else if (intensity > 1) delay = 220;
+      const clampedIntensity = Math.max(0, Math.min(5, intensity));
+      const normalized = clampedIntensity / 5;
+      const closeness = 1 - normalized;
+      const shaped = Math.pow(closeness, 1.5);
+      const delay = Math.round(420 - shaped * 360);
 
       audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
     };
@@ -3359,24 +3450,42 @@ function ReiseView({ state, setState, orientation }: any) {
               </div>
 
               {/* The Bubble (LED Sphere) - Z-30 */}
-              <div className="absolute w-[210px] h-[210px] flex items-center justify-center rounded-full overflow-hidden z-30 pointer-events-none">
-                <motion.div 
-                    className="absolute w-[36px] h-[36px] rounded-full overflow-hidden"
-                    style={{
-                      background: 'radial-gradient(circle at 35% 35%, #a7f3d0 0%, #34d399 25%, #059669 60%, #064e3b 100%)',
-                      boxShadow: '0 10px 20px rgba(0,0,0,0.9), 0 0 25px rgba(16,185,129,0.7), inset 0 3px 6px rgba(255,255,255,0.9), inset 0 -6px 12px rgba(0,0,0,0.9), inset -2px -2px 8px rgba(110,231,183,0.6)',
-                      border: '1px solid rgba(255,255,255,0.3)'
-                    }}
-                    animate={{ 
-                      x: rollNormalized * 3.8,
-                      y: pitchNormalized * 3.8 
-                    }}
-                    transition={{ type: 'spring', bounce: 0.25, stiffness: 100 }}
-                >
-                    <div className="absolute top-[3px] left-[6px] w-[16px] h-[8px] bg-white/60 rounded-full rotate-[-40deg] blur-[1px] pointer-events-none" />
-                    <div className="absolute top-[5px] left-[8px] w-[6px] h-[3px] bg-white rounded-full rotate-[-40deg] blur-[0.5px] pointer-events-none" />
-                </motion.div>
-              </div>
+              {(() => {
+                const rawBubbleX = rollNormalized * 3.8;
+                const rawBubbleY = pitchNormalized * 3.8;
+                const distance = Math.sqrt(rawBubbleX * rawBubbleX + rawBubbleY * rawBubbleY);
+                const maxRadius = 76;
+                
+                let bubbleX = rawBubbleX;
+                let bubbleY = rawBubbleY;
+                
+                if (distance > maxRadius) {
+                  const scale = maxRadius / distance;
+                  bubbleX *= scale;
+                  bubbleY *= scale;
+                }
+
+                return (
+                  <div className="absolute w-[210px] h-[210px] flex items-center justify-center rounded-full overflow-hidden z-30 pointer-events-none">
+                    <motion.div 
+                        className="absolute w-[36px] h-[36px] rounded-full overflow-hidden"
+                        style={{
+                          background: 'radial-gradient(circle at 35% 35%, #a7f3d0 0%, #34d399 25%, #059669 60%, #064e3b 100%)',
+                          boxShadow: '0 10px 20px rgba(0,0,0,0.9), 0 0 25px rgba(16,185,129,0.7), inset 0 3px 6px rgba(255,255,255,0.9), inset 0 -6px 12px rgba(0,0,0,0.9), inset -2px -2px 8px rgba(110,231,183,0.6)',
+                          border: '1px solid rgba(255,255,255,0.3)'
+                        }}
+                        animate={{ 
+                          x: bubbleX,
+                          y: bubbleY 
+                        }}
+                        transition={{ type: 'spring', stiffness: 70, damping: 18, mass: 0.8 }}
+                    >
+                        <div className="absolute top-[3px] left-[6px] w-[16px] h-[8px] bg-white/60 rounded-full rotate-[-40deg] blur-[1px] pointer-events-none" />
+                        <div className="absolute top-[5px] left-[8px] w-[6px] h-[3px] bg-white rounded-full rotate-[-40deg] blur-[0.5px] pointer-events-none" />
+                    </motion.div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="flex flex-row items-center justify-center mt-2 gap-8 w-full">
