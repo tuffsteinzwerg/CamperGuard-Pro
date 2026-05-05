@@ -275,7 +275,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.1-dev
+          CamperGuard Pro v0.1.2-dev
         </div>
 
         {showChangelog && (
@@ -283,7 +283,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.1-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.2-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 05.05.2026</p>
                  </div>
                  <button 
@@ -294,7 +294,37 @@ export default function App() {
                  </button>
               </div>
               <div className="p-4 overflow-y-auto flex-1">
-                 <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.1-dev:</h3>
+                 <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.2-dev:</h3>
+                 <ul className="space-y-1 text-gray-300 mb-6">
+                    <li>270. CamperGuard-Pro-Logo im Inhaltsdruck-Footer eingebunden.</li>
+                    <li>269. Logo-Datei für den Druck als Public-Asset vorbereitet.</li>
+                    <li>268. Medikamente im Inhaltsdruck nach Lagerorten gruppiert.</li>
+                    <li>267. Notfallausrüstung im Inhaltsdruck nach Lagerorten gruppiert.</li>
+                    <li>266. Gewichtssumme der gedruckten Inhaltsliste ergänzt.</li>
+                    <li>265. Inhaltsdruck-Kopfzeile mit Fahrzeugname, Kennzeichen und Druckdatum verdichtet.</li>
+                    <li>264. Inhaltsdruck mit Checkboxen für manuelles Abhaken ergänzt.</li>
+                    <li>263. Inhaltsdruck von Tabellenlayout auf kompakte Packlistenstruktur umgestellt.</li>
+                    <li>262. Medikamente in den Inhaltsdruck integriert.</li>
+                    <li>261. Notfallausrüstung in den Inhaltsdruck integriert.</li>
+                    <li>260. Vollständige Inventarliste über alle Kategorien und Lagerorte im Druck ergänzt.</li>
+                    <li>259. Inhaltsdruck vom sichtbaren Accordion-/Kategoriezustand entkoppelt.</li>
+                    <li>258. Eigene Druckansicht für den Inhaltsdruck vorbereitet.</li>
+                    <li>257. App-Container für den Druck von Smartphone-Breitenbegrenzung und Scroll-/Padding-Zwängen befreit.</li>
+                    <li>256. Druckformat global auf A4-Hochformat zurückgeführt.</li>
+                    <li>255. Globales Print-CSS entschärft, damit spezifische Druckansichten eigene Schriftgrößen nutzen können.</li>
+                    <li>254. Fahrzeug-Icon aus dem Zentrum der Reise-Wasserwaage entfernt.</li>
+                    <li>253. Wasserwaagen-Bubble-Bewegungsradius vergrößert, damit die Blase näher an den Innenrand läuft.</li>
+                    <li>252. Profil-Tankkapazitätsfelder für Frischwasser, Abwasser und Kraftstoff optisch vereinheitlicht.</li>
+                    <li>251. Audio-Pulsabstand an längeres Sonar-Motiv angepasst.</li>
+                    <li>250. Front/Rear im Audio-Sonar über unterschiedliche Rhythmusstruktur vorbereitet.</li>
+                    <li>249. Links/Rechts im Audio-Sonar über steigende/fallende Tonkontur unterscheidbarer gemacht.</li>
+                    <li>248. Audio-Sonar mit intensitätsabhängiger Tonhöhe ergänzt.</li>
+                    <li>247. Audio-Assist von Tack-Impuls auf 3-Noten-Bubble-Sonar umgestellt.</li>
+                    <li>246. Audio-Richtung an sichtbare Bubble-Richtung angepasst.</li>
+                    <li>245. Bubble-Richtung auf echte Luftblasenbewegung korrigiert.</li>
+                 </ul>
+
+                 <h3 className="font-bold mb-2">Änderungen v0.1.1-dev:</h3>
                  <ul className="space-y-1 text-gray-300 mb-6">
                     <li>244. Notfall-Suchbuttons im Safety Hub auf feste einheitliche Höhe gesetzt.</li>
                     <li>243. Google-Maps-Schnellzugriffe für Apotheke, Krankenhaus, Arzt und Polizei ergänzt.</li>
