@@ -129,6 +129,11 @@ export function InhaltPrintView({ state }: { state: any }) {
                         border-top: 1px solid #000;
                         padding-top: 4px;
                     }
+                    .print-footer-logo {
+                        height: 10mm;
+                        width: auto;
+                        display: block;
+                    }
                 }
             `}</style>
 
@@ -237,7 +242,7 @@ export function InhaltPrintView({ state }: { state: any }) {
             )}
 
             <div className="print-footer">
-                <img src="/CHAMPERGUARD-PRO%20LOGO1.png" alt="CamperGuard Pro" style={{ height: '32px' }} />
+                <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-footer-logo" />
             </div>
         </div>
     );
