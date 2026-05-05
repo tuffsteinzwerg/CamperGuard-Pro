@@ -77,9 +77,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                 @media print {
                     @page { size: A4 portrait; margin: 15mm 20mm; }
                     .inhalt-print-wrapper {
-                        display: flex !important;
-                        flex-direction: column;
-                        min-height: calc(297mm - 10mm);
+                        display: block !important;
                         width: 100%;
                         color: black !important;
                     }
@@ -116,12 +114,14 @@ export function InhaltPrintView({ state }: { state: any }) {
                     .col-qty { flex: 0 0 18mm; text-align: right; }
                     .col-weight { flex: 0 0 16mm; text-align: right; }
                     .print-footer { 
-                        margin-top: auto;
+                        margin-top: 4mm;
                         padding-top: 2mm;
                         border-top: 1px solid #000;
                         display: flex;
-                        align-items: flex-end;
+                        align-items: center;
                         justify-content: flex-start;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                         font-size: 7pt !important; 
                     }
                     .print-weight-sum {
@@ -133,7 +133,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                         padding-top: 4px;
                     }
                     .print-footer-logo {
-                        height: 22mm;
+                        height: 32mm;
                         width: auto;
                         display: block;
                     }
