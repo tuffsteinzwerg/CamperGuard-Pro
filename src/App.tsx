@@ -3251,14 +3251,14 @@ function ReiseView({ state, setState, orientation }: any) {
     const scheduleNextPulse = () => {
       const dir = latestDirectionRef.current;
       const intensity = latestIntensityRef.current;
+      let delay = 1200;
 
       if (dir === 'level') {
-        if (wasLevelRef.current === false) {
-          if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
-            playLockTone(audioCtxRef.current);
-          }
-          wasLevelRef.current = true;
+        if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
+          playLockTone(audioCtxRef.current);
         }
+        wasLevelRef.current = true;
+        delay = 800;
       } else {
         wasLevelRef.current = false;
         if (audioCtxRef.current) {
@@ -3270,13 +3270,12 @@ function ReiseView({ state, setState, orientation }: any) {
             console.warn("Audio pulse error:", e);
           }
         }
-      }
 
-      const clampedIntensity = Math.max(0, Math.min(5, intensity));
-      const normalized = clampedIntensity / 5;
-      const closeness = 1 - normalized;
-      const shaped = Math.pow(closeness, 1.5);
-      const delay = Math.round(420 - shaped * 360);
+        const clampedIntensity = Math.max(0, Math.min(15, intensity));
+        const normalized = clampedIntensity / 15;
+        const shaped = Math.pow(normalized, 1.2);
+        delay = Math.round(100 + shaped * 1100);
+      }
 
       audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
     };
@@ -3451,8 +3450,8 @@ function ReiseView({ state, setState, orientation }: any) {
 
               {/* The Bubble (LED Sphere) - Z-30 */}
               {(() => {
-                const rawBubbleX = rollNormalized * 3.8;
-                const rawBubbleY = pitchNormalized * 3.8;
+                const rawBubbleX = -rollNormalized * 3.8;
+                const rawBubbleY = -pitchNormalized * 3.8;
                 const distance = Math.sqrt(rawBubbleX * rawBubbleX + rawBubbleY * rawBubbleY);
                 const maxRadius = 76;
                 
