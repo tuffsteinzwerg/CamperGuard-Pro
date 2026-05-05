@@ -21,13 +21,86 @@ export function InhaltPrintView({ state }: { state: any }) {
     const pharmacyFilter = state.sos?.pharmacy || [];
 
     return (
-        <div className="hidden print-only logbuch-print-wrapper bg-white">
+        <div className="hidden print-only inhalt-print-wrapper bg-white">
+            <style>{`
+                @media print {
+                    @page { size: A4 portrait; margin: 15mm; }
+                    .inhalt-print-wrapper {
+                        display: block !important;
+                        width: 100%;
+                        color: black !important;
+                        font-family: sans-serif;
+                        padding-bottom: 25mm;
+                    }
+                    .inhalt-print-wrapper h1,
+                    .inhalt-print-wrapper h2,
+                    .inhalt-print-wrapper h3,
+                    .inhalt-print-wrapper h4,
+                    .inhalt-print-wrapper p,
+                    .inhalt-print-wrapper div,
+                    .inhalt-print-wrapper span,
+                    .inhalt-print-wrapper td,
+                    .inhalt-print-wrapper th {
+                        color: black !important;
+                    }
+                    .inhalt-print-title { font-size: 16pt !important; }
+                    .inhalt-print-meta { font-size: 9pt !important; color: #555 !important; }
+                    
+                    .inhalt-print-section-wrap { page-break-inside: auto; }
+                    .inhalt-print-section {
+                        font-size: 12pt !important; 
+                        page-break-after: avoid;
+                        break-after: avoid;
+                        margin-top: 15px;
+                        margin-bottom: 10px;
+                        background-color: #e5e7eb !important;
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    
+                    .inhalt-print-location { 
+                        font-size: 10.5pt !important; 
+                        page-break-after: avoid;
+                        break-after: avoid;
+                        margin-bottom: 5px; 
+                    }
+                    
+                    .inhalt-print-table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-bottom: 15px; 
+                    }
+                    .inhalt-print-table th, .inhalt-print-table td {
+                        font-size: 9.5pt !important;
+                    }
+                    .inhalt-print-table th { 
+                        background: transparent !important; 
+                        font-weight: bold; 
+                        padding: 4px; 
+                        border-bottom: 2px solid #000 !important; 
+                        text-align: left; 
+                    }
+                    .inhalt-print-table td { 
+                        padding: 4px; 
+                        border-bottom: 1px solid #ccc !important; 
+                        vertical-align: top; 
+                    }
+                    .inhalt-print-table tr {
+                        page-break-inside: avoid;
+                        break-inside: avoid;
+                    }
+                    
+                    .inhalt-print-footer, .inhalt-print-footer span { 
+                        font-size: 8pt !important; 
+                    }
+                }
+            `}</style>
             <div className="flex justify-between items-end border-b-2 border-black pb-4 mb-6">
                 <div>
-                    <h1 className="text-xl font-black uppercase tracking-widest">{state.profile?.vehicleName || "Camper"}</h1>
-                    <p className="text-xs font-bold uppercase">{state.profile?.plate || "Kennzeichen"}</p>
+                    <h1 className="inhalt-print-title font-black uppercase tracking-widest">{state.profile?.vehicleName || "Camper"}</h1>
+                    <p className="inhalt-print-meta font-bold uppercase">{state.profile?.plate || "Kennzeichen"}</p>
                 </div>
-                <h2 className="text-lg font-black uppercase">Inhaltsliste</h2>
+                <h2 className="inhalt-print-title font-black uppercase">Inhaltsliste</h2>
             </div>
 
             {allCategories.map(category => {
@@ -48,9 +121,9 @@ export function InhaltPrintView({ state }: { state: any }) {
                     hasRenderedSubcats = true;
 
                     return (
-                        <div key={sub} className="mb-6">
-                            <h4 className="text-md font-bold mb-2 uppercase border-b border-gray-300">{sub}</h4>
-                            <table className="print-table w-full text-left">
+                        <div key={sub} className="mb-4">
+                            <h4 className="inhalt-print-location font-bold uppercase border-b border-gray-300 pb-1">{sub}</h4>
+                            <table className="inhalt-print-table text-left">
                                 <thead>
                                     <tr>
                                         <th>Artikel</th>
@@ -79,17 +152,17 @@ export function InhaltPrintView({ state }: { state: any }) {
                 if (!hasRenderedSubcats) return null;
 
                 return (
-                    <div key={category} className="mb-8">
-                        <h3 className="text-lg font-black bg-gray-200 px-2 py-1 mb-4 uppercase">{category}</h3>
+                    <div key={category} className="inhalt-print-section-wrap mb-6">
+                        <h3 className="inhalt-print-section font-black px-2 py-1 uppercase">{category}</h3>
                         {categoryContent}
                     </div>
                 );
             })}
 
             {gearFilter.length > 0 && (
-                <div className="mb-8">
-                    <h3 className="text-lg font-black bg-gray-200 px-2 py-1 mb-4 uppercase">Notfallausrüstung</h3>
-                    <table className="print-table w-full text-left">
+                <div className="inhalt-print-section-wrap mb-6">
+                    <h3 className="inhalt-print-section font-black px-2 py-1 uppercase">Notfallausrüstung</h3>
+                    <table className="inhalt-print-table text-left">
                         <thead>
                             <tr>
                                 <th>Artikel</th>
@@ -117,9 +190,9 @@ export function InhaltPrintView({ state }: { state: any }) {
             )}
 
             {pharmacyFilter.length > 0 && (
-                <div className="mb-8">
-                    <h3 className="text-lg font-black bg-gray-200 px-2 py-1 mb-4 uppercase">Apotheke / Medikamente</h3>
-                    <table className="print-table w-full text-left">
+                <div className="inhalt-print-section-wrap mb-6">
+                    <h3 className="inhalt-print-section font-black px-2 py-1 uppercase">Apotheke / Medikamente</h3>
+                    <table className="inhalt-print-table text-left">
                         <thead>
                             <tr>
                                 <th>Medikament</th>
@@ -150,7 +223,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                 </div>
             )}
             
-            <div className="mt-10 pt-4 border-t border-gray-300 flex justify-between typo-label text-xs">
+            <div className="inhalt-print-footer mt-8 pt-4 border-t border-gray-300 flex justify-between">
                 <span>CamperGuard Pro</span>
                 <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
             </div>
