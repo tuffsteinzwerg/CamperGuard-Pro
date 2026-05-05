@@ -3274,7 +3274,7 @@ function ReiseView({ state, setState, orientation }: any) {
         const clampedIntensity = Math.max(0, Math.min(15, intensity));
         const normalized = clampedIntensity / 15;
         const shaped = Math.pow(normalized, 1.2);
-        delay = Math.round(100 + shaped * 1100);
+        delay = Math.round(100 + shaped * 550);
       }
 
       audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
