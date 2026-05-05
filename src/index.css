@@ -298,14 +298,14 @@ body {
   max-width: none !important;
 }
 @media print {
-  @page { size: A4 landscape; margin: 1cm; }
+  @page { size: A4 portrait; margin: 5mm; }
   body { background: white !important; color: black !important; }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   .high-density-grid, .bg-\[\#1A1C1E\], .bg-\[\#2C2E30\] { background: white !important; border:none; }
   * { text-shadow: none !important; box-shadow: none !important; }
   .text-white, .text-\[\#FF6600\] { color: black !important; }
-  h1, h2, h3, span, div { color: black !important; font-size: 11pt !important; }
+  .logbuch-print-wrapper h1, .logbuch-print-wrapper h2, .logbuch-print-wrapper h3, .logbuch-print-wrapper span, .logbuch-print-wrapper div { color: black !important; font-size: 11pt !important; }
   .print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
   .print-table th { background: #eee !important; color: black !important; font-weight: bold; border: 1px solid #000; padding: 4px; text-align: left;}
   .print-table td { border: 1px solid #000; padding: 4px; }

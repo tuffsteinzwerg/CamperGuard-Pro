@@ -245,7 +245,7 @@ export default function App() {
   if (loading) return <div className="fixed inset-0 bg-[var(--bg-app)] z-[999]" />;
 
   return (
-    <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[var(--bg-app)] text-white">
+    <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[var(--bg-app)] text-white print:min-h-0 print:pb-0 print:max-w-none print:mx-0 print:w-full">
       
       <header className="h-[60px] px-4 bg-[var(--bg-input)] border-b-2 border-[var(--accent)] sticky top-0 z-40 flex justify-between items-center no-print overflow-hidden gap-4">
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -261,7 +261,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="p-4 overflow-y-auto lg:max-w-6xl lg:mx-auto min-h-[80vh]">
+      <main className="p-4 overflow-y-auto lg:max-w-6xl lg:mx-auto min-h-[80vh] print:p-0 print:overflow-visible print:min-h-0 print:h-auto print:max-w-none print:mx-0 print:w-full">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
             {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} />}
