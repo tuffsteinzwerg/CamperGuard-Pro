@@ -3190,37 +3190,42 @@ function ReiseView({ state, setState, orientation }: any) {
     }
   };
 
-  const playDirectionTone = (ctx: AudioContext, direction: string) => {
+  const playDirectionTone = (ctx: AudioContext, direction: string, intensity: number = 8) => {
     if (direction === 'level') return;
-
-    const dirOsc = ctx.createOscillator();
-    const dirGain = ctx.createGain();
-    const dirPan = ctx.createStereoPanner();
 
     let panValue = 0;
     if (['left', 'frontLeft', 'rearLeft'].includes(direction)) panValue = -1;
     else if (['right', 'frontRight', 'rearRight'].includes(direction)) panValue = 1;
 
-    let freqValue = 500;
-    if (['front', 'frontLeft', 'frontRight'].includes(direction)) freqValue = 800;
-    else if (['rear', 'rearLeft', 'rearRight'].includes(direction)) freqValue = 300;
+    const clampedIntensity = Math.max(0, Math.min(15, intensity));
+    const closeness = 1 - (clampedIntensity / 15);
+    const baseFreq = 260 + closeness * 500;
 
-    dirOsc.type = 'triangle';
-    const startTime = ctx.currentTime + 0.6;
-    dirOsc.frequency.setValueAtTime(freqValue, startTime);
+    const startTime = ctx.currentTime;
 
-    dirPan.pan.setValueAtTime(panValue, startTime);
+    for (let i = 0; i < 3; i++) {
+      const dirOsc = ctx.createOscillator();
+      const dirGain = ctx.createGain();
+      const dirPan = ctx.createStereoPanner();
 
-    dirGain.gain.setValueAtTime(0, startTime);
-    dirGain.gain.linearRampToValueAtTime(0.28, startTime + 0.02);
-    dirGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+      dirOsc.type = 'triangle';
+      const noteFreq = baseFreq * Math.pow(1.12, i);
+      const noteStart = startTime + i * 0.12;
 
-    dirOsc.connect(dirGain);
-    dirGain.connect(dirPan);
-    dirPan.connect(ctx.destination);
+      dirOsc.frequency.setValueAtTime(noteFreq, noteStart);
+      dirPan.pan.setValueAtTime(panValue, noteStart);
 
-    dirOsc.start(startTime);
-    dirOsc.stop(startTime + 0.15);
+      dirGain.gain.setValueAtTime(0, noteStart);
+      dirGain.gain.linearRampToValueAtTime(0.15, noteStart + 0.02);
+      dirGain.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.1);
+
+      dirOsc.connect(dirGain);
+      dirGain.connect(dirPan);
+      dirPan.connect(ctx.destination);
+
+      dirOsc.start(noteStart);
+      dirOsc.stop(noteStart + 0.12);
+    }
   };
 
   const handleManualSoundTest = async () => {
@@ -3232,7 +3237,7 @@ function ReiseView({ state, setState, orientation }: any) {
       }
       const testSequence = ['left', 'frontLeft', 'front', 'frontRight', 'right', 'rearRight', 'rear', 'rearLeft'];
       const dir = testSequence[soundTestIndex % testSequence.length];
-      playDirectionTone(audioCtxRef.current, dir);
+      playDirectionTone(audioCtxRef.current, dir, 8);
       setSoundTestIndex(prev => prev + 1);
     } catch (e) {
       console.warn("Manual sound test failed:", e);
@@ -3264,7 +3269,7 @@ function ReiseView({ state, setState, orientation }: any) {
         if (audioCtxRef.current) {
           try {
             if (audioCtxRef.current.state !== 'suspended') {
-              playDirectionTone(audioCtxRef.current, dir);
+              playDirectionTone(audioCtxRef.current, dir, intensity);
             }
           } catch (e) {
             console.warn("Audio pulse error:", e);
@@ -3274,7 +3279,7 @@ function ReiseView({ state, setState, orientation }: any) {
         const clampedIntensity = Math.max(0, Math.min(15, intensity));
         const normalized = clampedIntensity / 15;
         const shaped = Math.pow(normalized, 1.2);
-        delay = Math.round(100 + shaped * 550);
+        delay = Math.round(360 + shaped * 490);
       }
 
       audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
@@ -3321,7 +3326,7 @@ function ReiseView({ state, setState, orientation }: any) {
         osc.stop(ctx.currentTime + 0.5);
 
         // --- 2. Richtungstestton ---
-        playDirectionTone(ctx, assistDirection);
+        playDirectionTone(ctx, assistDirection, 8);
 
       } catch (e) {
         console.warn("AudioContext creation failed:", e);
