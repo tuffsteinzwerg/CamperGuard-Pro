@@ -3209,7 +3209,8 @@ function ReiseView({ state, setState, orientation }: any) {
       const dirPan = ctx.createStereoPanner();
 
       dirOsc.type = 'triangle';
-      const noteFreq = baseFreq * Math.pow(1.12, i);
+      const multipliers = panValue === 1 ? [1.25, 1.12, 1] : [1, 1.12, 1.25];
+      const noteFreq = baseFreq * multipliers[i];
       const noteStart = startTime + i * 0.12;
 
       dirOsc.frequency.setValueAtTime(noteFreq, noteStart);
