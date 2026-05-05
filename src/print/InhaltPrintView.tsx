@@ -30,83 +30,79 @@ export function InhaltPrintView({ state }: { state: any }) {
                         width: 100%;
                         color: black !important;
                         font-family: sans-serif;
-                        padding-bottom: 8mm;
+                        line-height: 1.2;
                     }
-                    .inhalt-print-wrapper h1,
-                    .inhalt-print-wrapper h2,
-                    .inhalt-print-wrapper h3,
-                    .inhalt-print-wrapper h4,
-                    .inhalt-print-wrapper p,
-                    .inhalt-print-wrapper div,
-                    .inhalt-print-wrapper span,
-                    .inhalt-print-wrapper td,
-                    .inhalt-print-wrapper th {
+                    .inhalt-print-wrapper * {
                         color: black !important;
                     }
-                    .inhalt-print-title { font-size: 11pt !important; }
-                    .inhalt-print-meta { font-size: 8pt !important; color: #555 !important; }
-                    
-                    .inhalt-print-section-wrap { page-break-inside: auto; }
-                    .inhalt-print-section {
-                        font-size: 9.5pt !important; 
-                        page-break-after: avoid;
-                        break-after: avoid;
-                        margin-top: 12px;
-                        margin-bottom: 4px;
-                        border-bottom: 1px solid #000 !important;
-                        padding-bottom: 2px !important;
+                    .print-header-line {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-end;
+                        border-bottom: 2px solid black;
+                        padding-bottom: 2px;
+                        margin-bottom: 6px;
+                        font-size: 9pt !important;
+                        font-weight: bold;
+                        text-transform: uppercase;
                     }
-                    
-                    .inhalt-print-location { 
-                        font-size: 8.5pt !important; 
-                        page-break-after: avoid;
-                        break-after: avoid;
-                        margin-top: 6px;
+                    .print-header-left {
+                        font-size: 11pt !important;
+                        font-weight: 900;
+                        letter-spacing: 1px;
+                    }
+                    .print-header-right {
+                        display: flex;
+                        gap: 16px;
+                    }
+                    .print-category {
+                        font-size: 8.5pt !important;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                        margin-top: 8px;
                         margin-bottom: 2px;
-                        margin-left: 6px;
+                        page-break-after: avoid;
+                        break-after: avoid;
                     }
-                    
-                    .inhalt-print-table { 
-                        width: calc(100% - 6px); 
-                        margin-left: 6px;
-                        border-collapse: collapse; 
-                        margin-bottom: 8px; 
+                    .print-location { 
+                        font-size: 8pt !important; 
+                        font-weight: bold;
+                        page-break-after: avoid;
+                        break-after: avoid;
+                        margin-top: 4px;
+                        margin-bottom: 2px;
+                        margin-left: 8px;
                     }
-                    .inhalt-print-table th, .inhalt-print-table td {
-                        font-size: 8pt !important;
-                    }
-                    .inhalt-print-table th { 
-                        background: transparent !important; 
-                        font-weight: bold; 
-                        padding: 2px 3px; 
-                        border-bottom: 1px solid #000 !important; 
-                        text-align: left; 
-                    }
-                    .inhalt-print-table td { 
-                        padding: 2px 3px; 
-                        border-bottom: 1px solid #eee !important; 
-                        vertical-align: top; 
-                    }
-                    .inhalt-print-table tr {
+                    .print-item-row {
+                        font-size: 7.5pt !important;
+                        margin-left: 16px;
+                        display: flex;
                         page-break-inside: avoid;
                         break-inside: avoid;
+                        margin-bottom: 1px;
                     }
-                    .print-checkbox-col {
-                        width: 5mm;
-                        text-align: center !important;
+                    .print-item-row > div {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
-                    
-                    .inhalt-print-footer, .inhalt-print-footer span { 
-                        font-size: 7pt !important; 
+                    .print-footer { 
+                        margin-top: 6px;
+                        padding-top: 2px;
+                        border-top: 1px solid #ccc;
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 6pt !important; 
                     }
                 }
             `}</style>
-            <div className="flex justify-between items-end border-b-2 border-black pb-2 mb-4">
-                <div>
-                    <h1 className="inhalt-print-title font-black uppercase tracking-widest">{state.profile?.vehicleName || "Camper"}</h1>
-                    <p className="inhalt-print-meta font-bold uppercase">{state.profile?.plate || "Kennzeichen"}</p>
+
+            <div className="print-header-line">
+                <div className="print-header-left">INHALT</div>
+                <div className="print-header-right">
+                    <span>{state.profile?.vehicleName || "Camper"}</span>
+                    <span>{state.profile?.plate || "Kennzeichen"}</span>
                 </div>
-                <h2 className="inhalt-print-title font-black uppercase">Inhaltsliste</h2>
             </div>
 
             {allCategories.map(category => {
@@ -127,32 +123,20 @@ export function InhaltPrintView({ state }: { state: any }) {
                     hasRenderedSubcats = true;
 
                     return (
-                        <div key={sub} className="mb-2">
-                            <h4 className="inhalt-print-location font-bold uppercase border-b border-gray-300 pb-1">{sub}</h4>
-                            <table className="inhalt-print-table text-left">
-                                <thead>
-                                    <tr>
-                                        <th className="print-checkbox-col">✓</th>
-                                        <th>Artikel</th>
-                                        <th className="w-20">Menge</th>
-                                        <th className="w-20">Gewicht</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {itemsInSubcat.map((item: any) => (
-                                        <tr key={item.id}>
-                                            <td className="print-checkbox-col">□</td>
-                                            <td>{item.name}</td>
-                                            <td>{item.quantity} {formatUnit(item.unit)}</td>
-                                            <td>
-                                                {item.weight !== undefined && item.weight !== null && !isNaN(item.weight) 
-                                                    ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
-                                                    : ''}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div key={sub}>
+                            <div className="print-location">{sub}</div>
+                            {itemsInSubcat.map((item: any) => (
+                                <div className="print-item-row" key={item.id}>
+                                    <div style={{ width: '12px' }}>□</div>
+                                    <div style={{ flex: '1' }}>{item.name}</div>
+                                    <div style={{ width: '60px', textAlign: 'right' }}>{item.quantity} {formatUnit(item.unit)}</div>
+                                    <div style={{ width: '60px', textAlign: 'right' }}>
+                                        {item.weight !== undefined && item.weight !== null && !isNaN(item.weight) 
+                                            ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
+                                            : ''}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     );
                 });
@@ -160,82 +144,57 @@ export function InhaltPrintView({ state }: { state: any }) {
                 if (!hasRenderedSubcats) return null;
 
                 return (
-                    <div key={category} className="inhalt-print-section-wrap mb-4">
-                        <h3 className="inhalt-print-section font-black uppercase">{category}</h3>
+                    <div key={category}>
+                        <div className="print-category">{category}</div>
                         {categoryContent}
                     </div>
                 );
             })}
 
             {gearFilter.length > 0 && (
-                <div className="inhalt-print-section-wrap mb-4">
-                    <h3 className="inhalt-print-section font-black uppercase">Notfallausrüstung</h3>
-                    <table className="inhalt-print-table text-left">
-                        <thead>
-                            <tr>
-                                <th className="print-checkbox-col">✓</th>
-                                <th>Artikel</th>
-                                <th className="w-20">Menge</th>
-                                <th className="w-32">Lagerorte</th>
-                                <th className="w-20">Gewicht</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {gearFilter.map((g: any) => (
-                                <tr key={g.id}>
-                                    <td className="print-checkbox-col">□</td>
-                                    <td>{g.name}</td>
-                                    <td>{g.count} Stk</td>
-                                    <td>{(g.locations || []).filter((l: string) => l.trim() !== '').join(', ')}</td>
-                                    <td>
-                                        {g.weight !== undefined && g.weight !== null && g.weight !== ''
-                                            ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
-                                            : ''}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div>
+                    <div className="print-category">Notfallausrüstung</div>
+                    {gearFilter.map((g: any) => (
+                        <div className="print-item-row" key={g.id}>
+                            <div style={{ width: '12px' }}>□</div>
+                            <div style={{ flex: '1' }}>{g.name}</div>
+                            <div style={{ width: '50px', textAlign: 'right' }}>{g.count} Stk</div>
+                            <div style={{ width: '100px', textAlign: 'right', paddingLeft: '8px' }}>
+                                {(g.locations || []).filter((l: string) => l.trim() !== '').join(', ')}
+                            </div>
+                            <div style={{ width: '60px', textAlign: 'right' }}>
+                                {g.weight !== undefined && g.weight !== null && g.weight !== ''
+                                    ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
+                                    : ''}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
             {pharmacyFilter.length > 0 && (
-                <div className="inhalt-print-section-wrap mb-4">
-                    <h3 className="inhalt-print-section font-black uppercase">Apotheke / Medikamente</h3>
-                    <table className="inhalt-print-table text-left">
-                        <thead>
-                            <tr>
-                                <th className="print-checkbox-col">✓</th>
-                                <th>Medikament</th>
-                                <th>Zweck</th>
-                                <th className="w-20">Menge</th>
-                                <th>Lagerort</th>
-                                <th className="w-20">Exp.</th>
-                                <th className="w-20">Gewicht</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {pharmacyFilter.map((p: any) => (
-                                <tr key={p.id}>
-                                    <td className="print-checkbox-col">□</td>
-                                    <td>{p.name}</td>
-                                    <td>{p.purpose}</td>
-                                    <td>{p.quantity} {formatUnit(p.unit)}</td>
-                                    <td>{p.location}</td>
-                                    <td>{p.expiry}</td>
-                                    <td>
-                                        {p.weight !== undefined && p.weight !== null && p.weight !== ''
-                                            ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
-                                            : ''}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div>
+                    <div className="print-category">Apotheke / Medikamente</div>
+                    {pharmacyFilter.map((p: any) => (
+                        <div className="print-item-row" key={p.id}>
+                            <div style={{ width: '12px' }}>□</div>
+                            <div style={{ flex: '1' }}>
+                                {p.name} {p.purpose && <span style={{ color: '#555' }}> - {p.purpose}</span>}
+                            </div>
+                            <div style={{ width: '50px', textAlign: 'right' }}>{p.quantity} {formatUnit(p.unit)}</div>
+                            <div style={{ width: '80px', textAlign: 'right', paddingLeft: '8px' }}>{p.location}</div>
+                            <div style={{ width: '50px', textAlign: 'right' }}>{p.expiry}</div>
+                            <div style={{ width: '60px', textAlign: 'right' }}>
+                                {p.weight !== undefined && p.weight !== null && p.weight !== ''
+                                    ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
+                                    : ''}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
             
-            <div className="inhalt-print-footer mt-4 pt-2 border-t border-gray-300 flex justify-between">
+            <div className="print-footer">
                 <span>CamperGuard Pro</span>
                 <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
             </div>
