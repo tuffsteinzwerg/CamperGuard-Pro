@@ -24,13 +24,14 @@ export function InhaltPrintView({ state }: { state: any }) {
         <div className="hidden print-only inhalt-print-wrapper bg-white">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 8mm; }
+                    @page { size: A4 portrait; margin: 4mm 5mm; }
                     .inhalt-print-wrapper {
                         display: block !important;
                         width: 100%;
                         color: black !important;
                         font-family: sans-serif;
-                        line-height: 1.2;
+                        padding-bottom: 0;
+                        line-height: 1.12;
                     }
                     .inhalt-print-wrapper * {
                         color: black !important;
@@ -39,56 +40,61 @@ export function InhaltPrintView({ state }: { state: any }) {
                         display: flex;
                         justify-content: space-between;
                         align-items: flex-end;
-                        border-bottom: 2px solid black;
-                        padding-bottom: 2px;
-                        margin-bottom: 6px;
-                        font-size: 9pt !important;
+                        border-bottom: 1px solid black;
+                        padding-bottom: 1px;
+                        margin-bottom: 4px;
+                        font-size: 8pt !important;
                         font-weight: bold;
                         text-transform: uppercase;
                     }
                     .print-header-left {
-                        font-size: 11pt !important;
+                        font-size: 8pt !important;
                         font-weight: 900;
                         letter-spacing: 1px;
                     }
                     .print-header-right {
                         display: flex;
-                        gap: 16px;
+                        gap: 12px;
                     }
                     .print-category {
-                        font-size: 8.5pt !important;
+                        font-size: 7.8pt !important;
                         font-weight: bold;
                         text-transform: uppercase;
-                        margin-top: 8px;
-                        margin-bottom: 2px;
+                        margin-top: 4px;
+                        margin-bottom: 1px;
                         page-break-after: avoid;
                         break-after: avoid;
                     }
                     .print-location { 
-                        font-size: 8pt !important; 
+                        font-size: 7.4pt !important; 
                         font-weight: bold;
                         page-break-after: avoid;
                         break-after: avoid;
-                        margin-top: 4px;
-                        margin-bottom: 2px;
-                        margin-left: 8px;
+                        margin-top: 2px;
+                        margin-bottom: 1px;
+                        margin-left: 6px;
                     }
-                    .print-item-row {
-                        font-size: 7.5pt !important;
-                        margin-left: 16px;
+                    .print-item-wrap {
+                        font-size: 6.8pt !important;
+                        margin-left: 10px;
                         display: flex;
+                        flex-direction: column;
                         page-break-inside: avoid;
                         break-inside: avoid;
                         margin-bottom: 1px;
                     }
-                    .print-item-row > div {
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
+                    .print-item-line {
+                        display: flex;
+                        width: 100%;
+                        gap: 4px;
                     }
+                    .col-check { width: 4mm; text-align: left; flex-shrink: 0; }
+                    .col-name { flex: 1; }
+                    .col-qty { width: 18mm; text-align: right; flex-shrink: 0; }
+                    .col-weight { width: 16mm; text-align: right; flex-shrink: 0; }
                     .print-footer { 
-                        margin-top: 6px;
-                        padding-top: 2px;
+                        margin-top: 2px;
+                        padding-top: 1px;
                         border-top: 1px solid #ccc;
                         display: flex;
                         justify-content: space-between;
@@ -126,14 +132,16 @@ export function InhaltPrintView({ state }: { state: any }) {
                         <div key={sub}>
                             <div className="print-location">{sub}</div>
                             {itemsInSubcat.map((item: any) => (
-                                <div className="print-item-row" key={item.id}>
-                                    <div style={{ width: '12px' }}>□</div>
-                                    <div style={{ flex: '1' }}>{item.name}</div>
-                                    <div style={{ width: '60px', textAlign: 'right' }}>{item.quantity} {formatUnit(item.unit)}</div>
-                                    <div style={{ width: '60px', textAlign: 'right' }}>
-                                        {item.weight !== undefined && item.weight !== null && !isNaN(item.weight) 
-                                            ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
-                                            : ''}
+                                <div className="print-item-wrap" key={item.id}>
+                                    <div className="print-item-line">
+                                        <div className="col-check">□</div>
+                                        <div className="col-name">{item.name}</div>
+                                        <div className="col-qty">{item.quantity} {formatUnit(item.unit)}</div>
+                                        <div className="col-weight">
+                                            {item.weight !== undefined && item.weight !== null && !isNaN(item.weight) 
+                                                ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
+                                                : ''}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -154,43 +162,55 @@ export function InhaltPrintView({ state }: { state: any }) {
             {gearFilter.length > 0 && (
                 <div>
                     <div className="print-category">Notfallausrüstung</div>
-                    {gearFilter.map((g: any) => (
-                        <div className="print-item-row" key={g.id}>
-                            <div style={{ width: '12px' }}>□</div>
-                            <div style={{ flex: '1' }}>{g.name}</div>
-                            <div style={{ width: '50px', textAlign: 'right' }}>{g.count} Stk</div>
-                            <div style={{ width: '100px', textAlign: 'right', paddingLeft: '8px' }}>
-                                {(g.locations || []).filter((l: string) => l.trim() !== '').join(', ')}
+                    {gearFilter.map((g: any) => {
+                        const locString = (g.locations || []).filter((l: string) => l.trim() !== '').join(', ');
+                        return (
+                            <div className="print-item-wrap" key={g.id}>
+                                <div className="print-item-line">
+                                    <div className="col-check">□</div>
+                                    <div className="col-name">
+                                        {g.name}
+                                        {locString && <span style={{color: '#555'}}> ({locString})</span>}
+                                    </div>
+                                    <div className="col-qty">{g.count} Stk</div>
+                                    <div className="col-weight">
+                                        {g.weight !== undefined && g.weight !== null && g.weight !== ''
+                                            ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
+                                            : ''}
+                                    </div>
+                                </div>
                             </div>
-                            <div style={{ width: '60px', textAlign: 'right' }}>
-                                {g.weight !== undefined && g.weight !== null && g.weight !== ''
-                                    ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
-                                    : ''}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
             {pharmacyFilter.length > 0 && (
                 <div>
                     <div className="print-category">Apotheke / Medikamente</div>
-                    {pharmacyFilter.map((p: any) => (
-                        <div className="print-item-row" key={p.id}>
-                            <div style={{ width: '12px' }}>□</div>
-                            <div style={{ flex: '1' }}>
-                                {p.name} {p.purpose && <span style={{ color: '#555' }}> - {p.purpose}</span>}
+                    {pharmacyFilter.map((p: any) => {
+                        const subLinePieces = [p.purpose, p.location, p.expiry ? `Exp: ${p.expiry}` : null].filter(Boolean);
+                        return (
+                            <div className="print-item-wrap" key={p.id}>
+                                <div className="print-item-line">
+                                    <div className="col-check">□</div>
+                                    <div className="col-name">{p.name}</div>
+                                    <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
+                                    <div className="col-weight">
+                                        {p.weight !== undefined && p.weight !== null && p.weight !== ''
+                                            ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
+                                            : ''}
+                                    </div>
+                                </div>
+                                {subLinePieces.length > 0 && (
+                                    <div className="print-item-line" style={{ color: '#555', marginTop: '1px' }}>
+                                        <div className="col-check"></div>
+                                        <div className="col-name">{subLinePieces.join(' | ')}</div>
+                                    </div>
+                                )}
                             </div>
-                            <div style={{ width: '50px', textAlign: 'right' }}>{p.quantity} {formatUnit(p.unit)}</div>
-                            <div style={{ width: '80px', textAlign: 'right', paddingLeft: '8px' }}>{p.location}</div>
-                            <div style={{ width: '50px', textAlign: 'right' }}>{p.expiry}</div>
-                            <div style={{ width: '60px', textAlign: 'right' }}>
-                                {p.weight !== undefined && p.weight !== null && p.weight !== ''
-                                    ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
-                                    : ''}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
             
