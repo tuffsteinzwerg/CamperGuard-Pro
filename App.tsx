@@ -3146,14 +3146,14 @@ function ReiseView({ state, setState, orientation }: any) {
   const needRaiseRight = calibratedRoll > deadzone;
   const needRaiseLeft = calibratedRoll < -deadzone;
 
-  if (needRaiseFront && needRaiseLeft) assistDirection = 'frontLeft';
-  else if (needRaiseFront && needRaiseRight) assistDirection = 'frontRight';
-  else if (needRaiseRear && needRaiseLeft) assistDirection = 'rearLeft';
-  else if (needRaiseRear && needRaiseRight) assistDirection = 'rearRight';
-  else if (needRaiseFront) assistDirection = 'front';
-  else if (needRaiseRear) assistDirection = 'rear';
-  else if (needRaiseLeft) assistDirection = 'left';
-  else if (needRaiseRight) assistDirection = 'right';
+  if (needRaiseFront && needRaiseLeft) assistDirection = 'rearRight';
+  else if (needRaiseFront && needRaiseRight) assistDirection = 'rearLeft';
+  else if (needRaiseRear && needRaiseLeft) assistDirection = 'frontRight';
+  else if (needRaiseRear && needRaiseRight) assistDirection = 'frontLeft';
+  else if (needRaiseFront) assistDirection = 'rear';
+  else if (needRaiseRear) assistDirection = 'front';
+  else if (needRaiseLeft) assistDirection = 'right';
+  else if (needRaiseRight) assistDirection = 'left';
 
   const tiltIntensity = Math.sqrt(calibratedPitch * calibratedPitch + calibratedRoll * calibratedRoll);
 
