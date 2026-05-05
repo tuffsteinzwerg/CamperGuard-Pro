@@ -20,11 +20,56 @@ export function InhaltPrintView({ state }: { state: any }) {
     );
     const pharmacyFilter = state.sos?.pharmacy || [];
 
+    const getWeightInKg = (weight: any, unit: any) => {
+        if (weight === undefined || weight === null || weight === '') return 0;
+        const num = Number(weight);
+        if (isNaN(num)) return 0;
+        const u = formatUnit(unit);
+        if (u === 'g') return num / 1000;
+        return num;
+    };
+
+    let totalWeightKg = 0;
+
+    allCategories.forEach(category => {
+        const subcats = Array.from(new Set(state.subcategories[category] || []));
+        const itemsInCategory = state.inventory.filter((item: any) => item.category === category);
+        subcats.forEach((sub: any) => {
+            const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
+            itemsInSubcat.forEach((item: any) => {
+                totalWeightKg += getWeightInKg(item.weight, item.weightUnit);
+            });
+        });
+    });
+
+    gearFilter.forEach((g: any) => {
+        totalWeightKg += getWeightInKg(g.weight, g.weightUnit);
+    });
+
+    pharmacyFilter.forEach((p: any) => {
+        totalWeightKg += getWeightInKg(p.weight, p.weightUnit);
+    });
+
+    const groupedGear = gearFilter.reduce((acc: Record<string, any[]>, g: any) => {
+        let loc = (g.locations || []).map((l: string) => l.trim()).filter(Boolean).join(', ');
+        if (!loc) loc = 'Ohne Lagerort';
+        if (!acc[loc]) acc[loc] = [];
+        acc[loc].push(g);
+        return acc;
+    }, {});
+
+    const groupedPharmacy = pharmacyFilter.reduce((acc: Record<string, any[]>, p: any) => {
+        const loc = (p.location && p.location.trim()) ? p.location.trim() : 'Ohne Lagerort';
+        if (!acc[loc]) acc[loc] = [];
+        acc[loc].push(p);
+        return acc;
+    }, {});
+
     return (
         <div className="hidden print-only inhalt-print-wrapper bg-white">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 4mm 5mm; }
+                    @page { size: A4 portrait; margin: 15mm 20mm; }
                     .inhalt-print-wrapper {
                         display: block !important;
                         width: 100%;
@@ -93,12 +138,21 @@ export function InhaltPrintView({ state }: { state: any }) {
                     .col-qty { width: 18mm; text-align: right; flex-shrink: 0; }
                     .col-weight { width: 16mm; text-align: right; flex-shrink: 0; }
                     .print-footer { 
-                        margin-top: 2px;
-                        padding-top: 1px;
-                        border-top: 1px solid #ccc;
+                        margin-top: 12px;
+                        padding-top: 6px;
+                        border-top: 1px solid #000;
                         display: flex;
-                        justify-content: space-between;
-                        font-size: 6pt !important; 
+                        justify-content: flex-start;
+                        font-size: 7pt !important; 
+                        height: 20px;
+                    }
+                    .print-weight-sum {
+                        margin-top: 12px;
+                        font-size: 8pt !important;
+                        font-weight: bold;
+                        text-align: right;
+                        border-top: 1px solid #000;
+                        padding-top: 4px;
                     }
                 }
             `}</style>
@@ -108,6 +162,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                 <div className="print-header-right">
                     <span>{state.profile?.vehicleName || "Camper"}</span>
                     <span>{state.profile?.plate || "Kennzeichen"}</span>
+                    <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
                 </div>
             </div>
 
@@ -162,61 +217,70 @@ export function InhaltPrintView({ state }: { state: any }) {
             {gearFilter.length > 0 && (
                 <div>
                     <div className="print-category">Notfallausrüstung</div>
-                    {gearFilter.map((g: any) => {
-                        const locString = (g.locations || []).filter((l: string) => l.trim() !== '').join(', ');
-                        return (
-                            <div className="print-item-wrap" key={g.id}>
-                                <div className="print-item-line">
-                                    <div className="col-check">□</div>
-                                    <div className="col-name">
-                                        {g.name}
-                                        {locString && <span style={{color: '#555'}}> ({locString})</span>}
-                                    </div>
-                                    <div className="col-qty">{g.count} Stk</div>
-                                    <div className="col-weight">
-                                        {g.weight !== undefined && g.weight !== null && g.weight !== ''
-                                            ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
-                                            : ''}
+                    {Object.keys(groupedGear).map(loc => (
+                        <div key={loc}>
+                            <div className="print-location">{loc}</div>
+                            {groupedGear[loc].map((g: any) => (
+                                <div className="print-item-wrap" key={g.id}>
+                                    <div className="print-item-line">
+                                        <div className="col-check">□</div>
+                                        <div className="col-name">{g.name}</div>
+                                        <div className="col-qty">{g.count} Stk</div>
+                                        <div className="col-weight">
+                                            {g.weight !== undefined && g.weight !== null && g.weight !== ''
+                                                ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
+                                                : ''}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
+                            ))}
+                        </div>
+                    ))}
                 </div>
             )}
 
             {pharmacyFilter.length > 0 && (
                 <div>
                     <div className="print-category">Apotheke / Medikamente</div>
-                    {pharmacyFilter.map((p: any) => {
-                        const subLinePieces = [p.purpose, p.location, p.expiry ? `Exp: ${p.expiry}` : null].filter(Boolean);
-                        return (
-                            <div className="print-item-wrap" key={p.id}>
-                                <div className="print-item-line">
-                                    <div className="col-check">□</div>
-                                    <div className="col-name">{p.name}</div>
-                                    <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
-                                    <div className="col-weight">
-                                        {p.weight !== undefined && p.weight !== null && p.weight !== ''
-                                            ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
-                                            : ''}
+                    {Object.keys(groupedPharmacy).map(loc => (
+                        <div key={loc}>
+                            <div className="print-location">{loc}</div>
+                            {groupedPharmacy[loc].map((p: any) => {
+                                const subLinePieces = [p.purpose, p.expiry ? `Exp: ${p.expiry}` : null].filter(Boolean);
+                                return (
+                                    <div className="print-item-wrap" key={p.id}>
+                                        <div className="print-item-line">
+                                            <div className="col-check">□</div>
+                                            <div className="col-name">{p.name}</div>
+                                            <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
+                                            <div className="col-weight">
+                                                {p.weight !== undefined && p.weight !== null && p.weight !== ''
+                                                    ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
+                                                    : ''}
+                                            </div>
+                                        </div>
+                                        {subLinePieces.length > 0 && (
+                                            <div className="print-item-line" style={{ color: '#555', marginTop: '1px' }}>
+                                                <div className="col-check"></div>
+                                                <div className="col-name">{subLinePieces.join(' | ')}</div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                                {subLinePieces.length > 0 && (
-                                    <div className="print-item-line" style={{ color: '#555', marginTop: '1px' }}>
-                                        <div className="col-check"></div>
-                                        <div className="col-name">{subLinePieces.join(' | ')}</div>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
             )}
             
+            {totalWeightKg > 0 && (
+                <div className="print-weight-sum">
+                    Gesamtgewicht der gedruckten Liste: {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g / ` : ''}{totalWeightKg.toFixed(2)} kg
+                </div>
+            )}
+
             <div className="print-footer">
-                <span>CamperGuard Pro</span>
-                <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
+                <div></div>
             </div>
         </div>
     );
