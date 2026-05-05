@@ -5,19 +5,14 @@ export function InhaltPrintView({ state }: { state: any }) {
     const otherCategories = Object.keys(state.subcategories || {}).filter(c => !fixedCategories.includes(c));
     const allCategories = [...fixedCategories, ...otherCategories];
 
-    const formatUnit = (u?: string) => {
-        if (!u) return '';
-        const lower = u.toLowerCase();
-        if (lower === 'g' || lower === 'gr') return 'g';
-        if (lower === 'stk' || lower === 'stück') return 'stk';
-        if (lower === 'kg') return 'kg';
-        if (lower === 'l' || lower === 'liter') return 'l';
-        return u;
+    const formatUnit = (unit: string) => {
+        if (!unit) return 'kg';
+        const str = unit.trim().toLowerCase();
+        if (str === 'grams' || str === 'gramm' || str === 'g') return 'g';
+        return str;
     };
 
-    const gearFilter = (state.sos?.gear || []).filter((g: any) => 
-        g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true
-    );
+    const gearFilter = state.sos?.gear?.filter((g: any) => g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true) || [];
     const pharmacyFilter = state.sos?.pharmacy || [];
 
     const getWeightInKg = (weight: any, unit: any) => {
@@ -50,13 +45,24 @@ export function InhaltPrintView({ state }: { state: any }) {
         totalWeightKg += getWeightInKg(p.weight, p.weightUnit);
     });
 
-    const groupedGear = gearFilter.reduce((acc: Record<string, any[]>, g: any) => {
-        let loc = (g.locations || []).map((l: string) => l.trim()).filter(Boolean).join(', ');
-        if (!loc) loc = 'Ohne Lagerort';
-        if (!acc[loc]) acc[loc] = [];
-        acc[loc].push(g);
-        return acc;
-    }, {});
+    const groupedGear: Record<string, any[]> = {};
+    gearFilter.forEach((g: any) => {
+        let locs: string[] = [];
+        if (g.locations && Array.isArray(g.locations)) {
+            locs = g.locations.map((l: string) => l.trim()).filter(Boolean);
+        } else if (g.location && typeof g.location === 'string' && g.location.trim() !== '') {
+            locs = [g.location.trim()];
+        }
+        
+        if (locs.length === 0) {
+            locs = ['Ohne Lagerort'];
+        }
+
+        locs.forEach(loc => {
+            if (!groupedGear[loc]) groupedGear[loc] = [];
+            groupedGear[loc].push(g);
+        });
+    });
 
     const groupedPharmacy = pharmacyFilter.reduce((acc: Record<string, any[]>, p: any) => {
         const loc = (p.location && p.location.trim()) ? p.location.trim() : 'Ohne Lagerort';
@@ -74,69 +80,39 @@ export function InhaltPrintView({ state }: { state: any }) {
                         display: block !important;
                         width: 100%;
                         color: black !important;
-                        font-family: sans-serif;
-                        padding-bottom: 0;
-                        line-height: 1.12;
-                    }
-                    .inhalt-print-wrapper * {
-                        color: black !important;
-                    }
-                    .print-header-line {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-end;
-                        border-bottom: 1px solid black;
-                        padding-bottom: 1px;
-                        margin-bottom: 4px;
-                        font-size: 8pt !important;
-                        font-weight: bold;
-                        text-transform: uppercase;
-                    }
-                    .print-header-left {
-                        font-size: 8pt !important;
-                        font-weight: 900;
-                        letter-spacing: 1px;
-                    }
-                    .print-header-right {
-                        display: flex;
-                        gap: 12px;
                     }
                     .print-category {
-                        font-size: 7.8pt !important;
                         font-weight: bold;
-                        text-transform: uppercase;
-                        margin-top: 4px;
-                        margin-bottom: 1px;
-                        page-break-after: avoid;
-                        break-after: avoid;
+                        font-size: 11pt !important;
+                        margin-top: 15px;
+                        border-bottom: 2px solid #000;
+                        padding-bottom: 2px;
                     }
-                    .print-location { 
-                        font-size: 7.4pt !important; 
+                    .print-location {
                         font-weight: bold;
-                        page-break-after: avoid;
-                        break-after: avoid;
-                        margin-top: 2px;
-                        margin-bottom: 1px;
-                        margin-left: 6px;
+                        font-size: 9pt !important;
+                        margin-top: 8px;
+                        color: #333;
                     }
                     .print-item-wrap {
-                        font-size: 6.8pt !important;
-                        margin-left: 10px;
                         display: flex;
                         flex-direction: column;
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                        margin-bottom: 1px;
+                        font-size: 8pt !important;
+                        border-bottom: 1px solid #eee;
+                        padding: 3px 0;
                     }
                     .print-item-line {
                         display: flex;
+                        justify-content: space-between;
                         width: 100%;
-                        gap: 4px;
                     }
-                    .col-check { width: 4mm; text-align: left; flex-shrink: 0; }
-                    .col-name { flex: 1; }
-                    .col-qty { width: 18mm; text-align: right; flex-shrink: 0; }
-                    .col-weight { width: 16mm; text-align: right; flex-shrink: 0; }
+                    .col-check { flex: 0 0 4mm; }
+                    .col-name { flex: 1; padding-left: 2mm; }
+                    .col-med-name { flex: 1 1 30%; padding-left: 2mm; }
+                    .col-med-purpose { flex: 1 1 30%; padding-left: 2mm; }
+                    .col-med-exp { flex: 0 0 22mm; padding-left: 2mm; }
+                    .col-qty { flex: 0 0 18mm; text-align: right; }
+                    .col-weight { flex: 0 0 16mm; text-align: right; }
                     .print-footer { 
                         margin-top: 12px;
                         padding-top: 6px;
@@ -144,7 +120,6 @@ export function InhaltPrintView({ state }: { state: any }) {
                         display: flex;
                         justify-content: flex-start;
                         font-size: 7pt !important; 
-                        height: 20px;
                     }
                     .print-weight-sum {
                         margin-top: 12px;
@@ -157,9 +132,9 @@ export function InhaltPrintView({ state }: { state: any }) {
                 }
             `}</style>
 
-            <div className="print-header-line">
-                <div className="print-header-left">INHALT</div>
-                <div className="print-header-right">
+            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '3px solid #000', paddingBottom: '4px', fontWeight: 'bold', fontSize: '10pt' }}>
+                <div>INHALT</div>
+                <div style={{ display: 'flex', gap: '15px' }}>
                     <span>{state.profile?.vehicleName || "Camper"}</span>
                     <span>{state.profile?.plate || "Kennzeichen"}</span>
                     <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
@@ -170,46 +145,35 @@ export function InhaltPrintView({ state }: { state: any }) {
                 const subcats = Array.from(new Set(state.subcategories[category] || []));
                 const itemsInCategory = state.inventory.filter((item: any) => item.category === category);
                 
-                if (subcats.length === 0 && itemsInCategory.length === 0) {
-                    return null;
-                }
-
-                let hasRenderedSubcats = false;
-
-                const categoryContent = subcats.map((sub: any) => {
-                    const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
-                    
-                    if (itemsInSubcat.length === 0) return null;
-                    
-                    hasRenderedSubcats = true;
-
-                    return (
-                        <div key={sub}>
-                            <div className="print-location">{sub}</div>
-                            {itemsInSubcat.map((item: any) => (
-                                <div className="print-item-wrap" key={item.id}>
-                                    <div className="print-item-line">
-                                        <div className="col-check">□</div>
-                                        <div className="col-name">{item.name}</div>
-                                        <div className="col-qty">{item.quantity} {formatUnit(item.unit)}</div>
-                                        <div className="col-weight">
-                                            {item.weight !== undefined && item.weight !== null && !isNaN(item.weight) 
-                                                ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
-                                                : ''}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    );
-                });
-
-                if (!hasRenderedSubcats) return null;
+                if (itemsInCategory.length === 0) return null;
 
                 return (
                     <div key={category}>
-                        <div className="print-category">{category}</div>
-                        {categoryContent}
+                        <div className="print-category">{category.toUpperCase()}</div>
+                        {subcats.map((sub: any) => {
+                            const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
+                            if (itemsInSubcat.length === 0) return null;
+
+                            return (
+                                <div key={sub}>
+                                    <div className="print-location">{sub}</div>
+                                    {itemsInSubcat.map((item: any) => (
+                                        <div className="print-item-wrap" key={item.id}>
+                                            <div className="print-item-line">
+                                                <div className="col-check">□</div>
+                                                <div className="col-name">{item.name}</div>
+                                                <div className="col-qty">{item.quantity} {formatUnit(item.unit)}</div>
+                                                <div className="col-weight">
+                                                    {item.weight !== undefined && item.weight !== null && item.weight !== '' 
+                                                        ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}` 
+                                                        : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })}
                     </div>
                 );
             })}
@@ -220,8 +184,8 @@ export function InhaltPrintView({ state }: { state: any }) {
                     {Object.keys(groupedGear).map(loc => (
                         <div key={loc}>
                             <div className="print-location">{loc}</div>
-                            {groupedGear[loc].map((g: any) => (
-                                <div className="print-item-wrap" key={g.id}>
+                            {groupedGear[loc].map((g: any, _idx: number) => (
+                                <div className="print-item-wrap" key={`${g.id}-${_idx}`}>
                                     <div className="print-item-line">
                                         <div className="col-check">□</div>
                                         <div className="col-name">{g.name}</div>
@@ -245,29 +209,22 @@ export function InhaltPrintView({ state }: { state: any }) {
                     {Object.keys(groupedPharmacy).map(loc => (
                         <div key={loc}>
                             <div className="print-location">{loc}</div>
-                            {groupedPharmacy[loc].map((p: any) => {
-                                const subLinePieces = [p.purpose, p.expiry ? `Exp: ${p.expiry}` : null].filter(Boolean);
-                                return (
-                                    <div className="print-item-wrap" key={p.id}>
-                                        <div className="print-item-line">
-                                            <div className="col-check">□</div>
-                                            <div className="col-name">{p.name}</div>
-                                            <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
-                                            <div className="col-weight">
-                                                {p.weight !== undefined && p.weight !== null && p.weight !== ''
-                                                    ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
-                                                    : ''}
-                                            </div>
+                            {groupedPharmacy[loc].map((p: any) => (
+                                <div className="print-item-wrap" key={p.id}>
+                                    <div className="print-item-line">
+                                        <div className="col-check">□</div>
+                                        <div className="col-med-name">{p.name}</div>
+                                        <div className="col-med-purpose">{p.purpose}</div>
+                                        <div className="col-med-exp">{p.expiry ? `Exp: ${p.expiry}` : ''}</div>
+                                        <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
+                                        <div className="col-weight">
+                                            {p.weight !== undefined && p.weight !== null && p.weight !== ''
+                                                ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
+                                                : ''}
                                         </div>
-                                        {subLinePieces.length > 0 && (
-                                            <div className="print-item-line" style={{ color: '#555', marginTop: '1px' }}>
-                                                <div className="col-check"></div>
-                                                <div className="col-name">{subLinePieces.join(' | ')}</div>
-                                            </div>
-                                        )}
                                     </div>
-                                );
-                            })}
+                                </div>
+                            ))}
                         </div>
                     ))}
                 </div>
@@ -280,7 +237,7 @@ export function InhaltPrintView({ state }: { state: any }) {
             )}
 
             <div className="print-footer">
-                <div></div>
+                <img src="/CHAMPERGUARD-PRO%20LOGO1.png" alt="CamperGuard Pro" style={{ height: '32px' }} />
             </div>
         </div>
     );
