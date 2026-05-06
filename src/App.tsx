@@ -47,6 +47,17 @@ const formatWeight = (kg: number): string => {
   return `${kg.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg`;
 };
 
+const normalizeGearName = (name: string) => {
+  if (!name) return '';
+  const n = name.trim().toLowerCase();
+  if (n === 'warnweste' || n === 'warnwesten') return 'Warnwesten';
+  if (n === 'erste-hilfe-kasten' || n === 'erste hilfe kasten' || n === 'erste hilfe-kasten' || n === 'verbandkasten' || n === 'verbandskasten') return 'Erste-Hilfe-Kasten';
+  if (n === 'feuerlöschdecke' || n === 'feuerlöschdecken') return 'Feuerlöschdecke';
+  if (n === 'warndreieck' || n === 'warndreiecke') return 'Warndreieck';
+  if (n === 'feuerlöscher') return 'Feuerlöscher';
+  return name.trim();
+};
+
 const ViewTitle = ({ children, right }: { children: React.ReactNode, right?: React.ReactNode }) => (
   <div className="flex justify-between items-end mb-4 px-2 no-print">
       <h1 className="typo-section-title" style={{ fontSize: '14px' }}>{children}</h1>
@@ -103,27 +114,68 @@ export default function App() {
            }
 
            if (loadedSos.gear) {
-               loadedSos.gear = loadedSos.gear.map((g: any) => {
+               const groupedGear: Record<string, any> = {};
+               
+               loadedSos.gear.forEach((g: any) => {
                    const migrated = { ...g };
+                   migrated.name = normalizeGearName(migrated.name || '');
+                   
                    if (migrated.count === undefined) {
                        migrated.count = migrated.checked ? 1 : 0;
                    }
-                   if (migrated.locations === undefined) {
-                       if (typeof migrated.location === 'string') {
-                           migrated.locations = migrated.location.trim() ? [migrated.location] : (migrated.checked ? [''] : []);
-                       } else {
-                           migrated.locations = migrated.checked ? [''] : [];
-                       }
-                       delete migrated.location;
+                   
+                   let locs: string[] = [];
+                   if (Array.isArray(migrated.locations)) {
+                       migrated.locations.forEach((l: any) => locs.push(String(l).trim()));
                    }
-                   return migrated;
+                   if (typeof migrated.location === 'string') {
+                       locs.push(migrated.location.trim());
+                   }
+                   delete migrated.location;
+                   
+                   migrated.locations = Array.from(new Set(locs.filter(Boolean)));
+                   
+                   const key = migrated.name.toLowerCase();
+                   if (!groupedGear[key]) {
+                       groupedGear[key] = { ...migrated };
+                   } else {
+                       const existing = groupedGear[key];
+                       existing.checked = existing.checked || migrated.checked;
+                       existing.count = Math.max(Number(existing.count) || 0, Number(migrated.count) || 0);
+                       
+                       const allLocs = [...(existing.locations || []), ...(migrated.locations || [])];
+                       existing.locations = Array.from(new Set(allLocs.filter(Boolean)));
+                       
+                       const preserveField = (field: string) => {
+                           if ((existing[field] === undefined || existing[field] === null || existing[field] === '') && migrated[field]) {
+                               existing[field] = migrated[field];
+                           }
+                       };
+                       
+                       preserveField('weight');
+                       preserveField('weightUnit');
+                       preserveField('category');
+                       preserveField('notes');
+                       preserveField('expiry');
+                       
+                       existing.isHidden = (existing.isHidden === true && migrated.isHidden === true);
+                       existing.isDeleted = (existing.isDeleted === true && migrated.isDeleted === true);
+                   }
                });
+               
+               loadedSos.gear = Object.values(groupedGear);
+               
+               if (Array.isArray(loadedSos.deletedGear)) {
+                   loadedSos.deletedGear = loadedSos.deletedGear.map((d: string) => normalizeGearName(d));
+               } else {
+                   loadedSos.deletedGear = [];
+               }
                
                const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnwesten', 'Erste-Hilfe-Kasten', 'Warndreieck'];
                requiredCategories.forEach((cat, idx) => {
-                   if (!loadedSos.gear.some((g: any) => g.name === cat) && !loadedSos.deletedGear.includes(cat)) {
+                   if (!loadedSos.gear.some((g: any) => normalizeGearName(g.name) === cat) && !loadedSos.deletedGear.some((d: string) => normalizeGearName(d) === cat)) {
                        loadedSos.gear.push({
-                           id: `g_new_${idx}`,
+                           id: `g_new_${idx}_${Date.now()}`,
                            name: cat,
                            checked: false,
                            count: 0,
