@@ -3281,84 +3281,89 @@ function ReiseView({ state, setState, orientation }: any) {
     
     const now = ctx.currentTime;
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.35, now);
+    masterGain.gain.setValueAtTime(0.5, now);
     masterGain.connect(ctx.destination);
     
-    // Intensität: 0 = am Level, 1 = stark geneigt
     const closeness = 1 - Math.min(intensity, 1);
     
-    // === VORNE/HINTEN-ACHSE: Sweep-Töne ===
     const needFront = direction.toLowerCase().includes('front');
     const needRear = direction.toLowerCase().includes('rear');
+    const needLeft = direction.toLowerCase().includes('left');
+    const needRight = direction.toLowerCase().includes('right');
+    
+    // === VORNE/HINTEN: Sweep-Töne (länger und deutlicher) ===
     
     if (needFront) {
-        // Aufsteigender Chirp: 400Hz -> 900Hz in 120ms
+        // Aufsteigender Chirp: 500Hz -> 1200Hz in 180ms, laut
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(now);
-        osc.stop(now + 0.15);
-    }
-    
-    if (needRear) {
-        // Absteigender Brumm-Sweep: 300Hz -> 100Hz in 200ms
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-        gain.gain.setValueAtTime(0.2, now);
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.18);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.setValueAtTime(0.4, now + 0.12);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
         osc.connect(gain);
         gain.connect(masterGain);
         osc.start(now);
-        osc.stop(now + 0.25);
+        osc.stop(now + 0.26);
     }
     
-    // === LINKS/RECHTS-ACHSE: Impulse ===
-    const needLeft = direction.toLowerCase().includes('left');
-    const needRight = direction.toLowerCase().includes('right');
-    
-    if (needLeft) {
-        // Scharfes Klicken: Square-Wave, 800Hz, 30ms
+    if (needRear) {
+        // Absteigender Brumm: 350Hz -> 80Hz in 250ms, Sägezahn für Rauheit
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(800, now + 0.05);
-        gain.gain.setValueAtTime(0.25, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.setValueAtTime(0.3, now + 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
         osc.connect(gain);
         gain.connect(masterGain);
-        osc.start(now + 0.05);
-        osc.stop(now + 0.09);
+        osc.start(now);
+        osc.stop(now + 0.31);
+    }
+    
+    // === LINKS/RECHTS: Impulse (lauter und schärfer) ===
+    
+    if (needLeft) {
+        // Doppelklick: Zwei schnelle Square-Impulse
+        for (let k = 0; k < 2; k++) {
+            const t = now + k * 0.06;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(900, t);
+            gain.gain.setValueAtTime(0.35, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(t);
+            osc.stop(t + 0.04);
+        }
     }
     
     if (needRight) {
-        // Weiches Pochen: Sine-Wave, 500Hz, 60ms
+        // Einzelner weicher Bop: Sine + leichter Frequenz-Drop
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, now + 0.05);
-        gain.gain.setValueAtTime(0.25, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+        osc.frequency.setValueAtTime(600, now + 0.03);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
+        gain.gain.setValueAtTime(0.35, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
         osc.connect(gain);
         gain.connect(masterGain);
-        osc.start(now + 0.05);
-        osc.stop(now + 0.12);
+        osc.start(now + 0.03);
+        osc.stop(now + 0.16);
     }
     
-    // === NAHE AM LEVEL: Rosa Rauschen einblenden ===
-    if (closeness > 0.7 && intensity > 0) {
-        const bufferSize = ctx.sampleRate * 0.15;
+    // === NAHE AM LEVEL: Rosa Rauschen ===
+    if (closeness > 0.6 && intensity > 0) {
+        const bufferSize = ctx.sampleRate * 0.2;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
-        // Einfaches Pink-Noise-Approximation
         let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
         for (let i = 0; i < bufferSize; i++) {
             const white = Math.random() * 2 - 1;
@@ -3368,15 +3373,15 @@ function ReiseView({ state, setState, orientation }: any) {
             b3 = 0.86650 * b3 + white * 0.3104856;
             b4 = 0.55000 * b4 + white * 0.5329522;
             b5 = -0.7616 * b5 - white * 0.0168980;
-            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.06;
             b6 = white * 0.115926;
         }
         const noise = ctx.createBufferSource();
         const noiseGain = ctx.createGain();
         noise.buffer = buffer;
-        const noiseVolume = (closeness - 0.7) / 0.3 * 0.15;
+        const noiseVolume = (closeness - 0.6) / 0.4 * 0.2;
         noiseGain.gain.setValueAtTime(noiseVolume, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
         noise.connect(noiseGain);
         noiseGain.connect(masterGain);
         noise.start(now);
@@ -3432,7 +3437,7 @@ function ReiseView({ state, setState, orientation }: any) {
         }
         
         const normalizedIntensity = Math.min(int, 1);
-        const delay = 100 + 900 * Math.pow(normalizedIntensity, 0.5);
+        const delay = 60 + 1400 * Math.pow(normalizedIntensity, 1.8);
         
         audioTimerRef.current = window.setTimeout(scheduleNextPulse, delay);
       }
