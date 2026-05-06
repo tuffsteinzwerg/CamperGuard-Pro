@@ -3246,87 +3246,140 @@ function ReiseView({ state, setState, orientation }: any) {
   latestDirectionRef.current = assistDirection;
   latestIntensityRef.current = tiltIntensity;
 
-  const playLockTone = (ctx: AudioContext) => {
-    try {
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.type = 'sine';
-      osc2.type = 'sine';
-
-      // Ein wohlklingender, kurzer Doppel-Ton (z.B. A5 + C#6)
-      osc1.frequency.setValueAtTime(880, ctx.currentTime);
-      osc2.frequency.setValueAtTime(1108.73, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.start(ctx.currentTime);
-      osc2.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 0.3);
-      osc2.stop(ctx.currentTime + 0.3);
-    } catch (e) {
-      console.warn("Lock-Sound Fehler:", e);
-    }
+  const playLockTone = () => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.3, now);
+    masterGain.connect(ctx.destination);
+    
+    // Warmer Erfolgs-Akkord: C5 + E5 + G5 (C-Dur)
+    const frequencies = [523.25, 659.25, 783.99];
+    
+    frequencies.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        // Leichtes Staffeln für Harfen-Effekt
+        const startTime = now + i * 0.03;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(startTime);
+        osc.stop(startTime + 0.85);
+    });
   };
 
-  const playDirectionTone = (ctx: AudioContext, direction: string, intensity: number = 8) => {
-    if (direction === 'level') return;
-
-    let panValue = 0;
-    if (['left', 'frontLeft', 'rearLeft'].includes(direction)) panValue = -1;
-    else if (['right', 'frontRight', 'rearRight'].includes(direction)) panValue = 1;
-
-    const isFront = ['front', 'frontLeft', 'frontRight'].includes(direction);
-    const isRear = ['rear', 'rearLeft', 'rearRight'].includes(direction);
-
-    const clampedIntensity = Math.max(0, Math.min(15, intensity));
-    const closeness = 1 - (clampedIntensity / 15);
-    const baseFreq = 260 + closeness * 500;
-
-    const startTime = ctx.currentTime;
-
-    let startOffsets = [0, 0.12, 0.24];
-    let noteDurations = [0.12, 0.12, 0.12];
-
-    if (isFront) {
-      startOffsets = [0, 0.055, 0.18];
-      noteDurations = [0.055, 0.10, 0.12];
-    } else if (isRear) {
-      startOffsets = [0, 0.20, 0.34];
-      noteDurations = [0.20, 0.11, 0.11];
+  const playDirectionTone = (direction: string, intensity: number) => {
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.35, now);
+    masterGain.connect(ctx.destination);
+    
+    // Intensität: 0 = am Level, 1 = stark geneigt
+    const closeness = 1 - Math.min(intensity, 1);
+    
+    // === VORNE/HINTEN-ACHSE: Sweep-Töne ===
+    const needFront = direction.toLowerCase().includes('front');
+    const needRear = direction.toLowerCase().includes('rear');
+    
+    if (needFront) {
+        // Aufsteigender Chirp: 400Hz -> 900Hz in 120ms
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.15);
     }
-
-    for (let i = 0; i < 3; i++) {
-      const dirOsc = ctx.createOscillator();
-      const dirGain = ctx.createGain();
-      const dirPan = ctx.createStereoPanner();
-
-      dirOsc.type = 'triangle';
-      const multipliers = panValue === 1 ? [1.25, 1.12, 1] : [1, 1.12, 1.25];
-      const noteFreq = baseFreq * multipliers[i];
-      const noteDur = noteDurations[i];
-      const noteStart = startTime + startOffsets[i];
-
-      dirOsc.frequency.setValueAtTime(noteFreq, noteStart);
-      dirPan.pan.setValueAtTime(panValue, noteStart);
-
-      dirGain.gain.setValueAtTime(0, noteStart);
-      dirGain.gain.linearRampToValueAtTime(0.15, noteStart + 0.02);
-      dirGain.gain.exponentialRampToValueAtTime(0.001, noteStart + Math.max(0.03, noteDur - 0.02));
-
-      dirOsc.connect(dirGain);
-      dirGain.connect(dirPan);
-      dirPan.connect(ctx.destination);
-
-      dirOsc.start(noteStart);
-      dirOsc.stop(noteStart + noteDur);
+    
+    if (needRear) {
+        // Absteigender Brumm-Sweep: 300Hz -> 100Hz in 200ms
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+    
+    // === LINKS/RECHTS-ACHSE: Impulse ===
+    const needLeft = direction.toLowerCase().includes('left');
+    const needRight = direction.toLowerCase().includes('right');
+    
+    if (needLeft) {
+        // Scharfes Klicken: Square-Wave, 800Hz, 30ms
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, now + 0.05);
+        gain.gain.setValueAtTime(0.25, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now + 0.05);
+        osc.stop(now + 0.09);
+    }
+    
+    if (needRight) {
+        // Weiches Pochen: Sine-Wave, 500Hz, 60ms
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500, now + 0.05);
+        gain.gain.setValueAtTime(0.25, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now + 0.05);
+        osc.stop(now + 0.12);
+    }
+    
+    // === NAHE AM LEVEL: Rosa Rauschen einblenden ===
+    if (closeness > 0.7 && intensity > 0) {
+        const bufferSize = ctx.sampleRate * 0.15;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        // Einfaches Pink-Noise-Approximation
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.05;
+            b6 = white * 0.115926;
+        }
+        const noise = ctx.createBufferSource();
+        const noiseGain = ctx.createGain();
+        noise.buffer = buffer;
+        const noiseVolume = (closeness - 0.7) / 0.3 * 0.15;
+        noiseGain.gain.setValueAtTime(noiseVolume, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        noise.connect(noiseGain);
+        noiseGain.connect(masterGain);
+        noise.start(now);
     }
   };
 
@@ -3339,7 +3392,7 @@ function ReiseView({ state, setState, orientation }: any) {
       }
       const testSequence = ['left', 'frontLeft', 'front', 'frontRight', 'right', 'rearRight', 'rear', 'rearLeft'];
       const dir = testSequence[soundTestIndex % testSequence.length];
-      playDirectionTone(audioCtxRef.current, dir, 8);
+      playDirectionTone(dir, 1);
       setSoundTestIndex(prev => prev + 1);
     } catch (e) {
       console.warn("Manual sound test failed:", e);
@@ -3356,35 +3409,33 @@ function ReiseView({ state, setState, orientation }: any) {
     }
 
     const scheduleNextPulse = () => {
+      if (!isAudioAssistActive) return;
+      
       const dir = latestDirectionRef.current;
-      const intensity = latestIntensityRef.current;
-      let delay = 1200;
-
+      const int = latestIntensityRef.current;
+      
       if (dir === 'level') {
-        if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
-          playLockTone(audioCtxRef.current);
+        if (!wasLevelRef.current) {
+            // Gerade erst ins Level gekommen: Akkord spielen
+            if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
+                playLockTone();
+            }
+            wasLevelRef.current = true;
         }
-        wasLevelRef.current = true;
-        delay = 800;
+        // Stille — prüfe alle 500ms ob noch im Level
+        audioTimerRef.current = window.setTimeout(scheduleNextPulse, 500);
       } else {
         wasLevelRef.current = false;
-        if (audioCtxRef.current) {
-          try {
-            if (audioCtxRef.current.state !== 'suspended') {
-              playDirectionTone(audioCtxRef.current, dir, intensity);
-            }
-          } catch (e) {
-            console.warn("Audio pulse error:", e);
-          }
+        // Richtungston spielen
+        if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
+            playDirectionTone(dir, int);
         }
-
-        const clampedIntensity = Math.max(0, Math.min(15, intensity));
-        const normalized = clampedIntensity / 15;
-        const shaped = Math.pow(normalized, 1.2);
-        delay = Math.round(360 + shaped * 490);
+        
+        const normalizedIntensity = Math.min(int, 1);
+        const delay = 100 + 900 * Math.pow(normalizedIntensity, 0.5);
+        
+        audioTimerRef.current = window.setTimeout(scheduleNextPulse, delay);
       }
-
-      audioTimerRef.current = setTimeout(scheduleNextPulse, delay);
     };
 
     scheduleNextPulse();
@@ -3428,7 +3479,7 @@ function ReiseView({ state, setState, orientation }: any) {
         osc.stop(ctx.currentTime + 0.5);
 
         // --- 2. Richtungstestton ---
-        playDirectionTone(ctx, assistDirection, 8);
+        playDirectionTone(assistDirection, 1);
 
       } catch (e) {
         console.warn("AudioContext creation failed:", e);
