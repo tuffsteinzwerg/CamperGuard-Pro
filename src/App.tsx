@@ -1210,10 +1210,16 @@ function StatusView({ state, setState, orientation }: any) {
                                  {gpsStatus === 'loading' && <span className="cg-master-value text-[var(--accent)] animate-pulse !text-[12px]">Signal wird ermittelt...</span>}
                                  {gpsStatus === 'offline' && <span className="cg-master-label !mb-0 cg-master-muted">GPS DEAKTIVIERT</span>}
                                  {gpsStatus === 'active' && gpsCoords && (
-                                     <div className="flex gap-4 justify-around w-full">
+                                     <a 
+                                         href={`https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lng}`}
+                                         target="_blank"
+                                         rel="noopener noreferrer"
+                                         className="flex gap-4 justify-around w-full no-underline"
+                                         style={{ textDecoration: 'none' }}
+                                     >
                                          <div className="flex flex-col text-center"><span className="cg-master-label !mb-0.5">Breite</span><span className="cg-master-value text-[var(--accent)]">{gpsCoords.lat.toFixed(6)}°</span></div>
                                          <div className="flex flex-col text-center"><span className="cg-master-label !mb-0.5">Länge</span><span className="cg-master-value text-[var(--accent)]">{gpsCoords.lng.toFixed(6)}°</span></div>
-                                     </div>
+                                     </a>
                                  )}
                              </div>
                              {gpsStatus === 'active' && gpsAlt !== null && <div className="cg-master-label text-center text-[var(--accent)] mt-3 !mb-0 relative z-10">{Math.round(gpsAlt)} METER ÜBER NN</div>}
@@ -1333,6 +1339,7 @@ function StatusView({ state, setState, orientation }: any) {
             value={state.sos.bloodGroup || ""}
             onChange={e => updateSos('bloodGroup', e.target.value)}
             className="w-full bg-transparent border-none outline-none cg-master-value !text-sm p-3 appearance-none cursor-pointer relative z-10"
+            style={{ color: state.sos.bloodGroup ? 'var(--accent)' : undefined, fontWeight: state.sos.bloodGroup ? 900 : undefined, fontSize: state.sos.bloodGroup ? '18px' : undefined }}
           >
             <option value="" className="text-black bg-white">Unbekannt</option>
             <option value="A+" className="text-black bg-white">A+</option>
