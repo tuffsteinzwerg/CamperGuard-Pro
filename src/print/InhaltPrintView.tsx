@@ -1,4 +1,5 @@
 import React from 'react';
+import { PrintHeader } from './PrintHeader';
 
 export function InhaltPrintView({ state }: { state: any }) {
     const fixedCategories = ["Küche", "Wohnen", "Bad", "Garage", "Technik"];
@@ -190,25 +191,10 @@ export function InhaltPrintView({ state }: { state: any }) {
                         text-align: right;
                         padding-top: 2px;
                     }
-                    .print-header-logo {
-                        height: 20mm;
-                        width: auto;
-                        display: block;
-                        object-fit: contain;
-                    }
                 }
             `}</style>
 
-            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'nowrap', gap: '5mm', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                    <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-header-logo" />
-                </div>
-                <div style={{ display: 'flex', gap: '12px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '8pt', paddingBottom: '2px' }}>
-                    <span>Inventarliste</span>
-                    <span>{state.profile?.vehicleName || "Camper"}</span>
-                    <span>{new Date().toLocaleDateString('de-DE')}</span>
-                </div>
-            </div>
+            <PrintHeader title="Inventarliste" vehicleName={state.profile?.vehicleName} />
 
             {allCategories.map(category => {
                 const subcats = Array.from(new Set(state.subcategories[category] || []));

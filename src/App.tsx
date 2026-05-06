@@ -12,6 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { openDB } from 'idb';
 import { INITIAL_STATE, AppState, InventoryItem, FuelEntry, TripEntry, FuelType, Currency, TireProfile, SpotEntry, FAQEntry, EmergencyGear, PharmacyItem } from './types.ts';
+import { PrintHeader } from './print/PrintHeader';
 import { InhaltPrintView } from './print/InhaltPrintView';
 
 // Fix Leaflet icons
@@ -3079,15 +3080,10 @@ function LogbuchView({ state, setState }: any) {
       </div>
 
       <div className="hidden print-only logbuch-print-wrapper bg-white">
-          <div className="flex justify-between items-end border-b-2 border-black pb-4 mb-6">
-              <div>
-                  <h1 className="text-xl font-black uppercase tracking-widest">{state.profile.vehicleName || "Camper"}</h1>
-                  <p className="text-xs font-bold uppercase">{state.profile.plate || "Kennzeichen"}</p>
-              </div>
-              <h2 className="text-lg font-black uppercase">
-                  Logbuch - {logType === 'tank' ? 'Tanken' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Fahrten') : logType === 'spots' ? "POI's" : 'Archiv'}
-              </h2>
-          </div>
+          <PrintHeader 
+              title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
+              vehicleName={state.profile?.vehicleName} 
+          />
 
           {logType === 'tank' && (
              currentFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
