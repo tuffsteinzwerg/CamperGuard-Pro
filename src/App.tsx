@@ -1287,7 +1287,7 @@ function StatusView({ state, setState, orientation }: any) {
               <input
                 value={state.sos.ice1Name}
                 onChange={e => updateSos('ice1Name', e.target.value)}
-                className="w-full bg-transparent border-none outline-none cg-master-value !text-sm !p-0 !mb-2"
+                className="w-full bg-transparent border-none outline-none cg-master-value !p-0 !mb-2"
                 placeholder="Name"
               />
               <div className="flex items-center gap-2 cg-master-muted">
@@ -1296,7 +1296,7 @@ function StatusView({ state, setState, orientation }: any) {
                   type="tel"
                   value={state.sos.ice1Phone}
                   onChange={e => updateSos('ice1Phone', e.target.value)}
-                  className="w-full bg-transparent border-none outline-none cg-master-value !text-xs !font-normal !p-0"
+                  className="w-full bg-transparent border-none outline-none cg-master-value !p-0"
                   placeholder="Telefonnummer"
                 />
               </div>
@@ -1309,7 +1309,7 @@ function StatusView({ state, setState, orientation }: any) {
               <input
                 value={state.sos.ice2Name}
                 onChange={e => updateSos('ice2Name', e.target.value)}
-                className="w-full bg-transparent border-none outline-none cg-master-value !text-sm !p-0 !mb-2"
+                className="w-full bg-transparent border-none outline-none cg-master-value !p-0 !mb-2"
                 placeholder="Name"
               />
               <div className="flex items-center gap-2 cg-master-muted">
@@ -1318,7 +1318,7 @@ function StatusView({ state, setState, orientation }: any) {
                   type="tel"
                   value={state.sos.ice2Phone}
                   onChange={e => updateSos('ice2Phone', e.target.value)}
-                  className="w-full bg-transparent border-none outline-none cg-master-value !text-xs !font-normal !p-0"
+                  className="w-full bg-transparent border-none outline-none cg-master-value !p-0"
                   placeholder="Telefonnummer"
                 />
               </div>
@@ -1338,7 +1338,7 @@ function StatusView({ state, setState, orientation }: any) {
           <select
             value={state.sos.bloodGroup || ""}
             onChange={e => updateSos('bloodGroup', e.target.value)}
-            className="w-full bg-transparent border-none outline-none cg-master-value !text-sm p-3 appearance-none cursor-pointer relative z-10"
+            className="w-full bg-transparent border-none outline-none cg-master-value p-3 appearance-none cursor-pointer relative z-10"
             style={{ color: state.sos.bloodGroup ? 'var(--accent)' : undefined, fontWeight: state.sos.bloodGroup ? 900 : undefined, fontSize: state.sos.bloodGroup ? '18px' : undefined }}
           >
             <option value="" className="text-black bg-white">Unbekannt</option>
@@ -1366,7 +1366,7 @@ function StatusView({ state, setState, orientation }: any) {
           <textarea
             value={state.sos.medicalConditions}
             onChange={e => updateSos('medicalConditions', e.target.value)}
-            className="w-full bg-transparent border-none outline-none cg-master-value !font-normal !text-sm resize-none min-h-[90px]"
+            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[90px]"
             placeholder="Bekannte Vorerkrankungen oder Allergien..."
           />
         </div>
@@ -1384,7 +1384,7 @@ function StatusView({ state, setState, orientation }: any) {
             value={state.sos.medications}
             onChange={e => updateSos('medications', e.target.value)}
             placeholder="Regelmäßige Medikationen hier eintragen..."
-            className="w-full bg-transparent border-none outline-none cg-master-value !font-normal !text-sm resize-none min-h-[70px]"
+            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[70px]"
           />
         </div>
       </div>
@@ -1406,7 +1406,7 @@ function StatusView({ state, setState, orientation }: any) {
         <textarea 
           value={state.sos.address || ''} 
           onChange={e => updateSos('address', e.target.value)} 
-          className="cg-master-textarea w-full" 
+          className="cg-master-textarea w-full cg-master-value" 
           rows={5}
           placeholder={"Max Mustermann\nMusterstraße 12\n12345 Musterstadt\nDeutschland"} 
         />
