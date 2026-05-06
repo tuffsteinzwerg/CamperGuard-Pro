@@ -151,22 +151,25 @@ export function InhaltPrintView({ state }: { state: any }) {
                     }
                     .print-category {
                         font-weight: bold;
-                        font-size: 10pt !important;
-                        margin-top: 8px;
+                        font-size: 9pt !important;
+                        margin-top: 5px;
+                        margin-bottom: 0px;
                     }
                     .print-location {
                         font-weight: bold;
-                        font-size: 8pt !important;
-                        margin-top: 3px;
+                        font-size: 7pt !important;
+                        margin-top: 1px;
+                        margin-bottom: 0px;
                         margin-left: 4mm;
                         color: #333;
                     }
                     .print-item-wrap {
                         display: flex;
                         flex-direction: column;
-                        font-size: 8pt !important;
-                        padding: 1px 0;
+                        font-size: 7pt !important;
+                        padding: 0;
                         margin-left: 8mm;
+                        line-height: 1.4;
                     }
                     .print-item-line {
                         display: flex;
@@ -188,22 +191,22 @@ export function InhaltPrintView({ state }: { state: any }) {
                         padding-top: 2px;
                     }
                     .print-header-logo {
-                        height: 36mm;
+                        height: 20mm;
                         width: auto;
                         display: block;
+                        object-fit: contain;
                     }
                 }
             `}</style>
 
-            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap', gap: '8mm', borderBottom: '1px solid #000', paddingBottom: '3px', fontWeight: 'bold', fontSize: '10pt', marginBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', whiteSpace: 'nowrap' }}>
+            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'nowrap', gap: '5mm', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
                     <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-header-logo" />
-                    <div>Inventarliste</div>
                 </div>
-                <div style={{ display: 'flex', gap: '15px', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', gap: '12px', whiteSpace: 'nowrap', fontWeight: 'bold', fontSize: '8pt', paddingBottom: '2px' }}>
+                    <span>Inventarliste</span>
                     <span>{state.profile?.vehicleName || "Camper"}</span>
-                    <span>{state.profile?.plate || "Kennzeichen"}</span>
-                    <span>Ausdruck vom: {new Date().toLocaleDateString('de-DE')}</span>
+                    <span>{new Date().toLocaleDateString('de-DE')}</span>
                 </div>
             </div>
 
