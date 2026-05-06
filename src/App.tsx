@@ -3284,7 +3284,7 @@ function ReiseView({ state, setState, orientation }: any) {
     masterGain.gain.setValueAtTime(0.5, now);
     masterGain.connect(ctx.destination);
     
-    const closeness = 1 - Math.min(intensity, 1);
+    const closeness = 1 - Math.min(intensity / 10, 1);
     
     const needFront = direction.toLowerCase().includes('front');
     const needRear = direction.toLowerCase().includes('rear');
@@ -3436,7 +3436,7 @@ function ReiseView({ state, setState, orientation }: any) {
             playDirectionTone(dir, int);
         }
         
-        const normalizedIntensity = Math.min(int, 1);
+        const normalizedIntensity = Math.min(int / 10, 1);
         const delay = 60 + 1400 * Math.pow(normalizedIntensity, 1.8);
         
         audioTimerRef.current = window.setTimeout(scheduleNextPulse, delay);
