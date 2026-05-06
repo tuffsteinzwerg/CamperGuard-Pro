@@ -75,7 +75,7 @@ export function InhaltPrintView({ state }: { state: any }) {
         <div className="hidden print-only inhalt-print-wrapper bg-white">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 5mm; }
+                    @page { size: A4 portrait; margin: 10mm 20mm; }
                     .inhalt-print-wrapper {
                         display: block !important;
                         width: 100%;
@@ -120,22 +120,22 @@ export function InhaltPrintView({ state }: { state: any }) {
                         padding-top: 2px;
                     }
                     .print-header-logo {
-                        height: 18mm;
+                        height: 36mm;
                         width: auto;
                         display: block;
                     }
                 }
             `}</style>
 
-            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #000', paddingBottom: '3px', fontWeight: 'bold', fontSize: '10pt', marginBottom: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap', gap: '8mm', borderBottom: '1px solid #000', paddingBottom: '3px', fontWeight: 'bold', fontSize: '10pt', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', whiteSpace: 'nowrap' }}>
                     <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-header-logo" />
-                    <div style={{ paddingBottom: '3px' }}>INHALT</div>
+                    <div>Inventarliste</div>
                 </div>
-                <div style={{ display: 'flex', gap: '15px', paddingBottom: '3px' }}>
+                <div style={{ display: 'flex', gap: '15px', whiteSpace: 'nowrap' }}>
                     <span>{state.profile?.vehicleName || "Camper"}</span>
                     <span>{state.profile?.plate || "Kennzeichen"}</span>
-                    <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
+                    <span>Ausdruck vom: {new Date().toLocaleDateString('de-DE')}</span>
                 </div>
             </div>
 
