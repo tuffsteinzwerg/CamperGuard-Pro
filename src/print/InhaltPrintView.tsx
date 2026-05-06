@@ -75,7 +75,7 @@ export function InhaltPrintView({ state }: { state: any }) {
         <div className="hidden print-only inhalt-print-wrapper bg-white">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 15mm 20mm; }
+                    @page { size: A4 portrait; margin: 5mm; }
                     .inhalt-print-wrapper {
                         display: block !important;
                         width: 100%;
@@ -83,23 +83,22 @@ export function InhaltPrintView({ state }: { state: any }) {
                     }
                     .print-category {
                         font-weight: bold;
-                        font-size: 11pt !important;
-                        margin-top: 15px;
-                        border-bottom: 2px solid #000;
-                        padding-bottom: 2px;
+                        font-size: 10pt !important;
+                        margin-top: 8px;
                     }
                     .print-location {
                         font-weight: bold;
-                        font-size: 9pt !important;
-                        margin-top: 8px;
+                        font-size: 8pt !important;
+                        margin-top: 3px;
+                        margin-left: 4mm;
                         color: #333;
                     }
                     .print-item-wrap {
                         display: flex;
                         flex-direction: column;
                         font-size: 8pt !important;
-                        border-bottom: 1px solid #eee;
-                        padding: 3px 0;
+                        padding: 1px 0;
+                        margin-left: 8mm;
                     }
                     .print-item-line {
                         display: flex;
@@ -113,36 +112,27 @@ export function InhaltPrintView({ state }: { state: any }) {
                     .col-med-exp { flex: 0 0 22mm; padding-left: 2mm; }
                     .col-qty { flex: 0 0 18mm; text-align: right; }
                     .col-weight { flex: 0 0 16mm; text-align: right; }
-                    .print-footer { 
-                        margin-top: 4mm;
-                        padding-top: 2mm;
-                        border-top: 1px solid #000;
-                        display: flex;
-                        align-items: center;
-                        justify-content: flex-start;
-                        break-inside: avoid;
-                        page-break-inside: avoid;
-                        font-size: 7pt !important; 
-                    }
                     .print-weight-sum {
-                        margin-top: 12px;
+                        margin-top: 8px;
                         font-size: 8pt !important;
                         font-weight: bold;
                         text-align: right;
-                        border-top: 1px solid #000;
-                        padding-top: 4px;
+                        padding-top: 2px;
                     }
-                    .print-footer-logo {
-                        height: 32mm;
+                    .print-header-logo {
+                        height: 18mm;
                         width: auto;
                         display: block;
                     }
                 }
             `}</style>
 
-            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '3px solid #000', paddingBottom: '4px', fontWeight: 'bold', fontSize: '10pt' }}>
-                <div>INHALT</div>
-                <div style={{ display: 'flex', gap: '15px' }}>
+            <div className="print-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #000', paddingBottom: '3px', fontWeight: 'bold', fontSize: '10pt', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-header-logo" />
+                    <div style={{ paddingBottom: '3px' }}>INHALT</div>
+                </div>
+                <div style={{ display: 'flex', gap: '15px', paddingBottom: '3px' }}>
                     <span>{state.profile?.vehicleName || "Camper"}</span>
                     <span>{state.profile?.plate || "Kennzeichen"}</span>
                     <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
@@ -243,10 +233,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                     Gesamtgewicht der gedruckten Liste: {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g / ` : ''}{totalWeightKg.toFixed(2)} kg
                 </div>
             )}
-
-            <div className="print-footer">
-                <img src="/CGProLogo.png" alt="CamperGuard Pro" className="print-footer-logo" />
-            </div>
         </div>
     );
 }
+
