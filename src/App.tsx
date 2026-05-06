@@ -50,7 +50,8 @@ const formatWeight = (kg: number): string => {
 const normalizeGearName = (name: string) => {
   if (!name) return '';
   const n = name.trim().toLowerCase();
-  if (n === 'warnweste' || n === 'warnwesten') return 'Warnwesten';
+  const cleaned = n.replace(/[^a-z0-9]/g, '');
+  if (cleaned.includes('warnweste') || cleaned.includes('warnwesten')) return 'Warnweste';
   if (n === 'erste-hilfe-kasten' || n === 'erste hilfe kasten' || n === 'erste hilfe-kasten' || n === 'verbandkasten' || n === 'verbandskasten') return 'Erste-Hilfe-Kasten';
   if (n === 'feuerlöschdecke' || n === 'feuerlöschdecken') return 'Feuerlöschdecke';
   if (n === 'warndreieck' || n === 'warndreiecke') return 'Warndreieck';
@@ -171,7 +172,7 @@ export default function App() {
                    loadedSos.deletedGear = [];
                }
                
-               const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnwesten', 'Erste-Hilfe-Kasten', 'Warndreieck'];
+               const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnweste', 'Erste-Hilfe-Kasten', 'Warndreieck'];
                requiredCategories.forEach((cat, idx) => {
                    if (!loadedSos.gear.some((g: any) => normalizeGearName(g.name) === cat) && !loadedSos.deletedGear.some((d: string) => normalizeGearName(d) === cat)) {
                        loadedSos.gear.push({
@@ -1643,8 +1644,8 @@ function StatusView({ state, setState, orientation }: any) {
                     <div className="flex gap-3 mt-6">
                         <button onClick={() => setDeletingGearItem(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
-                            const deletedName = deletingGearItem.name;
-                            const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnwesten', 'Erste-Hilfe-Kasten', 'Warndreieck'];
+                            const deletedName = normalizeGearName(deletingGearItem.name);
+                            const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnweste', 'Erste-Hilfe-Kasten', 'Warndreieck'];
                             const newDeletedGear = [...(state.sos.deletedGear || [])];
                             if (requiredCategories.includes(deletedName) && !newDeletedGear.includes(deletedName)) {
                                 newDeletedGear.push(deletedName);

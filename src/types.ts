@@ -246,7 +246,7 @@ export const INITIAL_STATE: AppState = {
     gear: [
       { id: 'g1', name: 'Feuerlöscher', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
       { id: 'g2', name: 'Feuerlöschdecke', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
-      { id: 'g3', name: 'Warnwesten', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
+      { id: 'g3', name: 'Warnweste', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
       { id: 'g4', name: 'Erste-Hilfe-Kasten', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' },
       { id: 'g5', name: 'Warndreieck', count: 0, locations: [], checked: false, weight: '', weightUnit: 'kg' }
     ],
