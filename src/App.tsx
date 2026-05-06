@@ -1425,17 +1425,15 @@ function StatusView({ state, setState, orientation }: any) {
                                              if (isEditing) setEditingGearId(null);
                                              else {
                                                  setEditingGearId(g.id);
-                                                 if (!g.checked) {
-                                                     let newCount = g.count || 1;
-                                                     let newLocations = (!g.locations || g.locations.length === 0) ? [''] : g.locations;
-                                                     updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, checked: true, count: newCount, locations: newLocations } : gx)); 
+                                                 if (!g.locations || g.locations.length === 0) {
+                                                     updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
                                                  }
                                              }
                                          }}>
                                              <h3 className="typo-section-title min-w-0 flex-1 line-clamp-2" style={{ color: 'var(--accent)', marginBottom: 0, minHeight: '32px' }}>{g.name}</h3>
-                                             {g.checked && (
+                                             {Number(g.count) > 0 && (
                                                 <span className="typo-value-small whitespace-nowrap mt-0.5">
-                                                    {hasWeight ? weightStr : (Number(g.count) > 0 ? `${g.count} Stk` : '')}
+                                                    {hasWeight ? weightStr : `${g.count} Stk`}
                                                 </span>
                                              )}
                                          </div>
@@ -1446,10 +1444,8 @@ function StatusView({ state, setState, orientation }: any) {
                                                      setEditingGearId(null);
                                                  } else {
                                                      setEditingGearId(g.id);
-                                                     if (!g.checked) {
-                                                         let newCount = g.count || 1;
-                                                         let newLocations = (!g.locations || g.locations.length === 0) ? [''] : g.locations;
-                                                         updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, checked: true, count: newCount, locations: newLocations } : gx)); 
+                                                     if (!g.locations || g.locations.length === 0) {
+                                                         updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
                                                      }
                                                  }
                                              }} 
@@ -1471,11 +1467,11 @@ function StatusView({ state, setState, orientation }: any) {
                                                 <div className="flex flex-col space-y-2">
                                                     <span className="cg-master-label !mb-0">Menge</span>
                                                     <div className="flex h-[42px] items-center gap-2">
-                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(1, (gx.count||0)-1) } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
+                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(0, (gx.count||0)-1), checked: Math.max(0, (gx.count||0)-1) > 0 } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
                                                             <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                                         </button>
-                                                        <input type="number" min="1" value={g.count} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: parseInt(e.target.value) || 1 } : gx))} className="cg-master-input flex-1 w-full !h-full !text-center !px-2" />
-                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1 } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
+                                                        <input type="number" min="0" value={g.count} onChange={e => { const val = parseInt(e.target.value) || 0; updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: val, checked: val > 0 } : gx)); }} className="cg-master-input flex-1 w-full !h-full !text-center !px-2" />
+                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1, checked: true } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
                                                             <Plus size={14}/>
                                                         </button>
                                                     </div>

@@ -45,35 +45,90 @@ export function InhaltPrintView({ state }: { state: any }) {
         totalWeightKg += getWeightInKg(p.weight, p.weightUnit);
     });
 
-    const groupedGear: Record<string, any[]> = {};
+    const normalizePrintGearName = (name: any): string => {
+        const str = String(name || '').trim();
+        const lower = str.toLowerCase();
+        const cleaned = lower.replace(/[\s\-\(\)\[\]\{\}_.,!?"']/g, '');
+        if (cleaned.includes('warnweste') || cleaned.includes('warnwesten')) return 'Warnweste';
+        if (cleaned.includes('feuerlöscher') || cleaned.includes('feuerlscher')) return 'Feuerlöscher';
+        if (cleaned.includes('feuerlöschdecke') || cleaned.includes('feuerlschdecke')) return 'Feuerlöschdecke';
+        if (cleaned.includes('erstehilfekasten') || cleaned.includes('verbandskasten') || cleaned.includes('verbandkasten')) return 'Erste-Hilfe-Kasten';
+        if (cleaned.includes('warndreieck')) return 'Warndreieck';
+        return str;
+    };
+
+    const printableGearMap: Record<string, any> = {};
     gearFilter.forEach((g: any) => {
-        let locs: string[] = [];
-        
-        if (g.locations && Array.isArray(g.locations)) {
-            g.locations.forEach((l: any) => {
-                const locStr = String(l).trim();
-                if (locStr) {
-                    locs.push(locStr);
+        const normName = normalizePrintGearName(g.name);
+        if (!printableGearMap[normName]) {
+            printableGearMap[normName] = {
+                ...g,
+                name: normName,
+                locations: [],
+                count: Number(g.count) || 0
+            };
+        } else {
+            const merged = printableGearMap[normName];
+            if (g.checked) merged.checked = true;
+            const c = Number(g.count) || 0;
+            if (c > merged.count) merged.count = c;
+            
+            if (merged.weight === undefined || merged.weight === null || merged.weight === '') {
+                if (g.weight !== undefined && g.weight !== null && g.weight !== '') {
+                    merged.weight = g.weight;
+                    merged.weightUnit = g.weightUnit;
                 }
-            });
-        }
-        
-        if (g.location && typeof g.location === 'string' && g.location.trim() !== '') {
-            const locStr = g.location.trim();
-            if (!locs.includes(locStr)) {
-                locs.push(locStr);
             }
         }
         
-        locs = Array.from(new Set(locs));
+        const merged = printableGearMap[normName];
+        let locsToMerge: string[] = [];
+        if (g.locations && Array.isArray(g.locations)) locsToMerge.push(...g.locations);
+        if (typeof g.location === 'string') locsToMerge.push(g.location);
         
+        locsToMerge.forEach(l => {
+            const locStr = String(l).trim();
+            if (locStr && !merged.locations.includes(locStr)) {
+                merged.locations.push(locStr);
+            }
+        });
+    });
+
+    const printableGear = Object.values(printableGearMap);
+
+    const groupedGear: Record<string, any[]> = {};
+    printableGear.forEach((g: any) => {
+        let locs: string[] = g.locations && Array.isArray(g.locations) ? [...g.locations] : [];
         if (locs.length === 0) {
             locs = ['Ohne Lagerort'];
         }
 
+        const locCount = locs.length;
+        const totalCount = Number(g.count) || 0;
+        let baseCount = totalCount;
+        let remainder = 0;
+        
+        if (locCount > 0 && totalCount >= locCount) {
+            baseCount = Math.floor(totalCount / locCount);
+            remainder = totalCount % locCount;
+        } else if (locCount > 0 && totalCount < locCount) {
+            baseCount = 0;
+            remainder = totalCount;
+        }
+
         locs.forEach(loc => {
-            if (!groupedGear[loc]) groupedGear[loc] = [];
-            groupedGear[loc].push(g);
+            let currentCount = baseCount;
+            if (remainder > 0) {
+                currentCount++;
+                remainder--;
+            }
+            if (currentCount > 0) {
+                if (!groupedGear[loc]) groupedGear[loc] = [];
+                groupedGear[loc].push({
+                    ...g,
+                    printCount: currentCount
+                });
+            }
         });
     });
 
@@ -189,7 +244,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                 );
             })}
 
-            {gearFilter.length > 0 && (
+            {Object.keys(groupedGear).length > 0 && (
                 <div>
                     <div className="print-category">Notfallausrüstung</div>
                     {Object.keys(groupedGear).map(loc => (
@@ -200,7 +255,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                                     <div className="print-item-line">
                                         <div className="col-check">□</div>
                                         <div className="col-name">{g.name}</div>
-                                        <div className="col-qty">{g.count} Stk</div>
+                                        <div className="col-qty">{g.printCount} Stk</div>
                                         <div className="col-weight">
                                             {g.weight !== undefined && g.weight !== null && g.weight !== ''
                                                 ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
