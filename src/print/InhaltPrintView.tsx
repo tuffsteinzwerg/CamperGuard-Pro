@@ -48,11 +48,24 @@ export function InhaltPrintView({ state }: { state: any }) {
     const groupedGear: Record<string, any[]> = {};
     gearFilter.forEach((g: any) => {
         let locs: string[] = [];
+        
         if (g.locations && Array.isArray(g.locations)) {
-            locs = g.locations.map((l: string) => l.trim()).filter(Boolean);
-        } else if (g.location && typeof g.location === 'string' && g.location.trim() !== '') {
-            locs = [g.location.trim()];
+            g.locations.forEach((l: any) => {
+                const locStr = String(l).trim();
+                if (locStr) {
+                    locs.push(locStr);
+                }
+            });
         }
+        
+        if (g.location && typeof g.location === 'string' && g.location.trim() !== '') {
+            const locStr = g.location.trim();
+            if (!locs.includes(locStr)) {
+                locs.push(locStr);
+            }
+        }
+        
+        locs = Array.from(new Set(locs));
         
         if (locs.length === 0) {
             locs = ['Ohne Lagerort'];
