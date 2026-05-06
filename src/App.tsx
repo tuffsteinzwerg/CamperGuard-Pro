@@ -3212,10 +3212,17 @@ function ReiseView({ state, setState, orientation }: any) {
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
   const [soundTestIndex, setSoundTestIndex] = useState(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioTimerRef = useRef<any>(null);
   const latestDirectionRef = useRef<string>('level');
   const latestIntensityRef = useRef<number>(0);
-  const wasLevelRef = useRef<boolean>(true);
+  const wasLevelRef = useRef<boolean>(false);
+  const mainOscRef = useRef<OscillatorNode | null>(null);
+  const mainGainRef = useRef<GainNode | null>(null);
+  const tremoloOscRef = useRef<OscillatorNode | null>(null);
+  const tremoloGainRef = useRef<GainNode | null>(null);
+  const roughOscRef = useRef<OscillatorNode | null>(null);
+  const roughGainRef = useRef<GainNode | null>(null);
+  const noiseSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const noiseGainRef = useRef<GainNode | null>(null);
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
   const calibratedRoll = (orientation?.roll || 0) - (state.profile.rollOffset || 0);
@@ -3246,212 +3253,219 @@ function ReiseView({ state, setState, orientation }: any) {
   latestDirectionRef.current = assistDirection;
   latestIntensityRef.current = tiltIntensity;
 
-  const playLockTone = () => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-    
-    const now = ctx.currentTime;
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.3, now);
-    masterGain.connect(ctx.destination);
-    
-    // Warmer Erfolgs-Akkord: C5 + E5 + G5 (C-Dur)
-    const frequencies = [523.25, 659.25, 783.99];
-    
-    frequencies.forEach((freq, i) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, now);
-        // Leichtes Staffeln für Harfen-Effekt
-        const startTime = now + i * 0.03;
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(startTime);
-        osc.stop(startTime + 0.85);
-    });
+// === KONTINUIERLICHE SONIFIKATION (Tiltification-Prinzip) ===
+
+  const playLockChord = () => {
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const chordGain = ctx.createGain();
+      chordGain.gain.setValueAtTime(0.25, now);
+      chordGain.connect(ctx.destination);
+      [523.25, 659.25, 783.99].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now);
+          const t = now + i * 0.03;
+          g.gain.setValueAtTime(0, t);
+          g.gain.linearRampToValueAtTime(0.2, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+          osc.connect(g);
+          g.connect(chordGain);
+          osc.start(t);
+          osc.stop(t + 0.85);
+      });
   };
 
-  const playDirectionTone = (direction: string, intensity: number) => {
-    const ctx = audioCtxRef.current;
-    if (!ctx) return;
-    
-    const now = ctx.currentTime;
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.5, now);
-    masterGain.connect(ctx.destination);
-    
-    const closeness = 1 - Math.min(intensity / 10, 1);
-    
-    const needFront = direction.toLowerCase().includes('front');
-    const needRear = direction.toLowerCase().includes('rear');
-    const needLeft = direction.toLowerCase().includes('left');
-    const needRight = direction.toLowerCase().includes('right');
-    
-    // === VORNE/HINTEN: Sweep-Töne (länger und deutlicher) ===
-    
-    if (needFront) {
-        // Aufsteigender Chirp: 500Hz -> 1200Hz in 180ms, laut
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(500, now);
-        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.18);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.setValueAtTime(0.4, now + 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(now);
-        osc.stop(now + 0.26);
-    }
-    
-    if (needRear) {
-        // Absteigender Brumm: 350Hz -> 80Hz in 250ms, Sägezahn für Rauheit
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(350, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.setValueAtTime(0.3, now + 0.18);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(now);
-        osc.stop(now + 0.31);
-    }
-    
-    // === LINKS/RECHTS: Impulse (lauter und schärfer) ===
-    
-    if (needLeft) {
-        // Doppelklick: Zwei schnelle Square-Impulse
-        for (let k = 0; k < 2; k++) {
-            const t = now + k * 0.06;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(900, t);
-            gain.gain.setValueAtTime(0.35, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
-            osc.connect(gain);
-            gain.connect(masterGain);
-            osc.start(t);
-            osc.stop(t + 0.04);
-        }
-    }
-    
-    if (needRight) {
-        // Einzelner weicher Bop: Sine + leichter Frequenz-Drop
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, now + 0.03);
-        osc.frequency.exponentialRampToValueAtTime(400, now + 0.12);
-        gain.gain.setValueAtTime(0.35, now + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain);
-        gain.connect(masterGain);
-        osc.start(now + 0.03);
-        osc.stop(now + 0.16);
-    }
-    
-    // === NAHE AM LEVEL: Rosa Rauschen ===
-    if (closeness > 0.6 && intensity > 0) {
-        const bufferSize = ctx.sampleRate * 0.2;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            b0 = 0.99886 * b0 + white * 0.0555179;
-            b1 = 0.99332 * b1 + white * 0.0750759;
-            b2 = 0.96900 * b2 + white * 0.1538520;
-            b3 = 0.86650 * b3 + white * 0.3104856;
-            b4 = 0.55000 * b4 + white * 0.5329522;
-            b5 = -0.7616 * b5 - white * 0.0168980;
-            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.06;
-            b6 = white * 0.115926;
-        }
-        const noise = ctx.createBufferSource();
-        const noiseGain = ctx.createGain();
-        noise.buffer = buffer;
-        const noiseVolume = (closeness - 0.6) / 0.4 * 0.2;
-        noiseGain.gain.setValueAtTime(noiseVolume, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        noise.connect(noiseGain);
-        noiseGain.connect(masterGain);
-        noise.start(now);
-    }
+  const startContinuousAudio = () => {
+      const ctx = audioCtxRef.current;
+      if (!ctx) return;
+
+      // --- Haupt-Oszillator (Links/Rechts = Tonhöhe) ---
+      const mainOsc = ctx.createOscillator();
+      const mainGain = ctx.createGain();
+      mainOsc.type = 'sine';
+      mainOsc.frequency.setValueAtTime(440, ctx.currentTime);
+      mainGain.gain.setValueAtTime(0.3, ctx.currentTime);
+      mainOsc.connect(mainGain);
+      mainGain.connect(ctx.destination);
+      mainOsc.start();
+      mainOscRef.current = mainOsc;
+      mainGainRef.current = mainGain;
+
+      // --- Tremolo-Oszillator (Vorne = schnelles Lautstärke-Pulsieren) ---
+      const tremoloOsc = ctx.createOscillator();
+      const tremoloGain = ctx.createGain();
+      tremoloOsc.type = 'sine';
+      tremoloOsc.frequency.setValueAtTime(0, ctx.currentTime); // 0Hz = kein Tremolo
+      tremoloGain.gain.setValueAtTime(0, ctx.currentTime); // 0 = kein Effekt
+      tremoloOsc.connect(tremoloGain);
+      tremoloGain.connect(mainGain.gain); // Moduliert die Lautstärke des Haupttons
+      tremoloOsc.start();
+      tremoloOscRef.current = tremoloOsc;
+      tremoloGainRef.current = tremoloGain;
+
+      // --- Rauheits-Oszillator (Hinten = verstimmter Zweiter Ton) ---
+      const roughOsc = ctx.createOscillator();
+      const roughGain = ctx.createGain();
+      roughOsc.type = 'sine';
+      roughOsc.frequency.setValueAtTime(440, ctx.currentTime);
+      roughGain.gain.setValueAtTime(0, ctx.currentTime); // Anfangs stumm
+      roughOsc.connect(roughGain);
+      roughGain.connect(ctx.destination);
+      roughOsc.start();
+      roughOscRef.current = roughOsc;
+      roughGainRef.current = roughGain;
+
+      // --- Rosa Rauschen (Level-Nähe) ---
+      const bufferSize = ctx.sampleRate * 2;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+          b6 = white * 0.115926;
+      }
+      const noiseSource = ctx.createBufferSource();
+      const noiseGain = ctx.createGain();
+      noiseSource.buffer = buffer;
+      noiseSource.loop = true;
+      noiseGain.gain.setValueAtTime(0, ctx.currentTime);
+      noiseSource.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+      noiseSource.start();
+      noiseSourceRef.current = noiseSource;
+      noiseGainRef.current = noiseGain;
   };
+
+  const stopContinuousAudio = () => {
+      try {
+          mainOscRef.current?.stop();
+          tremoloOscRef.current?.stop();
+          roughOscRef.current?.stop();
+          noiseSourceRef.current?.stop();
+      } catch (e) {}
+      mainOscRef.current = null;
+      mainGainRef.current = null;
+      tremoloOscRef.current = null;
+      tremoloGainRef.current = null;
+      roughOscRef.current = null;
+      roughGainRef.current = null;
+      noiseSourceRef.current = null;
+      noiseGainRef.current = null;
+  };
+
+  const updateContinuousAudio = () => {
+      const ctx = audioCtxRef.current;
+      if (!ctx || !mainOscRef.current) return;
+
+      const now = ctx.currentTime;
+      const roll = calibratedRoll;   // Links/Rechts in Grad
+      const pitch = calibratedPitch; // Vorne/Hinten in Grad
+      const dz = deadzone;
+
+      const isLevel = Math.abs(roll) <= dz && Math.abs(pitch) <= dz;
+
+      // === LINKS/RECHTS: Tonhöhe ===
+      // Mitte = 440Hz, ±10° = ±1 Oktave (220Hz bis 880Hz)
+      const rollClamped = Math.max(-10, Math.min(10, roll));
+      const semitones = (rollClamped / 10) * 12; // ±12 Halbtöne
+      const freq = 440 * Math.pow(2, semitones / 12);
+      mainOscRef.current.frequency.setTargetAtTime(freq, now, 0.05);
+
+      // Rauheits-Oszillator folgt der Grundfrequenz (leicht verstimmt)
+      if (roughOscRef.current) {
+          roughOscRef.current.frequency.setTargetAtTime(freq * 1.02, now, 0.05);
+      }
+
+      // === VORNE/HINTEN: Tremolo + Rauheit ===
+      if (pitch > dz) {
+          // VORNE ZU HOCH: Tremolo (Lautstärke-Pulsieren)
+          const tremoloSpeed = 2 + (Math.min(pitch, 10) / 10) * 12; // 2Hz bis 14Hz
+          const tremoloDepth = Math.min(pitch / 5, 0.3); // Wie stark die Lautstärke schwankt
+          if (tremoloOscRef.current && tremoloGainRef.current) {
+              tremoloOscRef.current.frequency.setTargetAtTime(tremoloSpeed, now, 0.05);
+              tremoloGainRef.current.gain.setTargetAtTime(tremoloDepth, now, 0.05);
+          }
+          // Rauheit aus
+          if (roughGainRef.current) {
+              roughGainRef.current.gain.setTargetAtTime(0, now, 0.05);
+          }
+      } else if (pitch < -dz) {
+          // HINTEN ZU HOCH: Rauheit (zwei verstimmte Oszillatoren)
+          const roughAmount = Math.min(Math.abs(pitch) / 8, 0.25); // Lautstärke des 2. Oszillators
+          if (roughGainRef.current) {
+              roughGainRef.current.gain.setTargetAtTime(roughAmount, now, 0.05);
+          }
+          // Tremolo aus
+          if (tremoloGainRef.current) {
+              tremoloGainRef.current.gain.setTargetAtTime(0, now, 0.05);
+          }
+      } else {
+          // In der Deadzone für Pitch: Beides aus
+          if (tremoloGainRef.current) {
+              tremoloGainRef.current.gain.setTargetAtTime(0, now, 0.05);
+          }
+          if (roughGainRef.current) {
+              roughGainRef.current.gain.setTargetAtTime(0, now, 0.05);
+          }
+      }
+
+      // === LEVEL-NÄHE: Rosa Rauschen ===
+      const tiltTotal = Math.sqrt(roll * roll + pitch * pitch);
+      const levelProximity = Math.max(0, 1 - tiltTotal / 3); // 1 = am Level, 0 = >3° weg
+      if (noiseGainRef.current) {
+          const noiseVol = isLevel ? 0.12 : levelProximity * 0.08;
+          noiseGainRef.current.gain.setTargetAtTime(noiseVol, now, 0.1);
+      }
+
+      // === HAUPTLAUTSTÄRKE: Im Level leiser, sonst normal ===
+      if (mainGainRef.current) {
+          const mainVol = isLevel ? 0.08 : 0.3;
+          mainGainRef.current.gain.setTargetAtTime(mainVol, now, 0.1);
+      }
+
+      // === LOCK-AKKORD: Einmalig beim Erreichen des Levels ===
+      if (isLevel && !wasLevelRef.current) {
+          playLockChord();
+          wasLevelRef.current = true;
+      } else if (!isLevel) {
+          wasLevelRef.current = false;
+      }
+  };
+
+  // --- useEffect: Audio starten/stoppen ---
+  useEffect(() => {
+      if (isAudioAssistActive) {
+          if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
+              startContinuousAudio();
+          }
+      }
+      return () => {
+          stopContinuousAudio();
+      };
+  }, [isAudioAssistActive]);
+
+  // --- useEffect: Audio-Parameter in Echtzeit aktualisieren ---
+  useEffect(() => {
+      if (isAudioAssistActive && mainOscRef.current) {
+          updateContinuousAudio();
+      }
+  }, [calibratedPitch, calibratedRoll, isAudioAssistActive]);
 
   const handleManualSoundTest = async () => {
-    if (!isAudioAssistActive) return;
-    try {
-      if (!audioCtxRef.current) return;
-      if (audioCtxRef.current.state === 'suspended') {
-        await audioCtxRef.current.resume();
-      }
-      const testSequence = ['left', 'frontLeft', 'front', 'frontRight', 'right', 'rearRight', 'rear', 'rearLeft'];
-      const dir = testSequence[soundTestIndex % testSequence.length];
-      playDirectionTone(dir, 1);
-      setSoundTestIndex(prev => prev + 1);
-    } catch (e) {
-      console.warn("Manual sound test failed:", e);
-    }
+      // Nicht mehr nötig bei kontinuierlichem Ton, aber Button bleibt funktional
+      if (!isAudioAssistActive || !audioCtxRef.current) return;
+      playLockChord();
   };
-
-  useEffect(() => {
-    if (!isAudioAssistActive) {
-      if (audioTimerRef.current) {
-        clearTimeout(audioTimerRef.current);
-        audioTimerRef.current = null;
-      }
-      return;
-    }
-
-    const scheduleNextPulse = () => {
-      if (!isAudioAssistActive) return;
-      
-      const dir = latestDirectionRef.current;
-      const int = latestIntensityRef.current;
-      
-      if (dir === 'level') {
-        if (!wasLevelRef.current) {
-            // Gerade erst ins Level gekommen: Akkord spielen
-            if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
-                playLockTone();
-            }
-            wasLevelRef.current = true;
-        }
-        // Stille — prüfe alle 500ms ob noch im Level
-        audioTimerRef.current = window.setTimeout(scheduleNextPulse, 500);
-      } else {
-        wasLevelRef.current = false;
-        // Richtungston spielen
-        if (audioCtxRef.current && audioCtxRef.current.state !== 'suspended') {
-            playDirectionTone(dir, int);
-        }
-        
-        const normalizedIntensity = Math.min(int / 10, 1);
-        const delay = 60 + 1400 * Math.pow(normalizedIntensity, 1.8);
-        
-        audioTimerRef.current = window.setTimeout(scheduleNextPulse, delay);
-      }
-    };
-
-    scheduleNextPulse();
-
-    return () => {
-      if (audioTimerRef.current) {
-        clearTimeout(audioTimerRef.current);
-        audioTimerRef.current = null;
-      }
-    };
-  }, [isAudioAssistActive]);
 
   const handleAudioToggle = async () => {
     if (!isAudioAssistActive) {
@@ -3484,7 +3498,7 @@ function ReiseView({ state, setState, orientation }: any) {
         osc.stop(ctx.currentTime + 0.5);
 
         // --- 2. Richtungstestton ---
-        playDirectionTone(assistDirection, 1);
+        // Kontinuierlicher Ton startet automatisch über useEffect
 
       } catch (e) {
         console.warn("AudioContext creation failed:", e);
