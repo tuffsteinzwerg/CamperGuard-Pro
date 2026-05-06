@@ -143,6 +143,8 @@ export interface ProfileData {
   height: number;
   width: number;
   length: number;
+  trackWidth: number;
+  wheelbase: number;
   maxWeight: number; // zGG
   emptyWeight: number;
   axleLoads: { front: number; rear: number };
@@ -185,6 +187,8 @@ export const INITIAL_STATE: AppState = {
     height: 0,
     width: 0,
     length: 0,
+    trackWidth: 0,
+    wheelbase: 0,
     maxWeight: 0,
     emptyWeight: 0,
     axleLoads: { front: 0, rear: 0 },

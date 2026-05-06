@@ -258,35 +258,91 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [state, loading]);
 
-  // Unified orientation logic
+  // Unified orientation logic (Kompass-Fix: absolute heading + iOS Permission)
+  const [orientationPermission, setOrientationPermission] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
+
+  const requestOrientationPermission = async () => {
+    try {
+      // @ts-ignore - requestPermission existiert nur auf iOS 13+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // @ts-ignore
+        const permission = await DeviceOrientationEvent.requestPermission();
+        setOrientationPermission(permission);
+        if (permission === 'granted') {
+          window.location.reload(); // Reload damit der useEffect die Events bekommt
+        }
+      }
+    } catch (err) {
+      console.warn("Orientation permission request failed:", err);
+      setOrientationPermission('denied');
+    }
+  };
+
   useEffect(() => {
+    // Prüfe ob iOS Permission nötig ist
+    // @ts-ignore
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      setOrientationPermission('prompt'); // iOS: Permission nötig, aber noch nicht erteilt
+    } else {
+      setOrientationPermission('granted'); // Android/Desktop: keine Permission nötig
+    }
+
     let lastUpdate = 0;
-    const handleOrientation = (e: DeviceOrientationEvent) => {
+    let absoluteAvailable = false;
+
+    const processOrientation = (e: DeviceOrientationEvent) => {
       try {
         const now = Date.now();
-        if (now - lastUpdate < 50) return; // Max 20Hz for Fold-Fix
+        if (now - lastUpdate < 50) return;
         lastUpdate = now;
 
         let h = 0;
-        if (e.alpha !== null) h = e.alpha;
+
+        // Priorität 1: iOS webkitCompassHeading (echter Kompass-Heading, 0=Nord, im Uhrzeigersinn)
         // @ts-ignore
-        if (e.webkitCompassHeading !== undefined) h = e.webkitCompassHeading;
-        
+        if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+          // @ts-ignore
+          h = e.webkitCompassHeading;
+        } 
+        // Priorität 2: alpha umrechnen (alpha steigt gegen Uhrzeigersinn, Kompass im Uhrzeigersinn)
+        else if (e.alpha !== null && e.alpha !== undefined) {
+          h = (360 - e.alpha) % 360;
+        }
+
         setOrientation({ pitch: e.beta || 0, roll: e.gamma || 0, heading: h });
       } catch (err) {
         console.warn("DeviceOrientation handling error:", err);
       }
     };
 
+    // Handler für deviceorientationabsolute (Android: echter Magnetometer-Bezug)
+    const handleAbsolute = (e: DeviceOrientationEvent) => {
+      absoluteAvailable = true;
+      processOrientation(e);
+    };
+
+    // Handler für normales deviceorientation (iOS + Fallback)
+    const handleRelative = (e: DeviceOrientationEvent) => {
+      // Wenn absolute verfügbar ist, ignoriere das relative Event
+      if (absoluteAvailable) return;
+      processOrientation(e);
+    };
+
     try {
-      window.addEventListener('deviceorientation', handleOrientation);
+      // Android Chrome: deviceorientationabsolute hat Vorrang (echter Kompass)
+      // @ts-ignore
+      window.addEventListener('deviceorientationabsolute', handleAbsolute, true);
+      // iOS + Fallback: normales deviceorientation
+      window.addEventListener('deviceorientation', handleRelative, true);
     } catch (err) {
       console.warn("Could not attach deviceorientation", err);
     }
-    
+
     return () => {
       try {
-        window.removeEventListener('deviceorientation', handleOrientation);
+        // @ts-ignore
+        window.removeEventListener('deviceorientationabsolute', handleAbsolute, true);
+        window.removeEventListener('deviceorientation', handleRelative, true);
       } catch (err) {}
     };
   }, []);
@@ -321,7 +377,7 @@ export default function App() {
             {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} />}
             {activeTab === 'inhalt' && <InhaltView state={state} setState={setState} />}
             {activeTab === 'logbuch' && <LogbuchView state={state} setState={setState} />}
-            {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} />}
+            {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} orientationPermission={orientationPermission} requestOrientationPermission={requestOrientationPermission} />}
             {activeTab === 'profil' && <ProfilView state={state} setState={setState} demoSeed={demoSeed} />}
           </motion.div>
         </AnimatePresence>
@@ -3206,7 +3262,7 @@ const ResizeMapComponent = () => {
   return null;
 };
 
-function ReiseView({ state, setState, orientation }: any) {
+function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: any) {
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
@@ -3461,10 +3517,8 @@ function ReiseView({ state, setState, orientation }: any) {
       }
   }, [calibratedPitch, calibratedRoll, isAudioAssistActive]);
 
-  const handleManualSoundTest = async () => {
-      // Nicht mehr nötig bei kontinuierlichem Ton, aber Button bleibt funktional
-      if (!isAudioAssistActive || !audioCtxRef.current) return;
-      playLockChord();
+  const handleTaraReset = () => {
+      setState((prev: any) => ({ ...prev, profile: { ...prev.profile, pitchOffset: 0, rollOffset: 0 } }));
   };
 
   const handleAudioToggle = async () => {
@@ -3530,6 +3584,19 @@ function ReiseView({ state, setState, orientation }: any) {
 
   return (
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
+      {orientationPermission === 'prompt' && (
+        <div className="mx-4 mb-4 p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--accent)]/30">
+          <p className="text-sm text-gray-300 mb-3">
+            Um Kompass und Wasserwaage nutzen zu können, wird Zugriff auf die Bewegungssensoren benötigt.
+          </p>
+          <button 
+            onClick={requestOrientationPermission}
+            className="w-full py-2 px-4 rounded-lg bg-[var(--accent)] text-white font-bold text-sm"
+          >
+            Sensoren aktivieren
+          </button>
+        </div>
+      )}
       
       <div className="relative overflow-hidden p-6 z-0 rounded-xl bg-gradient-to-b from-[#1c1e22] to-[#0e1013] shadow-[0_10px_30px_rgba(0,0,0,0.8),_inset_0_1px_1px_rgba(255,255,255,0.02)] border border-[#000]">
         {/* Deep Vignette */}
@@ -3749,13 +3816,13 @@ function ReiseView({ state, setState, orientation }: any) {
               >
                 {isAudioAssistActive ? 'AUDIO AN' : 'AUDIO ASSIST'}
               </button>
-              {isAudioAssistActive && (
+              {(state.profile.pitchOffset !== 0 || state.profile.rollOffset !== 0) && (
                 <button
-                  onClick={handleManualSoundTest}
+                  onClick={handleTaraReset}
                   className="cg-master-button"
-                  title="Manueller Sound-Test"
+                  title="Tara-Kalibrierung zurücksetzen auf Werkseinstellung"
                 >
-                  SOUND TEST
+                  TARA RESET
                 </button>
               )}
             </div>
@@ -3785,10 +3852,23 @@ function ReiseView({ state, setState, orientation }: any) {
                         WebkitTextFillColor: 'transparent',
                         textShadow: '0 0 8px rgba(255,122,0,0.6), 0 0 16px rgba(255,122,0,0.3)'
                       };
-                      const vFL = 0;
-                      const vHL = 0;
-                      const vFR = 0;
-                      const vHR = 0;
+                      const tw = state.profile.trackWidth || 0;
+                      const wb = state.profile.wheelbase || 0;
+                      const rollRad = (calibratedRoll * Math.PI) / 180;
+                      const pitchRad = (calibratedPitch * Math.PI) / 180;
+                      
+                      const sideCorrection = tw > 0 ? Math.abs(tw * Math.sin(rollRad)) : 0;
+                      const sideLeft = calibratedRoll > deadzone ? Math.round(sideCorrection * 10) / 10 : 0;
+                      const sideRight = calibratedRoll < -deadzone ? Math.round(sideCorrection * 10) / 10 : 0;
+                      
+                      const lengthCorrection = wb > 0 ? Math.abs(wb * Math.sin(pitchRad)) : 0;
+                      const frontUp = calibratedPitch > deadzone ? Math.round(lengthCorrection * 10) / 10 : 0;
+                      const rearUp = calibratedPitch < -deadzone ? Math.round(lengthCorrection * 10) / 10 : 0;
+                      
+                      const vFL = Math.round(Math.max(sideLeft + frontUp, 0) * 10) / 10;
+                      const vFR = Math.round(Math.max(sideRight + frontUp, 0) * 10) / 10;
+                      const vHL = Math.round(Math.max(sideLeft + rearUp, 0) * 10) / 10;
+                      const vHR = Math.round(Math.max(sideRight + rearUp, 0) * 10) / 10;
                       return (
                         <>
                           <div className="flex flex-col gap-6 text-left z-10">
@@ -3983,6 +4063,39 @@ function ProfilView({ state, setState, demoSeed }: any) {
               </div>
           )})}
       </div>
+          <label className="cg-master-label mt-4">FAHRWERK (FÜR HÖHENKORREKTUR)</label>
+          <div className="grid grid-cols-2 gap-3">
+              {[
+                  { l: 'SPURBREITE', k: 'trackWidth', min: 100, max: 250, hint: 'Rad links ↔ rechts' },
+                  { l: 'ACHSABSTAND', k: 'wheelbase', min: 150, max: 700, hint: 'Vorderachse ↔ Hinterachse' }
+              ].map(d => {
+                  const val = state.profile[d.k as keyof typeof state.profile];
+                  const numVal = val !== '' && val !== undefined ? Number(val) : NaN;
+                  const isEmpty = val === '' || val === undefined || val === 0;
+                  const isInvalid = !isEmpty && (isNaN(numVal) || numVal < d.min || numVal > d.max);
+                  return (
+                      <div key={d.k} className={`cg-master-card-small p-3 text-center ${isEmpty ? 'animate-pulse-border' : ''} ${isInvalid ? '!border-[var(--status-danger)]' : ''}`}>
+                          <span className="typo-label mb-0.5 block">{d.l}</span>
+                          <span className="text-[9px] text-[#666] block mb-1">{d.hint}</span>
+                          <input
+                              type="text"
+                              inputMode="numeric"
+                              value={!isEmpty && !isNaN(numVal) ? numVal.toLocaleString('de-DE') : ''}
+                              onChange={e => {
+                                  let rawVal = e.target.value.replace(/\D/g, '');
+                                  hc(`profile.${d.k}`, rawVal !== '' ? Number(rawVal) : '');
+                              }}
+                              onKeyDown={e => {
+                                  if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') e.preventDefault();
+                              }}
+                              className={`cg-master-input w-full text-center py-1 ${isEmpty ? 'text-[var(--text-muted)]' : 'text-white'} ${isInvalid ? 'text-[var(--status-danger)]' : ''}`}
+                              style={{ fontSize: '14px', fontWeight: 'normal', border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent' }}
+                          />
+                          {isInvalid && <span className="text-[var(--status-danger)] text-[10px] uppercase font-bold mt-1 block">Ungültiger Wert</span>}
+                      </div>
+                  );
+              })}
+          </div>
       </div>
 
       <div className="cg-master-card-small space-y-4">
