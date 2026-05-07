@@ -4067,6 +4067,7 @@ function ReiseView({ state, setState, orientation, orientationPermission, reques
                       };
                       const tw = state.profile.trackWidth || 0;
                       const wb = state.profile.wheelbase || 0;
+                      const hasHeightCorrectionDimensions = tw > 0 && wb > 0;
                       const rollRad = (calibratedRoll * Math.PI) / 180;
                       const pitchRad = (calibratedPitch * Math.PI) / 180;
                       
@@ -4078,45 +4079,54 @@ function ReiseView({ state, setState, orientation, orientationPermission, reques
                       const frontUp = calibratedPitch > deadzone ? Math.round(lengthCorrection * 10) / 10 : 0;
                       const rearUp = calibratedPitch < -deadzone ? Math.round(lengthCorrection * 10) / 10 : 0;
                       
-                      const vFL = Math.round(Math.max(sideLeft + frontUp, 0) * 10) / 10;
-                      const vFR = Math.round(Math.max(sideRight + frontUp, 0) * 10) / 10;
-                      const vHL = Math.round(Math.max(sideLeft + rearUp, 0) * 10) / 10;
-                      const vHR = Math.round(Math.max(sideRight + rearUp, 0) * 10) / 10;
+                      const hFL = Math.round(Math.max(sideLeft + frontUp, 0) * 10) / 10;
+                      const hHL = Math.round(Math.max(sideLeft + rearUp, 0) * 10) / 10;
+                      const hFR = Math.round(Math.max(sideRight + frontUp, 0) * 10) / 10;
+                      const hHR = Math.round(Math.max(sideRight + rearUp, 0) * 10) / 10;
+                      const maxHeight = Math.max(hFL, hHL, hFR, hHR);
+                      const vFL = Math.round(Math.max(maxHeight - hFL, 0));
+                      const vHL = Math.round(Math.max(maxHeight - hHL, 0));
+                      const vFR = Math.round(Math.max(maxHeight - hFR, 0));
+                      const vHR = Math.round(Math.max(maxHeight - hHR, 0));
                       return (
                         <>
-                          <div className="flex flex-col gap-6 text-left z-10">
-                             <div>
-                               <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Links</div>
-                               <div className="flex items-baseline">
-                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFL)}>{vFL}</span>
-                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
-                               </div>
-                             </div>
-                             <div>
-                               <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Links</div>
-                               <div className="flex items-baseline">
-                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHL)}>{vHL}</span>
-                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
-                               </div>
-                             </div>
-                          </div>
-                          
-                          <div className="flex flex-col gap-6 text-right z-10">
-                             <div>
-                               <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Rechts</div>
-                               <div className="flex items-baseline justify-end">
-                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFR)}>{vFR}</span>
-                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
-                               </div>
-                             </div>
-                             <div>
-                               <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Rechts</div>
-                               <div className="flex items-baseline justify-end">
-                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHR)}>{vHR}</span>
-                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
-                               </div>
-                             </div>
-                          </div>
+                          {hasHeightCorrectionDimensions ? (
+                            <>
+                              <div className="flex flex-col gap-6 text-left z-10">
+                                 <div>
+                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Links</div>
+                                   <div className="flex items-baseline">
+                                     <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFL)}>{vFL}</span>
+                                     <span className="text-[12px] cg-master-muted ml-1">cm</span>
+                                   </div>
+                                 </div>
+                                 <div>
+                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Links</div>
+                                   <div className="flex items-baseline">
+                                     <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHL)}>{vHL}</span>
+                                     <span className="text-[12px] cg-master-muted ml-1">cm</span>
+                                   </div>
+                                 </div>
+                              </div>
+                              
+                              <div className="flex flex-col gap-6 text-right z-10">
+                                 <div>
+                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Rechts</div>
+                                   <div className="flex items-baseline justify-end">
+                                     <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFR)}>{vFR}</span>
+                                     <span className="text-[12px] cg-master-muted ml-1">cm</span>
+                                   </div>
+                                 </div>
+                                 <div>
+                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Rechts</div>
+                                   <div className="flex items-baseline justify-end">
+                                     <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHR)}>{vHR}</span>
+                                     <span className="text-[12px] cg-master-muted ml-1">cm</span>
+                                   </div>
+                                 </div>
+                              </div>
+                            </>
+                          ) : ( <div className="cg-master-inset rounded-xl p-4 text-center"> <div className="cg-master-label !mb-1">Höhenkorrektur nicht verfügbar</div> <div className="cg-type-meta cg-master-muted">Bitte Spurbreite und Achsabstand im Profil eintragen.</div> </div> )}
                         </>
                       );
                     })()}
@@ -4279,8 +4289,8 @@ function ProfilView({ state, setState, demoSeed }: any) {
           <label className="cg-master-label mt-4">FAHRWERK (FÜR HÖHENKORREKTUR)</label>
           <div className="grid grid-cols-2 gap-3">
               {[
-                  { l: 'SPURBREITE', k: 'trackWidth', min: 100, max: 250, hint: 'Rad links ↔ rechts' },
-                  { l: 'ACHSABSTAND', k: 'wheelbase', min: 150, max: 700, hint: 'Vorderachse ↔ Hinterachse' }
+                  { l: 'SPURBREITE', k: 'trackWidth', min: 100, max: 250, hint: 'links ↔ rechts' },
+                  { l: 'ACHSABSTAND', k: 'wheelbase', min: 150, max: 700, hint: 'vorne ↔ hinten' }
               ].map(d => {
                   const val = state.profile[d.k as keyof typeof state.profile];
                   const numVal = val !== '' && val !== undefined ? Number(val) : NaN;
