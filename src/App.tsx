@@ -385,7 +385,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.2-dev
+          CamperGuard Pro v0.1.3-dev
         </div>
 
         {showChangelog && (
@@ -393,7 +393,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.2-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.3-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 05.05.2026</p>
                  </div>
                  <button 
@@ -404,7 +404,140 @@ export default function App() {
                  </button>
               </div>
               <div className="p-4 overflow-y-auto flex-1">
-                 <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.2-dev:</h3>
+                 <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.3-dev:</h3>
+                 <ul className="space-y-1 text-gray-300 mb-6">
+                    <li>400. Notfall-Ausrüstung-Header optisch an den Apotheke-Header mit rechtsstehendem Aktionsbutton angeglichen.</li>
+                    <li>399. Neu angelegte Ausrüstung öffnet sich sofort im Editier-Modus.</li>
+                    <li>398. Neues Ausrüstungs-Item erhält alle Pflichtfelder inklusive Name, Menge, Lagerort, Gewicht und Gewichtseinheit.</li>
+                    <li>397. Neues Ausrüstungs-Item wird mit eindeutiger ID per Date.now() erstellt.</li>
+                    <li>396. Neue eigene Notfallausrüstungs-Items können nun im Inhalt-Tab angelegt werden.</li>
+                    <li>395. Notfallausrüstung im Safety Hub um „+ Ausrüstung"-Button ergänzt.</li>
+                    <li>394. Bestehende Werte und Handler für Menge, Gewicht und Gewichtseinheit unverändert beibehalten.</li>
+                    <li>393. Layout-Gaps im Notfallausrüstung-Editor reduziert.</li>
+                    <li>392. Gewicht/Stk.-Eingabe zentriert und mit kompakterem Placeholder dargestellt.</li>
+                    <li>391. Gewicht/Stk.-Eingabefeld erhält durch schmaleres Dropdown mehr nutzbare Breite.</li>
+                    <li>390. kg/g-Auswahl bei Gewicht/Stk. von 80px auf 50px verschmälert.</li>
+                    <li>389. Icons der Mengensteuerung bei der Notfallausrüstung verkleinert.</li>
+                    <li>388. Minus- und Plus-Buttons bei der Notfallausrüstung von 50px auf 36px verschmälert.</li>
+                    <li>387. Menge und Gewicht/Stk. als Zwei-Spalten-Grid dargestellt.</li>
+                    <li>386. Menge und Gewicht/Stk. bei Notfallausrüstung in eine gemeinsame Zeile gebracht.</li>
+                    <li>385. Notfallausrüstung-Editor im Safety Hub kompakter proportioniert.</li>
+                    <li>384. Nicht-klickbare Status-Warnungen bleiben unverändert.</li>
+                    <li>383. Klickbare Warnungen im Status-Tab rechts mit ChevronRight-Pfeil gekennzeichnet.</li>
+                    <li>382. Klickbare Warnungen im Status-Tab optisch mit Cursor-Pointer und aktivem Zustand markiert.</li>
+                    <li>381. Safety Hub springt bei Medikamenten-Warnungen direkt in den Inhalt-Tab mit Apotheke-Kontext.</li>
+                    <li>380. Klick auf „Medikament läuft bald ab" öffnet den Safety Hub.</li>
+                    <li>379. Klick auf „Medikament abgelaufen" öffnet den Safety Hub.</li>
+                    <li>378. Medikamenten-Warnungen erhalten nun eine Pharmacy-Action im Warning-Objekt.</li>
+                    <li>377. Medikamenten-Warnungen auf der Status-Seite klickbar gemacht.</li>
+                    <li>376. Inventardruck verwendet nun den Titel „Inventarliste".</li>
+                    <li>375. Archiv-Druckansicht verwendet nun den Titel „Archiv".</li>
+                    <li>374. POI-Druckansicht verwendet nun den Titel „Standorte / POI".</li>
+                    <li>373. Strikte Fahrtenbuch-Ansicht verwendet nun den Titel „Fahrtenbuch §".</li>
+                    <li>372. Flexible Fahrtenansicht verwendet nun den Titel „Reisetagebuch".</li>
+                    <li>371. Tankdruck verwendet nun den Titel „Tankprotokoll".</li>
+                    <li>370. Logbuch-Drucktitel zentral vereinheitlicht und typabhängig zugeordnet.</li>
+                    <li>369. Bestehende Tabellenlogik für Tanken, Fahrten, Fahrtenbuch und POIs beim PrintHeader-Umbau unverändert beibehalten.</li>
+                    <li>368. Logbuch-Druckansichten nutzen für den Druck nun ebenfalls den gemeinsamen PrintHeader.</li>
+                    <li>367. Inventarliste nutzt für den Druck nun den gemeinsamen PrintHeader.</li>
+                    <li>366. PrintHeader ohne globale CSS-Klassen ausschließlich mit Inline-Styles umgesetzt.</li>
+                    <li>365. PrintHeader-Komponente mit Logo links, Titel mittig sowie Fahrzeugname und Datum rechts aufgebaut.</li>
+                    <li>364. Inhaltsdruck-Kopfzeile auf gemeinsamen PrintHeader vorbereitet.</li>
+                    <li>363. Tausenderpunkt-Formatierung bei Gewichtsangaben wie Leergewicht und zGG unverändert beibehalten.</li>
+                    <li>362. Zentimeter-Eingaben für Fahrzeugabmessungen dadurch lesbarer und weniger fehleranfällig gemacht.</li>
+                    <li>361. Spurbreite und Achsabstand werden im Profil ohne Tausenderpunkt angezeigt.</li>
+                    <li>360. Höhe, Breite und Länge werden im Profil ohne toLocaleString angezeigt.</li>
+                    <li>359. Tausenderpunkt-Anzeige bei Fahrzeugabmessungen im Profil entfernt.</li>
+                    <li>358. Höhenkorrektur bleibt bei fehlender Spurbreite oder fehlendem Achsabstand korrekt auf 0 cm.</li>
+                    <li>357. Vier-Ecken-Anzeige für Höhenkorrektur bleibt unverändert, wird aber mit berechneten cm-Werten gefüllt.</li>
+                    <li>356. Höhenkorrekturwerte werden auf eine Dezimalstelle gerundet.</li>
+                    <li>355. Höhenkorrektur nutzt trigonometrische Berechnung über Math.sin() und Radiant-Umrechnung.</li>
+                    <li>354. Höhenkorrektur berechnet Anhebungswerte aus Pitch, Roll, Spurbreite und Achsabstand.</li>
+                    <li>353. Höhenkorrektur im Reise-Tab von statischen 0-cm-Werten auf echte Berechnung umgestellt.</li>
+                    <li>352. Validierung für Achsabstand mit Wertebereich 150–700 cm ergänzt.</li>
+                    <li>351. Validierung für Spurbreite mit Wertebereich 100–250 cm ergänzt.</li>
+                    <li>350. Profil-Tab um Fahrwerksbereich für Spurbreite und Achsabstand erweitert.</li>
+                    <li>349. Initialwerte für Spurbreite und Achsabstand im INITIAL_STATE ergänzt.</li>
+                    <li>348. trackWidth und wheelbase im Profil-Typensystem ergänzt.</li>
+                    <li>347. Profil um Achsabstand für Höhenkorrektur ergänzt.</li>
+                    <li>346. Profil um Spurbreite für Höhenkorrektur ergänzt.</li>
+                    <li>345. Tara-Reset vom Audio-Assist entkoppelt und unabhängig vom Audio-Status nutzbar gemacht.</li>
+                    <li>344. Neuer TARA RESET-Button erscheint nur bei aktiver Tara-Kalibrierung.</li>
+                    <li>343. Tara-Reset setzt pitchOffset und rollOffset auf 0 zurück.</li>
+                    <li>342. Soundtest-Funktion durch Tara-Reset-Funktion ersetzt.</li>
+                    <li>341. Manuellen Soundtest-Button im Reise-Tab entfernt.</li>
+                    <li>340. Pitch-/Roll-Berechnung und Kompass-UI-Rotation unverändert beibehalten.</li>
+                    <li>339. Sensor-Permission-Status als State eingeführt und an ReiseView übergeben.</li>
+                    <li>338. Reise-Tab um Sensoren-aktivieren-Banner für iOS erweitert.</li>
+                    <li>337. iOS-Sensorberechtigung über DeviceOrientationEvent.requestPermission() ergänzt.</li>
+                    <li>336. iOS-webkitCompassHeading weiterhin mit höchster Priorität für echten Kompass-Heading genutzt.</li>
+                    <li>335. Relative deviceorientation-Events werden ignoriert, sobald absolute Orientierungsdaten verfügbar sind.</li>
+                    <li>334. deviceorientationabsolute als bevorzugtes Android-Event für absoluten Kompass-Heading ergänzt.</li>
+                    <li>333. e.alpha für Kompassanzeige auf (360 - alpha) % 360 umgerechnet.</li>
+                    <li>332. Kompass-Heading-Berechnung für deviceorientation korrigiert.</li>
+                    <li>331. Audio-Ready-Testton beim Aktivieren beibehalten, Richtungstestton entfernt.</li>
+                    <li>330. Manueller Soundtest auf Lock-Akkord umgestellt.</li>
+                    <li>329. Audio-Parameter werden nun bei Sensoränderungen über calibratedPitch/calibratedRoll aktualisiert.</li>
+                    <li>328. Alte Richtungston-Funktion durch kontinuierliche Echtzeit-Audio-Engine ersetzt.</li>
+                    <li>327. Altes Pulse-/scheduleNextPulse-System im Audio-Level-Assist entfernt.</li>
+                    <li>326. Einmaligen C-Dur-Lock-Akkord beim Erreichen des Levels beibehalten.</li>
+                    <li>325. Hauptlautstärke im Level reduziert und außerhalb des Levels angehoben.</li>
+                    <li>324. Loopendes Pink-Noise-Signal für Level-Nähe ergänzt.</li>
+                    <li>323. Zweiten leicht verstimmten Oszillator für raues Hinten-Feedback ergänzt.</li>
+                    <li>322. Tremolo-Oszillator für Vorne-/Hinten-Feedback ergänzt.</li>
+                    <li>321. Pitch-Neigung über Klangcharakter abgebildet: Vorne mit Tremolo, hinten mit Rauheit/Schwebung.</li>
+                    <li>320. Roll-Neigung über Tonhöhe abgebildet: Mitte 440 Hz, links tiefer, rechts höher.</li>
+                    <li>319. Dauerhaft laufenden Hauptoszillator für stufenlose Links-/Rechts-Rückmeldung vorbereitet.</li>
+                    <li>318. Audio-Level-Assist von gepulsten Einzeltönen auf kontinuierliche Sonifikation umgestellt.</li>
+                    <li>317. Audio-Geigerzähler-Feedback bei Annäherung an Level hörbar beschleunigt.</li>
+                    <li>316. Pink-Noise-Levelnähe durch korrekte Grad-Normalisierung wieder aktivierbar gemacht.</li>
+                    <li>315. Audio-Level-Assist-closeness-Berechnung in playDirectionTone korrigiert.</li>
+                    <li>314. Pulsing-Beschleunigung auf realistischen Neigungsbereich von 0–10 Grad gemappt.</li>
+                    <li>313. Audio-Level-Assist-Intensity-Normalisierung in scheduleNextPulse korrigiert.</li>
+                    <li>312. C-Dur-Lock-Akkord und Level-Lock-Logik unverändert beibehalten.</li>
+                    <li>311. Pink-Noise-Levelnähe früher und etwas deutlicher zugemischt.</li>
+                    <li>310. Rechts-Signal als weicher Sine-Wave-Bop mit Frequenzabfall umgesetzt.</li>
+                    <li>309. Links-Signal als markanter Square-Wave-Doppelklick umgesetzt.</li>
+                    <li>308. Hinten-Signal als längeres, tieferes und raueres Brummen umgesetzt.</li>
+                    <li>307. Vorne-Signal als deutlicherer aufsteigender Chirp mit breiterem Frequenzbereich umgesetzt.</li>
+                    <li>306. Richtungstöne im Audio-Level-Assist lauter und länger hörbar gemacht.</li>
+                    <li>305. Pulsabstand auf größere Dynamik zwischen starker Neigung und Levelnähe umgestellt.</li>
+                    <li>304. Audio-Level-Assist-Pulsing aggressiver abgestimmt.</li>
+                    <li>303. Audio-Assist geht nach erreichtem Level in stille Überwachung mit 500-ms-Prüfung.</li>
+                    <li>302. Lock-Piepen durch einmaligen kurzen C-Dur-Lock-Akkord ersetzt.</li>
+                    <li>301. Audio-Assist-Pulse werden bei starker Neigung langsamer und nahe am Level schneller.</li>
+                    <li>300. Audio-Pulsmodell auf Geigerzähler-ähnliche exponentielle Frequenzlogik umgestellt.</li>
+                    <li>299. Nähe-zum-Level-Feedback durch sanft zugemischtes Pink-Noise-Signal ergänzt.</li>
+                    <li>298. Diagonale Neigungen durch überlagerte Audio-Pattern hörbar gemacht.</li>
+                    <li>297. „Rechts" als weicher Sine-Wave-Puls umgesetzt.</li>
+                    <li>296. „Links" als kurzer scharfer Square-Wave-Klick umgesetzt.</li>
+                    <li>295. Links-/Rechts-Audiofeedback über unterschiedlichen Impulscharakter getrennt.</li>
+                    <li>294. „Hinten zu hoch" als tiefes absteigendes Brummen umgesetzt.</li>
+                    <li>293. „Vorne zu hoch" als heller aufsteigender Chirp umgesetzt.</li>
+                    <li>292. Vorne-/Hinten-Audiofeedback auf unterscheidbare Tonhöhen-Sweeps umgestellt.</li>
+                    <li>291. Audio-Level-Assist-System grundlegend klanglich überarbeitet.</li>
+                    <li>290. Hartcodierten System-Font in .typo-value-hero durch var(--font-sans) ersetzt.</li>
+                    <li>289. body, cg-*, cg-master-* und Tailwind-font-sans nutzen dadurch konsistent Inter.</li>
+                    <li>288. Mono-Font im Design-System an --font-mono angeschlossen.</li>
+                    <li>287. Inter-Font im Design-System an --font-sans angeschlossen.</li>
+                    <li>286. Leerer oder unbekannter Blutgruppenwert bleibt im Safety-Hub-Select weiß dargestellt.</li>
+                    <li>285. Ausgewählte Blutgruppe wird bei gültigem Wert in Accent-Orange angezeigt.</li>
+                    <li>284. Blutgruppen-Auswahl im Safety Hub optisch angepasst.</li>
+                    <li>283. Drucktitel für Tankprotokoll, Reisetagebuch, Fahrtenbuch, Standorte/POI, Archiv und Inventarliste vereinheitlicht.</li>
+                    <li>282. Logbuch-Druckkopf auf PrintHeader umgestellt.</li>
+                    <li>281. Inventar-Druckkopf auf PrintHeader umgestellt.</li>
+                    <li>280. Gemeinsame PrintHeader-Komponente für Druckansichten vorbereitet.</li>
+                    <li>279. Fehlerhafte Ausgabe „Ohne Lagerort – Warnwesten" im Inhaltsdruck behoben.</li>
+                    <li>278. Warnweste wird im Inhaltsdruck bei 2 Stück und 2 Lagerorten korrekt als 1 Stück je Lagerort ausgegeben.</li>
+                    <li>277. Inhaltsdruck-Mengenanzeige bei Safety-Gear mit mehreren Lagerorten korrigiert.</li>
+                    <li>276. Inhaltsdruck-Safety-Gear gegen Warnweste/Warnwesten-Dubletten abgesichert.</li>
+                    <li>275. INITIAL_STATE der Notfallausrüstung auf Warnweste angepasst.</li>
+                    <li>274. Safety-Gear-Wording für Warnweste/Warnwesten analysiert und vereinheitlicht.</li>
+                    <li>273. Inhaltsdruck-Abstände und Linienführung weiter verdichtet.</li>
+                    <li>272. Inhaltsdruck-Logo aus dem Footer in die Kopfzeile verschoben.</li>
+                    <li>271. Inhaltsdruck-Kopfzeile auf Inventarliste mit Logo, Fahrzeugdaten und Ausdruckdatum umgestellt.</li>
+                 </ul>
+                 <h3 className="font-bold mb-2">Änderungen v0.1.2-dev:</h3>
                  <ul className="space-y-1 text-gray-300 mb-6">
                     <li>270. CamperGuard-Pro-Logo im Inhaltsdruck-Footer eingebunden.</li>
                     <li>269. Logo-Datei für den Druck als Public-Asset vorbereitet.</li>
@@ -830,10 +963,10 @@ function StatusView({ state, setState, orientation }: any) {
       });
   })();
   if (expiredPharmacyItems.length > 0) {
-      warnings.push({ type: 'danger', text: `${expiredPharmacyItems.length === 1 ? '1 Medikament abgelaufen' : `${expiredPharmacyItems.length} Medikamente abgelaufen`} - Safety Hub · Apotheke prüfen` });
+      warnings.push({ type: 'danger', text: `${expiredPharmacyItems.length === 1 ? '1 Medikament abgelaufen' : `${expiredPharmacyItems.length} Medikamente abgelaufen`} - Safety Hub · Apotheke prüfen`, action: 'pharmacy' });
   }
   if (soonExpiringPharmacyItems.length > 0) {
-      warnings.push({ type: 'warn', text: `${soonExpiringPharmacyItems.length === 1 ? '1 Medikament läuft bald ab' : `${soonExpiringPharmacyItems.length} Medikamente laufen bald ab`} - Safety Hub · Apotheke prüfen` });
+      warnings.push({ type: 'warn', text: `${soonExpiringPharmacyItems.length === 1 ? '1 Medikament läuft bald ab' : `${soonExpiringPharmacyItems.length} Medikamente laufen bald ab`} - Safety Hub · Apotheke prüfen`, action: 'pharmacy' });
   }
   // --- Medikamenten Ablauf Logik Ende ---
 
@@ -1029,10 +1162,20 @@ function StatusView({ state, setState, orientation }: any) {
       {/* Element 2: Warnbereich */}
       {warnings.length > 0 && (
           <div className="flex flex-col gap-3">
-              {warnings.map((w, idx) => (
-                  <div key={idx} className={`card-alert alert-${w.type} flex items-center gap-3 cg-alert`}>
+              {warnings.map((w: any, idx: number) => (
+                  <div 
+                      key={idx} 
+                      className={`card-alert alert-${w.type} flex items-center gap-3 cg-alert ${w.action ? 'cursor-pointer active:opacity-70' : ''}`}
+                      onClick={() => {
+                          if (w.action === 'pharmacy') {
+                              setShowSos(true);
+                              setSosTab('inhalt');
+                          }
+                      }}
+                  >
                       <AlertTriangle size={18} />
                       <span className="cg-technical-label">{w.text}</span>
+                      {w.action && <ChevronRight size={16} className="ml-auto opacity-50" />}
                   </div>
               ))}
           </div>
@@ -1251,7 +1394,16 @@ function StatusView({ state, setState, orientation }: any) {
                          <div className="cg-master-card-small relative group">
                              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--accent)] relative z-10" />
                              <div className="flex justify-between items-center mb-3 relative z-10">
-                                 <h3 className="cg-master-label !mb-0 flex items-center gap-2"><MapPin size={14} className="text-[var(--accent)]"/> DEINE POSITION</h3>
+                                 <h3 
+                                    className={`cg-master-label !mb-0 flex items-center gap-2 ${gpsStatus === 'active' && gpsCoords ? 'cursor-pointer active:opacity-70' : ''}`}
+                                    onClick={() => {
+                                        if (gpsStatus === 'active' && gpsCoords) {
+                                            window.open(`https://www.google.com/maps?q=${gpsCoords.lat},${gpsCoords.lng}`, '_blank');
+                                        }
+                                    }}
+                                >
+                                    <MapPin size={14} className="text-[var(--accent)]"/> DEINE POSITION
+                                </h3>
                                  <div className="flex items-center gap-2">
                                      <span className="cg-master-label !mb-0">GPS</span>
                                      <button 
@@ -1474,7 +1626,16 @@ function StatusView({ state, setState, orientation }: any) {
                  {sosTab === 'inhalt' && (
                      <div className="space-y-6 bg-[var(--bg-app)] rounded-2xl p-4 -mx-2 border border-[var(--border)] shadow-inner">
                          <div>
-                             <h3 className="cg-master-section-title !mb-3 !mt-4">Notfall-Ausrüstung</h3>
+                             <h3 className="cg-master-section-title !mb-3 !mt-4 flex justify-between items-center">
+                                 <span>Notfall-Ausrüstung</span>
+                                 <button onClick={() => {
+                                     const newId = Date.now().toString();
+                                     updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
+                                     setEditingGearId(newId);
+                                 }} className="cg-master-button !py-1 !px-2">
+                                     <Plus size={10}/> Ausrüstung
+                                 </button>
+                             </h3>
                              {(state.sos.gear || []).map((g: any, i: number) => {
                                  const validLocations = (g.locations || []).filter((l: string) => l.trim() !== '');
                                  const hasWeight = g.weight !== undefined && g.weight !== null && g.weight !== '';
@@ -1527,27 +1688,29 @@ function StatusView({ state, setState, orientation }: any) {
                                      </div>
                                      {isEditing && (
                                         <div className="mt-3 pt-3 border-t border-[var(--cg-master-border)]">
-                                            <div className="space-y-4 mb-5">
-                                                <div className="flex flex-col space-y-2">
-                                                    <span className="cg-master-label !mb-0">Menge</span>
-                                                    <div className="flex h-[42px] items-center gap-2">
-                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(0, (gx.count||0)-1), checked: Math.max(0, (gx.count||0)-1) > 0 } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
-                                                            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                                        </button>
-                                                        <input type="number" min="0" value={g.count} onChange={e => { const val = parseInt(e.target.value) || 0; updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: val, checked: val > 0 } : gx)); }} className="cg-master-input flex-1 w-full !h-full !text-center !px-2" />
-                                                        <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1, checked: true } : gx))} className="cg-master-inset cg-master-control w-[50px] h-full rounded flex items-center justify-center shrink-0">
-                                                            <Plus size={14}/>
-                                                        </button>
+                                            <div className="mb-5">
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <span className="cg-master-label !mb-1 block">Menge</span>
+                                                        <div className="flex h-[42px] items-center gap-1">
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(0, (gx.count||0)-1), checked: Math.max(0, (gx.count||0)-1) > 0 } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
+                                                                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                            </button>
+                                                            <input type="number" min="0" value={g.count} onChange={e => { const val = parseInt(e.target.value) || 0; updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: val, checked: val > 0 } : gx)); }} className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1, checked: true } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
+                                                                <Plus size={12}/>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="flex flex-col space-y-2">
-                                                    <span className="cg-master-label !mb-0 whitespace-nowrap">Gewicht/Stk.</span>
-                                                    <div className="flex h-[42px] gap-2">
-                                                        <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="Gewicht" className="cg-master-input flex-1 w-full !h-full !pl-3 !pr-2" />
-                                                        <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-[80px] !h-full !px-2 shrink-0">
-                                                            <option value="kg">kg</option>
-                                                            <option value="g">g</option>
-                                                        </select>
+                                                    <div>
+                                                        <span className="cg-master-label !mb-1 block">Gewicht/Stk.</span>
+                                                        <div className="flex h-[42px] items-center gap-1">
+                                                            <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="0" className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
+                                                            <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-[50px] !h-full !px-1 !text-sm shrink-0">
+                                                                <option value="kg">kg</option>
+                                                                <option value="g">g</option>
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -4048,7 +4211,7 @@ function ProfilView({ state, setState, demoSeed }: any) {
                   <input 
                       type="text" 
                       inputMode="numeric"
-                      value={!isEmpty && !isNaN(numVal) ? numVal.toLocaleString('de-DE') : ''} 
+                      value={!isEmpty && !isNaN(numVal) ? String(numVal) : ''} 
                       onChange={e => {
                           let rawVal = e.target.value.replace(/\D/g, '');
                           hc(`profile.${d.k}`, rawVal !== '' ? Number(rawVal) : '');
@@ -4080,7 +4243,7 @@ function ProfilView({ state, setState, demoSeed }: any) {
                           <input
                               type="text"
                               inputMode="numeric"
-                              value={!isEmpty && !isNaN(numVal) ? numVal.toLocaleString('de-DE') : ''}
+                              value={!isEmpty && !isNaN(numVal) ? String(numVal) : ''}
                               onChange={e => {
                                   let rawVal = e.target.value.replace(/\D/g, '');
                                   hc(`profile.${d.k}`, rawVal !== '' ? Number(rawVal) : '');
