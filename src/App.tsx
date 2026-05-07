@@ -921,7 +921,7 @@ function StatusView({ state, setState, orientation }: any) {
   const updateSos = (field: string, val: any) => setState({...state, sos: {...state.sos, [field]: val}});
 
   const overLbs = remainingWeight < 0 ? Math.abs(remainingWeight) : 0;
-  const warnings: {type: 'danger' | 'warn', text: string}[] = [];
+  const warnings: { type: 'danger' | 'warn'; text: string; action?: 'pharmacy' }[] = [];
   if (overLbs > 0) {
       warnings.push({ type: 'danger', text: `Fahrzeug überladen! ${formatNumber(overLbs, 0)} kg über ZGG` });
   }
@@ -2624,12 +2624,14 @@ function LogbuchView({ state, setState }: any) {
   const result = calculateAverageFuelConsumptionFromFuelLog(currentFuelLog);
 
   const [tankForm, setTankForm] = useState({ date: new Date().toISOString().split('T')[0], km: '', liters: '', price: '', total: '' });
-  const [tripForm, setTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', destination: '', purpose: '', category: 'Privat', note: '' });
+  const [tripForm, setTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', destination: '', purpose: '', category: '', note: '' });
   const [businessTripForm, setBusinessTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: '' });
   const [spotForm, setSpotForm] = useState({ date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz' });
   const [spotGpsError, setSpotGpsError] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
+  const [tripGpsCoords, setTripGpsCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [tripGpsStatus, setTripGpsStatus] = useState<'offline'|'loading'|'active'>('offline');
   
   const [focusedTankField, setFocusedTankField] = useState<string | null>(null);
   
@@ -2659,6 +2661,28 @@ function LogbuchView({ state, setState }: any) {
       });
     }
   }, [isAdding, logType]);
+
+  useEffect(() => {
+    if (!(isAdding && logType === 'fahrt' && tripLogMode === 'flex' && !editingTripId && state.sos?.gpsEnabled !== false)) {
+      setTripGpsCoords(null);
+      setTripGpsStatus('offline');
+      return;
+    }
+
+    setTripGpsStatus('loading');
+
+    navigator.geolocation.getCurrentPosition(
+      p => {
+        setTripGpsCoords({ lat: p.coords.latitude, lng: p.coords.longitude });
+        setTripGpsStatus('active');
+      },
+      () => {
+        setTripGpsCoords(null);
+        setTripGpsStatus('offline');
+      },
+      { enableHighAccuracy: true }
+    );
+  }, [isAdding, logType, tripLogMode, editingTripId, state.sos?.gpsEnabled]);
 
   state.fuelLog.forEach((f: any) => {
       const fTime = new Date(f.date).getTime();
@@ -2876,7 +2900,6 @@ function LogbuchView({ state, setState }: any) {
                                     <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <h4 className="cg-type-card-title">{entry.destination}</h4>
-                                        <span className="cg-type-label text-[var(--accent)] border px-1">{entry.category || 'Privat'}</span>
                                     </div>
                                     {entry.purpose && <p className="cg-type-meta mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.purpose}</p>}
                                     {entry.note && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.note}</p>}
@@ -2907,7 +2930,7 @@ function LogbuchView({ state, setState }: any) {
                                                 toKm: entry.toKm.toString(),
                                                 destination: entry.destination,
                                                 purpose: entry.purpose || '',
-                                                category: entry.category || 'Privat',
+                                                category: '',
                                                 note: entry.note || ''
                                             });
                                             setIsAdding(true);
@@ -3058,7 +3081,7 @@ function LogbuchView({ state, setState }: any) {
                     if (logType === 'tank') {
                         setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
                     } else if (logType === 'fahrt') {
-                        setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: 'Privat', note: ''}));
+                        setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
                         setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
                     } else if (logType === 'spots') {
                         setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
@@ -3118,10 +3141,9 @@ function LogbuchView({ state, setState }: any) {
                                     toKm: isNaN(parsedToKm) ? 0 : parsedToKm, 
                                     purpose: tripForm.purpose, 
                                     destination: tripForm.destination, 
-                                    category: tripForm.category, 
                                     note: tripForm.note,
-                                    lat: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lat ?? (gpsCoords?.lat || undefined)) : (gpsCoords?.lat || undefined),
-                                    lng: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lng ?? (gpsCoords?.lng || undefined)) : (gpsCoords?.lng || undefined)
+                                    lat: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lat ?? undefined) : (tripGpsCoords?.lat || undefined),
+                                    lng: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lng ?? undefined) : (tripGpsCoords?.lng || undefined)
                                 };
                                 if (editingTripId) {
                                     setState({...state, tripLog: state.tripLog.map((t:any) => t.id === editingTripId ? entry : t)});
@@ -3237,10 +3259,10 @@ function LogbuchView({ state, setState }: any) {
                                         {tripForm.fromKm !== '' && parseFloat(tripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Tacho-Stand kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
                                         <input name="destination" required placeholder="Zielort" value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})} className="cg-master-input w-full" />
                                         <textarea name="note" placeholder="Notizen" value={tripForm.note} onChange={e => setTripForm({...tripForm, note: e.target.value})} className="cg-master-input w-full h-20" />
-                                        {gpsCoords && gpsStatus === 'active' && !editingTripId && (
+                                        {tripGpsCoords && tripGpsStatus === 'active' && !editingTripId && (
                                             <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)]">
                                                 <MapPin size={14} className="text-[var(--accent)] shrink-0"/>
-                                                <span className="cg-type-meta text-[var(--accent)]">GPS: {gpsCoords.lat.toFixed(5)}, {gpsCoords.lng.toFixed(5)}</span>
+                                                <span className="cg-type-meta text-[var(--accent)]">GPS: {tripGpsCoords.lat.toFixed(5)}, {tripGpsCoords.lng.toFixed(5)}</span>
                                                 <span className="cg-type-meta cg-master-muted ml-auto">wird gespeichert</span>
                                             </div>
                                         )}
@@ -3366,12 +3388,11 @@ function LogbuchView({ state, setState }: any) {
           {logType === 'fahrt' && tripLogMode === 'flex' && (
              currentTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Kategorie</th><th>Zielort</th><th>Zweck</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Notiz</th></tr></thead>
+                 <thead><tr><th>Datum</th><th>Zielort</th><th>Zweck</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Notiz</th></tr></thead>
                  <tbody>
                      {currentTripLog.map((t:any) => (
                          <tr key={t.id}>
                              <td>{new Date(t.date).toLocaleDateString('de-DE')}</td>
-                             <td>{t.category || 'Privat'}</td>
                              <td>{t.destination}</td>
                              <td>{t.purpose}</td>
                              <td>{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : t.fromKm}</td>
@@ -4038,15 +4059,11 @@ function ReiseView({ state, setState, orientation, orientationPermission, reques
 
                     {(() => {
                       const getStyle = (val: number) => val === 0 ? {
-                        background: 'linear-gradient(180deg, #00ff9c, #00cc7a)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        color: '#00ff9c',
                         textShadow: '0 0 3px rgba(0,255,156,0.25)'
                       } : {
-                        background: 'linear-gradient(180deg, #ff9a3c, #ff5a00)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        textShadow: '0 0 8px rgba(255,122,0,0.6), 0 0 16px rgba(255,122,0,0.3)'
+                        color: '#ff8a2a',
+                        textShadow: '0 0 3px rgba(255,122,0,0.35)'
                       };
                       const tw = state.profile.trackWidth || 0;
                       const wb = state.profile.wheelbase || 0;
@@ -4071,15 +4088,15 @@ function ReiseView({ state, setState, orientation, orientationPermission, reques
                              <div>
                                <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Links</div>
                                <div className="flex items-baseline">
-                                 <span className="text-[32px] leading-none font-mono font-bold" style={getStyle(vFL)}>{vFL}</span>
-                                 <span className="text-[19px] cg-master-muted ml-1">cm</span>
+                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFL)}>{vFL}</span>
+                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                </div>
                              </div>
                              <div>
                                <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Links</div>
                                <div className="flex items-baseline">
-                                 <span className="text-[32px] leading-none font-mono font-bold" style={getStyle(vHL)}>{vHL}</span>
-                                 <span className="text-[19px] cg-master-muted ml-1">cm</span>
+                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHL)}>{vHL}</span>
+                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                </div>
                              </div>
                           </div>
@@ -4088,15 +4105,15 @@ function ReiseView({ state, setState, orientation, orientationPermission, reques
                              <div>
                                <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Rechts</div>
                                <div className="flex items-baseline justify-end">
-                                 <span className="text-[32px] leading-none font-mono font-bold" style={getStyle(vFR)}>{vFR}</span>
-                                 <span className="text-[19px] cg-master-muted ml-1">cm</span>
+                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFR)}>{vFR}</span>
+                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                </div>
                              </div>
                              <div>
                                <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Rechts</div>
                                <div className="flex items-baseline justify-end">
-                                 <span className="text-[32px] leading-none font-mono font-bold" style={getStyle(vHR)}>{vHR}</span>
-                                 <span className="text-[19px] cg-master-muted ml-1">cm</span>
+                                 <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHR)}>{vHR}</span>
+                                 <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                </div>
                              </div>
                           </div>
