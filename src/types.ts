@@ -39,6 +39,8 @@ export interface TripEntry {
   toKm: number;
   purpose: string;
   destination: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface BusinessTripEntry {

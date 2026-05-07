@@ -1627,14 +1627,12 @@ function StatusView({ state, setState, orientation }: any) {
                      <div className="space-y-6 bg-[var(--bg-app)] rounded-2xl p-4 -mx-2 border border-[var(--border)] shadow-inner">
                          <div>
                              <h3 className="cg-master-section-title !mb-3 !mt-4 flex justify-between items-center">
-                                 <span>Notfall-Ausrüstung</span>
+                                 <span className="flex items-center"><ShieldPlus size={16} className="mr-2 text-[var(--accent)]"/>SOS-Ausrüstung</span>
                                  <button onClick={() => {
                                      const newId = Date.now().toString();
                                      updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
                                      setEditingGearId(newId);
-                                 }} className="cg-master-button !py-1 !px-2">
-                                     <Plus size={10}/> Ausrüstung
-                                 </button>
+                                 }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
                              {(state.sos.gear || []).map((g: any, i: number) => {
                                  const validLocations = (g.locations || []).filter((l: string) => l.trim() !== '');
@@ -1717,7 +1715,7 @@ function StatusView({ state, setState, orientation }: any) {
                                             <div>
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="cg-master-label !mb-0">Lagerorte</span>
-                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [...(gx.locations || []), ''] } : gx))} className="cg-master-button !py-1 !px-2"><Plus size={10}/> Ort</button>
+                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [...(gx.locations || []), ''] } : gx))} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/> Ort</button>
                                                 </div>
                                                 <div className="space-y-2">
                                                     {(g.locations || []).map((loc: string, locIdx: number) => (
@@ -1740,7 +1738,7 @@ function StatusView({ state, setState, orientation }: any) {
                          <div>
                              <h3 className="cg-master-section-title !mb-3 flex justify-between items-center">
                                  <span className="flex items-center"><Pill size={16} className="mr-2 text-[var(--accent)]"/>Apotheke</span>
-                                 <button onClick={() => { const newId = Date.now().toString(); updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); setEditingPharmacyId(newId); }} className="cg-master-button !py-1 !px-2"><Plus size={10}/> Med.</button>
+                                 <button onClick={() => { const newId = Date.now().toString(); updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); setEditingPharmacyId(newId); }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
 
                              {(expiredPharmacyItems.length > 0 || soonExpiringPharmacyItems.length > 0) && (
@@ -2032,7 +2030,7 @@ function InhaltView({ state, setState }: any) {
     <div className="space-y-6">
       <div className="flex justify-between items-end mb-4 px-2 no-print">
           <h1 className="typo-section-title">INHALT</h1>
-          <button onClick={() => window.print()} className="cg-master-button p-2"><Printer size={16}/></button>
+          <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
       </div>
 
       <div className="relative no-print mb-4">
@@ -2058,7 +2056,7 @@ function InhaltView({ state, setState }: any) {
               <option disabled className="bg-[var(--bg-card)] text-white/50" value="__divider__">──────────</option>
               <option value="__sort__" className="bg-[var(--bg-card)] text-[var(--accent)]">Lagerorte in „{activeCategory}“ sortieren</option>
           </select>
-          <button onClick={() => setIsAddingMainCategory(true)} className="cg-master-button px-3"><Plus size={16} /></button>
+          <button onClick={() => setIsAddingMainCategory(true)} className="cg-master-button !py-1.5 !px-3"><Plus size={14} /></button>
           {!fixedCategories.includes(activeCategory) && (
               <button 
                   onClick={() => {
@@ -2782,7 +2780,7 @@ function LogbuchView({ state, setState }: any) {
       <div className="space-y-6 logbuch-normal">
       <div className="flex justify-between items-end mb-4 px-2 no-print">
           <h1 className="cg-type-page-title">Logbuch {currentYear}</h1>
-          <button onClick={() => window.print()} className="cg-master-button p-2"><Printer size={16}/></button>
+          <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
       </div>
 
       <div className="cg-master-inset p-3 flex justify-between items-center sticky top-[-10px] z-20">
@@ -2872,16 +2870,29 @@ function LogbuchView({ state, setState }: any) {
               {tripLogMode === 'flex' && (
                   <div className="space-y-3">
                       {currentTripLog.slice(0, displayedTripsCount).map((entry:any) => (
-                          <div key={entry.id} className="cg-master-card-small !p-3 space-y-3 border-l-2 !border-l-[var(--accent)] !mb-0">
-                            <div className="flex justify-between items-start">
-                                <div className="flex flex-col gap-1 items-start w-2/3">
+                          <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0 overflow-hidden" style={{ maxHeight: '90px' }}>
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="flex flex-col gap-0 items-start w-2/3">
                                     <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <h4 className="cg-type-card-title">{entry.destination}</h4>
                                         <span className="cg-type-label text-[var(--accent)] border px-1">{entry.category || 'Privat'}</span>
                                     </div>
-                                    {entry.purpose && <p className="cg-type-meta mt-1 break-words line-clamp-2">{entry.purpose}</p>}
-                                    {entry.note && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-2">{entry.note}</p>}
+                                    {entry.purpose && <p className="cg-type-meta mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.purpose}</p>}
+                                    {entry.note && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.note}</p>}
+                                    {entry.lat && entry.lng && (
+                                        <a 
+                                            href={`https://www.google.com/maps?q=${entry.lat},${entry.lng}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 mt-0.5 no-underline"
+                                            style={{ textDecoration: 'none' }}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <MapPin size={10} className="text-[var(--accent)] shrink-0"/>
+                                            <span className="cg-type-meta text-[var(--accent)]">{entry.lat.toFixed(4)}, {entry.lng.toFixed(4)}</span>
+                                        </a>
+                                    )}
                                 </div>
                                 <div className="flex flex-col items-end gap-2 w-1/3">
                                     <div className="cg-type-value text-[var(--accent)]">
@@ -3034,33 +3045,34 @@ function LogbuchView({ state, setState }: any) {
           </div>
       )}
 
-      {logType === 'tank' && (
-         <div className="pt-4 flex w-full justify-center pb-24">
-             <button onClick={closeYear} className="cg-master-button h-11 px-6 flex flex-row items-center justify-center gap-2 max-w-[240px] w-full"><Archive size={16}/> Jahr abschließen</button>
-         </div>
-      )}
-
       {(logType === 'tank' || logType === 'fahrt' || logType === 'spots') && (
-          <button 
-            onClick={() => { 
-                const highestKm = getLastKnownKm();
-                if (logType === 'tank') {
-                    setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
-                } else if (logType === 'fahrt') {
-                    setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: 'Privat', note: ''}));
-                    setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
-                } else if (logType === 'spots') {
-                    setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
-                    setSpotGpsError(false);
-                }
-                setEditingTripId(null);
-                setEditingSpotId(null);
-                setIsAdding(true); 
-            }} 
-            className="cg-master-button fixed bottom-24 right-4 h-9 px-5 rounded-full flex flex-row items-center justify-center shadow-2xl z-40 border border-[var(--accent-dark)]"
-          >
-            <Plus size={20} />
-          </button>
+          <div className="fixed bottom-24 right-4 z-40 flex items-center gap-3">
+              {logType === 'tank' && (
+                  <button onClick={closeYear} className="cg-master-button h-9 px-4 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)] gap-2">
+                      <Archive size={14}/> <span className="text-xs font-bold">Abschließen</span>
+                  </button>
+              )}
+              <button 
+                onClick={() => { 
+                    const highestKm = getLastKnownKm();
+                    if (logType === 'tank') {
+                        setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
+                    } else if (logType === 'fahrt') {
+                        setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: 'Privat', note: ''}));
+                        setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
+                    } else if (logType === 'spots') {
+                        setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
+                        setSpotGpsError(false);
+                    }
+                    setEditingTripId(null);
+                    setEditingSpotId(null);
+                    setIsAdding(true); 
+                }} 
+                className="cg-master-button h-9 px-5 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)]"
+              >
+                <Plus size={20} />
+              </button>
+          </div>
       )}
 
       <AnimatePresence>
@@ -3107,7 +3119,9 @@ function LogbuchView({ state, setState }: any) {
                                     purpose: tripForm.purpose, 
                                     destination: tripForm.destination, 
                                     category: tripForm.category, 
-                                    note: tripForm.note 
+                                    note: tripForm.note,
+                                    lat: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lat ?? (gpsCoords?.lat || undefined)) : (gpsCoords?.lat || undefined),
+                                    lng: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lng ?? (gpsCoords?.lng || undefined)) : (gpsCoords?.lng || undefined)
                                 };
                                 if (editingTripId) {
                                     setState({...state, tripLog: state.tripLog.map((t:any) => t.id === editingTripId ? entry : t)});
@@ -3223,6 +3237,25 @@ function LogbuchView({ state, setState }: any) {
                                         {tripForm.fromKm !== '' && parseFloat(tripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Tacho-Stand kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
                                         <input name="destination" required placeholder="Zielort" value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})} className="cg-master-input w-full" />
                                         <textarea name="note" placeholder="Notizen" value={tripForm.note} onChange={e => setTripForm({...tripForm, note: e.target.value})} className="cg-master-input w-full h-20" />
+                                        {gpsCoords && gpsStatus === 'active' && !editingTripId && (
+                                            <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)]">
+                                                <MapPin size={14} className="text-[var(--accent)] shrink-0"/>
+                                                <span className="cg-type-meta text-[var(--accent)]">GPS: {gpsCoords.lat.toFixed(5)}, {gpsCoords.lng.toFixed(5)}</span>
+                                                <span className="cg-type-meta cg-master-muted ml-auto">wird gespeichert</span>
+                                            </div>
+                                        )}
+                                        {editingTripId && (() => {
+                                            const existingEntry = state.tripLog.find((t:any) => t.id === editingTripId);
+                                            if (existingEntry?.lat && existingEntry?.lng) {
+                                                return (
+                                                    <a href={`https://www.google.com/maps?q=${existingEntry.lat},${existingEntry.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)] no-underline" style={{ textDecoration: 'none' }}>
+                                                        <MapPin size={14} className="text-[var(--accent)] shrink-0"/>
+                                                        <span className="cg-type-meta text-[var(--accent)]">GPS: {existingEntry.lat.toFixed(5)}, {existingEntry.lng.toFixed(5)}</span>
+                                                    </a>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                     </>
                                 )
                             ) : (
