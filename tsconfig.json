@@ -24,7 +24,6 @@
     "noEmit": true
   },
   "exclude": [
-    "_archive-root-cleanup",
     "dist",
     "node_modules"
   ]

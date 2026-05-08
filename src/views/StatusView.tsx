@@ -982,9 +982,11 @@ export function StatusView({ state, setState, orientation }: any) {
                                      <div className="grid grid-cols-2 gap-3">
                                          <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className={`cg-master-input w-full ${(!p.name || String(p.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
                                          <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-full" />
-                                         <div>
-                                             <div className="text-[10px] text-[var(--text-muted)] ml-1 mb-1">Verfallsdatum</div>
-                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className={`cg-master-input w-full ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`} />
+                                         <div className="relative w-full">
+                                             <div className={`cg-master-input w-full flex items-center ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`}>
+                                                 {p.expiry ? p.expiry : 'Verfallsdatum'}
+                                             </div>
+                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer" />
                                          </div>
                                          <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-full" />
                                          <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-full" />
