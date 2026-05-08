@@ -1,7 +1,7 @@
 export const formatNumber = (num: number, decimals: number = 2) => num.toLocaleString('de-DE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 
 export const formatWeight = (kg: number): string => {
-  if (kg <= 0) return '';
+  if (kg < 0) return '';
   if (kg < 1) {
     const grams = Math.round(kg * 1000);
     return `${grams} g`;

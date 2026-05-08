@@ -114,7 +114,7 @@ export function StatusView({ state, setState, orientation }: any) {
           } else {
               const diffTime = expiryDate.getTime() - today.getTime();
               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              if (diffDays <= 90) {
+              if (diffDays <= 30) {
                   soonExpiringPharmacyItems.push(p);
               }
           }
@@ -337,64 +337,6 @@ export function StatusView({ state, setState, orientation }: any) {
                   </div>
               ))}
           </div>
-      )}
-
-      {/* Element 4: Tank-Stände (Hidden) */}
-      {false && (
-      <div className="cg-panel p-4">
-          <div className="typo-engraved mb-4">TANKSTÄNDE</div>
-          
-          <div className="flex items-center gap-4 cg-inset-panel p-3">
-              <div className="icon-circle shadow-none bg-transparent border border-white/5"><Droplet className="text-blue-400" /></div>
-              <div className="flex-1">
-                  <div className="flex justify-between items-end mb-2">
-                      <div>
-                         <div className="cg-technical-label">Frischwasser</div>
-                         <div className="cg-technical-label opacity-60 mt-0.5">{formatNumber((state.waterLevel / 100) * (state.profile.freshWaterCapacity || 0), 0)} L von {state.profile.freshWaterCapacity || 0} L</div>
-                      </div>
-                      <div className="text-right">
-                         <div className="instrument-value text-xl text-blue-400">{state.waterLevel}%</div>
-                         <div className="cg-technical-label opacity-60 mt-1">= {formatWeight(waterWeightImpact)}</div>
-                      </div>
-                  </div>
-                  <input type="range" min="0" max="100" step="25" value={state.waterLevel} onChange={(e) => setState({...state, waterLevel: parseInt(e.target.value)})} className="w-full h-2 bg-black/50 rounded-full appearance-none cursor-pointer accent-blue-500" />
-              </div>
-          </div>
-          
-          <div className="flex items-center gap-4 cg-inset-panel p-3 mt-3">
-              <div className="icon-circle shadow-none bg-transparent border border-white/5"><Droplet className="text-orange-400" /></div>
-              <div className="flex-1">
-                  <div className="flex justify-between items-end mb-2">
-                      <div>
-                         <div className="cg-technical-label">Abwasser</div>
-                         <div className="cg-technical-label opacity-60 mt-0.5">{formatNumber((state.wasteWaterLevel / 100) * (state.profile.wasteWaterCapacity || 0), 0)} L von {state.profile.wasteWaterCapacity || 0} L</div>
-                      </div>
-                      <div className="text-right">
-                         <div className="instrument-value text-xl text-orange-400">{state.wasteWaterLevel}%</div>
-                         <div className="cg-technical-label opacity-60 mt-1">= {formatWeight(wasteWaterWeight)}</div>
-                      </div>
-                  </div>
-                  <input type="range" min="0" max="100" step="25" value={state.wasteWaterLevel} onChange={(e) => setState({...state, wasteWaterLevel: parseInt(e.target.value)})} className="w-full h-2 bg-black/50 rounded-full appearance-none cursor-pointer accent-orange-500" />
-              </div>
-          </div>
-          
-          <div className="flex items-center gap-4 cg-inset-panel p-3 mt-3">
-              <div className="icon-circle shadow-none bg-transparent border border-white/5"><Fuel className="text-yellow-400" /></div>
-              <div className="flex-1">
-                  <div className="flex justify-between items-end mb-2">
-                      <div>
-                         <div className="cg-technical-label">Diesel</div>
-                         <div className="cg-technical-label opacity-60 mt-0.5">{formatNumber((state.dieselLevel / 100) * (state.profile.dieselCapacity || 0), 0)} L von {state.profile.dieselCapacity || 0} L</div>
-                      </div>
-                      <div className="text-right">
-                         <div className="instrument-value text-xl text-yellow-400">{state.dieselLevel}%</div>
-                         <div className="cg-technical-label opacity-60 mt-1">= {formatWeight(dieselWeight)}</div>
-                      </div>
-                  </div>
-                  <input type="range" min="0" max="100" step="10" value={state.dieselLevel} onChange={(e) => setState({...state, dieselLevel: parseInt(e.target.value)})} className="w-full h-2 bg-black/50 rounded-full appearance-none cursor-pointer accent-yellow-500" />
-              </div>
-          </div>
-      </div>
       )}
 
       {/* Element 6: Wartungstermine */}

@@ -150,13 +150,6 @@ body {
   box-shadow: var(--cg-shadow-card);
 }
 
-.cg-panel {
-  background: var(--cg-bg-panel);
-  border: 1px solid var(--cg-border);
-  border-radius: var(--cg-radius-panel);
-  box-shadow: var(--cg-shadow-panel);
-}
-
 .cg-instrument-frame {
   border-radius: var(--cg-radius-instrument);
   background: var(--cg-bg-instrument);

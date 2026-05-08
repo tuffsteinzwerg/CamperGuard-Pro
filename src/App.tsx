@@ -1,23 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Settings, Map as MapIcon, BookOpen, Package, Activity, 
-  Plus, Trash2, ChevronRight, Search, AlertTriangle,
-  FileDown, ChevronDown, ChevronUp, Printer, MapPin, Archive, CheckCircle, Check,
-  ShieldPlus, Phone, Edit2, User, Droplet, HeartPulse, Pill, Fuel, Flame,
-  ArrowLeftRight, ArrowUpDown, Weight, Scale
+  ShieldCheck, Settings, Map as MapIcon, BookOpen, Package, Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './lib/setupLeafletIcons';
 import { openDB } from 'idb';
-import { INITIAL_STATE, AppState, InventoryItem, FuelEntry, TripEntry, FuelType, Currency, TireProfile, SpotEntry, FAQEntry, EmergencyGear, PharmacyItem } from './types.ts';
-import { calculateAverageFuelConsumptionFromFuelLog, calculateFuelLogStats } from './lib/fuelCalculator';
-import { formatNumber, formatWeight, normalizeGearName } from './lib/formatters';
+import { INITIAL_STATE, AppState } from './types.ts';
+import { normalizeGearName } from './lib/formatters';
 import { NavButton } from './components/NavButton';
-import { PrintHeader } from './print/PrintHeader';
-import { InhaltPrintView } from './print/InhaltPrintView';
 import { StatusView } from './views/StatusView';
 import { ProfilView } from './views/ProfilView';
 import { InhaltView } from './views/InhaltView';
