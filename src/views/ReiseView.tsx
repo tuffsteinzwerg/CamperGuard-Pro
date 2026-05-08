@@ -36,9 +36,13 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const wasLevelRef = useRef<boolean>(false);
   const pannerRef = useRef<PannerNode | null>(null);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const calibratedPitchRef = useRef<number>(0);
+  const calibratedRollRef = useRef<number>(0);
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
   const calibratedRoll = (orientation?.roll || 0) - (state.profile.rollOffset || 0);
+  calibratedPitchRef.current = calibratedPitch;
+  calibratedRollRef.current = calibratedRoll;
 
   const pitchNormalized = Math.max(-20, Math.min(20, calibratedPitch));
   const rollNormalized = Math.max(-20, Math.min(20, calibratedRoll));
@@ -133,8 +137,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       if (!panner || !ctx) return;
 
       const dz = 0.5; // deadzone
-      const pitch = calibratedPitch;
-      const roll = calibratedRoll;
+      const pitch = calibratedPitchRef.current;
+      const roll = calibratedRollRef.current;
 
       // Innerhalb der Deadzone: Tonquelle im Kopf (kein Puls wird abgespielt)
       if (Math.abs(pitch) <= dz && Math.abs(roll) <= dz) return;
@@ -188,8 +192,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   };
 
   const schedulePulse = () => {
-      const pitch = calibratedPitch;
-      const roll = calibratedRoll;
+      const pitch = calibratedPitchRef.current;
+      const roll = calibratedRollRef.current;
       const dz = 0.5;
 
       const isLevel = Math.abs(pitch) <= dz && Math.abs(roll) <= dz;
