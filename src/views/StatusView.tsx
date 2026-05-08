@@ -787,9 +787,14 @@ export function StatusView({ state, setState, orientation }: any) {
                              <h3 className="cg-master-section-title !mb-3 !mt-4 flex justify-between items-center">
                                  <span className="flex items-center"><ShieldPlus size={16} className="mr-2 text-[var(--accent)]"/>SOS-Ausrüstung</span>
                                  <button onClick={() => {
-                                     const newId = Date.now().toString();
-                                     updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
-                                     setEditingGearId(newId);
+                                     const emptyItem = (state.sos.gear || []).find((g: any) => (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === '')));
+                                     if (emptyItem) {
+                                         setEditingGearId(emptyItem.id);
+                                     } else {
+                                         const newId = Date.now().toString();
+                                         updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
+                                         setEditingGearId(newId);
+                                     }
                                  }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
                              {(state.sos.gear || []).map((g: any, i: number) => {
@@ -845,6 +850,9 @@ export function StatusView({ state, setState, orientation }: any) {
                                      {isEditing && (
                                         <div className="mt-3 pt-3 border-t border-[var(--cg-master-border)]">
                                             <div className="mb-5">
+                                                <div className="mb-3">
+                                                    <input value={g.name || ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, name: e.target.value } : gx))} placeholder="Ausrüstung" className={`cg-master-input w-full ${(!g.name || String(g.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
+                                                </div>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <span className="cg-master-label !mb-1 block">Menge</span>
@@ -885,7 +893,22 @@ export function StatusView({ state, setState, orientation }: any) {
                                                 </div>
                                             </div>
                                             <div className="mt-4">
-                                                 <button onClick={() => setEditingGearId(null)} className="cg-master-button w-full py-1 text-center rounded">Fertig</button>
+                                                 {(()=>{
+                                                     const isEmpty = (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === ''));
+                                                     return !isEmpty && (!g.name || String(g.name).trim() === '') ? (
+                                                         <div className="text-[var(--status-danger)] text-xs text-center mb-2">Name der Ausrüstung ausfüllen.</div>
+                                                     ) : null;
+                                                 })()}
+                                                 <button onClick={() => {
+                                                     const isEmpty = (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === ''));
+                                                     if (isEmpty) {
+                                                         updateSos('gear', (state.sos.gear || []).filter((gx: any) => gx.id !== g.id));
+                                                         setEditingGearId(null);
+                                                         return;
+                                                     }
+                                                     if (!g.name || String(g.name).trim() === '') return;
+                                                     setEditingGearId(null);
+                                                 }} className="cg-master-button w-full py-1 text-center rounded">Fertig</button>
                                             </div>
                                         </div>
                                      )}
@@ -896,7 +919,16 @@ export function StatusView({ state, setState, orientation }: any) {
                          <div>
                              <h3 className="cg-master-section-title !mb-3 flex justify-between items-center">
                                  <span className="flex items-center"><Pill size={16} className="mr-2 text-[var(--accent)]"/>Apotheke</span>
-                                 <button onClick={() => { const newId = Date.now().toString(); updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); setEditingPharmacyId(newId); }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
+                                 <button onClick={() => {
+                                     const emptyItem = (state.sos.pharmacy || []).find((p: any) => (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg'));
+                                     if (emptyItem) {
+                                         setEditingPharmacyId(emptyItem.id);
+                                     } else {
+                                         const newId = Date.now().toString(); 
+                                         updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); 
+                                         setEditingPharmacyId(newId); 
+                                     }
+                                 }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
 
                              {(expiredPharmacyItems.length > 0 || soonExpiringPharmacyItems.length > 0) && (
@@ -950,11 +982,9 @@ export function StatusView({ state, setState, orientation }: any) {
                                      <div className="grid grid-cols-2 gap-3">
                                          <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className={`cg-master-input w-full ${(!p.name || String(p.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
                                          <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-full" />
-                                         <div className="relative w-full">
-                                             <div className={`cg-master-input w-full flex items-center ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`}>
-                                                 {p.expiry ? p.expiry : 'Verfallsdatum'}
-                                             </div>
-                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                         <div>
+                                             <div className="text-[10px] text-[var(--text-muted)] ml-1 mb-1">Verfallsdatum</div>
+                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className={`cg-master-input w-full ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`} />
                                          </div>
                                          <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-full" />
                                          <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-full" />
@@ -970,10 +1000,19 @@ export function StatusView({ state, setState, orientation }: any) {
                                              <option value="g">g</option>
                                          </select>
                                          <div className="col-span-2 mt-2">
-                                             {((!p.name || String(p.name).trim() === '') || !p.expiry) && (
-                                                 <div className="text-[var(--status-danger)] text-xs text-center mb-2">Medikament und Verfallsdatum ausfüllen.</div>
-                                             )}
+                                             {(()=>{
+                                                 const isEmpty = (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg');
+                                                 return !isEmpty && ((!p.name || String(p.name).trim() === '') || !p.expiry) ? (
+                                                     <div className="text-[var(--status-danger)] text-xs text-center mb-2">Medikament und Verfallsdatum ausfüllen.</div>
+                                                 ) : null;
+                                             })()}
                                              <button onClick={() => {
+                                                 const isEmpty = (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg');
+                                                 if (isEmpty) {
+                                                     updateSos('pharmacy', (state.sos.pharmacy || []).filter((px: any) => px.id !== p.id));
+                                                     setEditingPharmacyId(null);
+                                                     return;
+                                                 }
                                                  if ((!p.name || String(p.name).trim() === '') || !p.expiry) return;
                                                  setEditingPharmacyId(null);
                                              }} className="cg-master-button w-full py-1 text-center rounded">Fertig</button>

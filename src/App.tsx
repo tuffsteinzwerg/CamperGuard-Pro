@@ -344,7 +344,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.3-dev
+          CamperGuard Pro v0.1.4-dev
         </div>
 
         {showChangelog && (
@@ -352,8 +352,8 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.3-dev</h2>
-                   <p className="text-[var(--text-muted)] !mb-0">Stand: 05.05.2026</p>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.4-dev</h2>
+                   <p className="text-[var(--text-muted)] !mb-0">Stand: 08.05.2026</p>
                  </div>
                  <button 
                    className="cg-master-button px-4 py-2"
@@ -363,6 +363,79 @@ export default function App() {
                  </button>
               </div>
               <div className="p-4 overflow-y-auto flex-1">
+                                  <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.4-dev:</h3>
+                 <ul className="space-y-1 text-gray-300 mb-6">
+                    <li>470. Leerer Apotheken-Entwurf wird beim Klick auf „Fertig" verworfen und der Editor geschlossen.</li>
+                    <li>469. Apotheken-Entwürfe mit fehlendem Medikament oder Verfallsdatum bleiben beim Klick auf „Fertig" geöffnet.</li>
+                    <li>468. Apotheken-Warnhinweis wird nur noch bei teilweise ausgefüllten ungültigen Einträgen angezeigt.</li>
+                    <li>467. Mehrfaches Plus bei komplett leerem Apotheken-Entwurf öffnet den vorhandenen Entwurf statt neue leere Medikamente zu erzeugen.</li>
+                    <li>466. Leerer SOS-Ausrüstungs-Entwurf wird beim Klick auf „Fertig" verworfen und der Editor geschlossen.</li>
+                    <li>465. SOS-Ausrüstungs-Entwürfe ohne Namen bleiben beim Klick auf „Fertig" geöffnet.</li>
+                    <li>464. Warnhinweis „Name der Ausrüstung ausfüllen." im SOS-Ausrüstungseditor ergänzt.</li>
+                    <li>463. Namensfeld für eigene SOS-Ausrüstung im Bearbeitungsbereich ergänzt.</li>
+                    <li>462. Mehrfaches Plus bei komplett leerem SOS-Ausrüstungs-Entwurf öffnet den vorhandenen Entwurf statt neue leere Ausrüstung zu erzeugen.</li>
+                    <li>461. StatusView als erste große View aus src/App.tsx nach src/views/StatusView.tsx ausgelagert.</li>
+                    <li>460. StatusView wird in src/App.tsx nun importiert statt lokal definiert.</li>
+                    <li>459. StatusView-Aufruf im Main-Render unverändert beibehalten.</li>
+                    <li>458. navigator.geolocation-Logik der StatusView unverändert in die neue View-Datei übernommen.</li>
+                    <li>457. window.confirm-Logik der StatusView unverändert in die neue View-Datei übernommen.</li>
+                    <li>456. Hooks, State-Namen, Handler und JSX-Struktur der StatusView unverändert übernommen.</li>
+                    <li>455. src/App.tsx durch StatusView-Auslagerung um ca. 1000 Zeilen reduziert.</li>
+                    <li>454. Leaflet-Icon-Setup nach src/lib/setupLeafletIcons.ts ausgelagert.</li>
+                    <li>453. Leaflet-Icon-Workaround aus src/App.tsx entfernt.</li>
+                    <li>452. Side-Effect-Import für setupLeafletIcons in src/App.tsx ergänzt.</li>
+                    <li>451. Leaflet-CSS-Import unverändert in src/App.tsx belassen.</li>
+                    <li>450. globalLeafletMap-Typisierung über import L from 'leaflet' unverändert beibehalten.</li>
+                    <li>449. Ungenutzte lokale Komponente ViewTitle aus src/App.tsx entfernt.</li>
+                    <li>448. Ungenutzte lokale Komponente Card aus src/App.tsx entfernt.</li>
+                    <li>447. NavButton nach src/components/NavButton.tsx ausgelagert.</li>
+                    <li>446. Lokale NavButton-Definition aus src/App.tsx entfernt.</li>
+                    <li>445. NavButton-Aufrufe im unteren Hauptmenü unverändert beibehalten.</li>
+                    <li>444. motion/react als korrekter Import für ausgelagerten NavButton bestätigt.</li>
+                    <li>443. formatNumber nach src/lib/formatters.ts ausgelagert.</li>
+                    <li>442. formatWeight nach src/lib/formatters.ts ausgelagert.</li>
+                    <li>441. normalizeGearName nach src/lib/formatters.ts ausgelagert.</li>
+                    <li>440. Lokale Formatter-Definitionen aus src/App.tsx entfernt.</li>
+                    <li>439. Tank- und Verbrauchsberechnung nach src/lib/fuelCalculator.ts ausgelagert.</li>
+                    <li>438. calculateFuelConsumptionSegments ausgelagert.</li>
+                    <li>437. calculateAverageFuelConsumptionFromFuelLog ausgelagert.</li>
+                    <li>436. calculateFuelLogStats ausgelagert.</li>
+                    <li>435. Lokale Fuel-Calculator-Funktionen aus src/App.tsx entfernt.</li>
+                    <li>434. Höhenkorrektur auf praxisnahe Unterlegwerte je Rad umgestellt.</li>
+                    <li>433. Höchste berechnete Fahrzeugecke als Referenz für Unterlegwerte verwendet.</li>
+                    <li>432. Höhenkorrekturwerte auf ganze Zentimeter gerundet.</li>
+                    <li>431. Nachkommastellen in der Höhenkorrektur entfernt.</li>
+                    <li>430. Höhenkorrektur-Anzeige bei fehlender Spurbreite oder fehlendem Achsabstand deaktiviert.</li>
+                    <li>429. Hinweistext für fehlende Fahrwerksmaße im Reise-Tab ergänzt.</li>
+                    <li>428. Falsche 0-cm-Anzeige bei unvollständigen Fahrwerksdaten vermieden.</li>
+                    <li>427. Höhenkorrektur-Zahlenanzeige lesbarer gemacht.</li>
+                    <li>426. Transparenter Gradient-Text der Höhenkorrekturwerte entfernt.</li>
+                    <li>425. Textshadow der Höhenkorrekturwerte reduziert.</li>
+                    <li>424. Schriftgröße und cm-Label der Höhenkorrektur kompakter dargestellt.</li>
+                    <li>423. Tabular-Nums für Höhenkorrekturwerte ergänzt.</li>
+                    <li>422. Profil-Hilfstext für Spurbreite auf „links ↔ rechts" gekürzt.</li>
+                    <li>421. Profil-Hilfstext für Achsabstand auf „vorne ↔ hinten" gekürzt.</li>
+                    <li>420. Fahrwerksfelder im Profil optisch beruhigt.</li>
+                    <li>419. CSS-Import-Reihenfolge in src/index.css korrigiert.</li>
+                    <li>418. Google-Fonts-Import vor Tailwind-Import verschoben.</li>
+                    <li>417. Leaflet-CSS-Import vor Tailwind-Import verschoben.</li>
+                    <li>416. @import-Build-Warnungen vollständig behoben.</li>
+                    <li>415. public/CGProLogo.png als festes Projekt-Asset ergänzt.</li>
+                    <li>414. Drucklogo über den bestehenden Vite-Public-Pfad /CGProLogo.png verfügbar gemacht.</li>
+                    <li>413. Kein zusätzlicher Logo-Import im App-Code notwendig gemacht.</li>
+                    <li>412. Alte Root-Patch-, Analyse- und Hilfsdateien in _archive-root-cleanup archiviert.</li>
+                    <li>411. Archivordner _archive-root-cleanup als Projekt-Hygiene-Maßnahme eingeführt.</li>
+                    <li>410. tsconfig.json um Ausschluss von _archive-root-cleanup ergänzt.</li>
+                    <li>409. dist und node_modules weiterhin vom TypeScript-Check ausgeschlossen.</li>
+                    <li>408. CSS-Import-Warnungen nach Build-Korrektur erfolgreich geprüft.</li>
+                    <li>407. Fuel-Calculator-Auslagerung erfolgreich mit npm run lint geprüft.</li>
+                    <li>406. Fuel-Calculator-Auslagerung erfolgreich mit npm run build geprüft.</li>
+                    <li>405. Formatter-Auslagerung erfolgreich mit npm run lint geprüft.</li>
+                    <li>404. Formatter-Auslagerung erfolgreich mit npm run build geprüft.</li>
+                    <li>403. NavButton-Auslagerung erfolgreich mit npm run lint und npm run build geprüft.</li>
+                    <li>402. Leaflet-Icon-Setup-Auslagerung erfolgreich mit npm run lint und npm run build geprüft.</li>
+                    <li>401. StatusView-Auslagerung und Safety-Hub-Fix erfolgreich mit npm run lint und npm run build geprüft.</li>
+                 </ul>
                  <h3 className="font-bold mb-2 text-[var(--accent)]">Änderungen v0.1.3-dev:</h3>
                  <ul className="space-y-1 text-gray-300 mb-6">
                     <li>400. Notfall-Ausrüstung-Header optisch an den Apotheke-Header mit rechtsstehendem Aktionsbutton angeglichen.</li>
@@ -553,228 +626,228 @@ export default function App() {
                  
                  <h3 className="font-bold mb-2">Änderungen v0.1.0-dev:</h3>
                  <ul className="space-y-1 text-gray-300">
-                    <li>001. BusinessTripLog im Typensystem ergänzt.</li>
-                <li>002. BusinessTripEntry angelegt.</li>
-                <li>003. BusinessTripEntry um driver: string erweitert.</li>
-                <li>004. businessTripLog im App-State ergänzt.</li>
-                <li>005. Tanklogik analysiert: Verbrauchsberechnung basiert auf Tankdaten.</li>
-                <li>006. Volltankungen werden in der Verbrauchsberechnung berücksichtigt.</li>
-                <li>007. Teilbetankungen werden gesammelt und korrekt in Verbrauchssegmente einbezogen.</li>
-                <li>008. Verbrauch wird segmentweise zwischen Volltankungen berechnet.</li>
-                <li>009. Fahrtenbuch-Kilometer werden nicht mehr mit Tank-Kilometern vermischt.</li>
-                <li>010. Tankformular gegen ungültige Literwerte abgesichert.</li>
-                <li>011. Literwerte dürfen nicht 0 oder negativ sein.</li>
-                <li>012. Preiswerte dürfen nicht 0 oder negativ sein.</li>
-                <li>013. Fehler im Tankformular werden sichtbar angezeigt.</li>
-                <li>014. Fehlerhafte Tankformularfelder erhalten rote Markierung bzw. Hinweis.</li>
-                <li>015. Tankformular-Eingaben gegen Minuszeichen und Sonderzeichen verbessert.</li>
-                <li>016. Tankkapazität wird gegen den Profilwert geprüft.</li>
-                <li>017. Löschen von Tankeinträgen in Google AI Studio Preview analysiert.</li>
-                <li>018. Mögliche Ursachen für Tank-Löschproblem notiert: alte Einträge ohne id, window.confirm im Preview-iframe, Storage-/Preview-Verhalten.</li>
-                <li>019. Entscheidung getroffen: Tank-Löschproblem später in echter App erneut testen.</li>
-                <li>020. Profil um Kapazitäten für Frischwasser, Abwasser und Kraftstoff erweitert.</li>
-                <li>021. Aktuelle Tankfüllstände werden prozentual gepflegt.</li>
-                <li>022. Profilbereich „Tankstände & Füllmengen“ erweitert.</li>
-                <li>023. Bedienbare Füllstandsbalken/Slider für Tankstände eingebaut.</li>
-                <li>024. Prozentwerte und berechnete Liter werden angezeigt.</li>
-                <li>025. Fahrzeugmaße im Profil werden in cm geführt.</li>
-                <li>026. Fahrzeughöhe validiert.</li>
-                <li>027. Fahrzeugbreite validiert.</li>
-                <li>028. Fahrzeuglänge validiert.</li>
-                <li>029. Maße dürfen nicht 0 oder negativ sein.</li>
-                <li>030. Maximalwert Höhe auf 500 cm ergänzt.</li>
-                <li>031. Maximalwert Breite auf 300 cm ergänzt.</li>
-                <li>032. Maximalwert Länge auf 1200 cm ergänzt.</li>
-                <li>033. Fehler für ungültige Fahrzeugmaße werden sichtbar angezeigt.</li>
-                <li>034. Reifendruckbereich geprüft.</li>
-                <li>035. Reifendruckfelder VL, VR, HL, HR, HL außen und HR außen bestätigt.</li>
-                <li>036. Zwillingsbereifung im Reifendruckbereich bestätigt.</li>
-                <li>037. Reifendruckwerte gegen negative Werte abgesichert.</li>
-                <li>038. Reifendruckwerte &lt;= 0 als ungültig behandelt.</li>
-                <li>039. Maximalwert für Reifendruck auf 10 bar gesetzt.</li>
-                <li>040. Sichtbarer Fehlerhinweis für ungültige Reifendruckwerte ergänzt.</li>
-                <li>041. Bug mit || bei Außenreifen erkannt.</li>
-                <li>042. Außenreifen-Logik von || auf ?? umgestellt, damit 0 nicht fälschlich als leer gilt.</li>
-                <li>043. Gewichtsberechnung geprüft.</li>
-                <li>044. Gesamtgewicht basiert auf Leergewicht, Frischwasser, Abwasser, Kraftstoff und Inventar.</li>
-                <li>045. Kraftstofffaktor ca. 0.84 kg/l bestätigt.</li>
-                <li>046. Prozentwerte werden für Gewichtsberechnung in Liter umgerechnet.</li>
-                <li>047. Rundungsfehler in der Gewichtsberechnung reduziert.</li>
-                <li>048. Zwischenwerte werden intern nicht mehr gerundet.</li>
-                <li>049. Rundung soll nur für Anzeige erfolgen.</li>
-                <li>050. Drei Kilometerquellen definiert: fuelLog.km, tripLog.toKm und businessTripLog.toKm.</li>
-                <li>051. Zentrale Funktion getLastKnownKm() eingeführt.</li>
-                <li>052. getLastKnownKm() ermittelt höchsten bekannten Kilometerstand aus Tanklog, Fahrtenbuch und BusinessTripLog.</li>
-                <li>053. getLastKnownKm() als globale Kilometerquelle verwendet.</li>
-                <li>054. Start-Kilometer werden automatisch vorgeschlagen.</li>
-                <li>055. Start-Kilometer bleiben manuell änderbar.</li>
-                <li>056. Warnung ergänzt, wenn neuer Kilometerwert kleiner als höchster bekannter Kilometerstand ist.</li>
-                <li>057. End-Kilometer kleiner als Start-Kilometer bleibt harter Fehler.</li>
-                <li>058. Fahrer-Feld im BusinessTripLog ergänzt.</li>
-                <li>059. driver ist Pflichtfeld bei Business-Fahrten.</li>
-                <li>060. Pflichtfelder bei Business-Fahrten definiert: Start-KM, Ziel-KM, Kategorie und Fahrer.</li>
-                <li>061. Zweck bei Business-Fahrten bleibt optional.</li>
-                <li>062. Fahrer wird gespeichert.</li>
-                <li>063. Fahrer wird angezeigt.</li>
-                <li>064. 24h-Logik im Fahrtenbuch bleibt erhalten.</li>
-                <li>065. Rückwirkende Fahrten als fachlich kritisch notiert.</li>
-                <li>066. Statusseite deutlich überarbeitet.</li>
-                <li>067. Gesamtgewicht als Hero-Element auf der Statusseite dargestellt.</li>
-                <li>068. Rundes Gewichts-Gauge auf der Statusseite eingebaut.</li>
-                <li>069. Gauge nutzt Ring-/Progress-Darstellung.</li>
-                <li>070. Gewichtstatus wird angezeigt: sicherer Bereich oder Überladen.</li>
-                <li>071. Restgewicht bzw. Überladung wird angezeigt.</li>
-                <li>072. Zahl, Maximalgewicht und Status im bzw. unter dem Gauge dargestellt.</li>
-                <li>073. Status-Gauge als noch nicht final premium-final notiert.</li>
-                <li>074. Designziel für Status-Gauge notiert: näher an Reise-Kompass, mehr Tiefe, dunklerer Innenkörper, hochwertigerer Rahmen.</li>
-                <li>075. Design-System in src/index.css vorbereitet.</li>
-                <li>076. Klasse cg-card vorhanden.</li>
-                <li>077. Klasse cg-panel vorhanden.</li>
-                <li>078. Klasse cg-instrument-frame vorhanden.</li>
-                <li>079. Klasse cg-instrument-inner vorhanden.</li>
-                <li>080. Klasse cg-dark-field vorhanden.</li>
-                <li>081. Klasse cg-soft-button vorhanden.</li>
-                <li>082. card-standard angepasst.</li>
-                <li>083. Reise-Tab mit Kompass/Wasserwaage als visuelle Master-Referenz festgelegt.</li>
-                <li>084. Statusseite als bereits bearbeitet bestätigt.</li>
-                <li>085. Rundes Gewichtsgauge im Code bestätigt.</li>
-                <li>086. cg-* Designklassen in index.css bestätigt.</li>
-                <li>087. Reise-Kompass/Wasserwaage im Code bestätigt.</li>
-                <li>088. getLastKnownKm() im Code bestätigt.</li>
-                <li>089. BusinessTripEntry.driver im Code bestätigt.</li>
-                <li>090. Checklisten-Plus als offener Bug notiert.</li>
-                <li>091. Tab-Flackern als offener Bug notiert.</li>
-                <li>092. CamperGuard Pro Funktionskern dokumentiert: Status, Profil, Logbuch, Inventar, Reise, Safety Hub, Druck/Export und lokale Speicherung.</li>
-                <li>093. Primäre Zielgruppe festgelegt: Wohnmobilfahrer, Campervan-Besitzer, Wohnwagen-/Anhänger-Nutzer und mobile Camper.</li>
-                <li>094. Hauptnutzen festgelegt: Sicherheit und Kontrolle über Fahrzeugzustand, Gewicht, Beladung, Reisevorbereitung und Notfalldaten.</li>
-                <li>095. Nicht gesicherte Kernfunktionen notiert: Diebstahlschutz, Hardware-Sensorik, Community, Live-Tracking und Campingplatzbewertung.</li>
-                <li>096. Positionierung festgelegt: integriertes Camper-Cockpit statt reine Stellplatz-/Community-App.</li>
-                <li>097. Medikamentenfeld expiry analysiert.</li>
-                <li>098. expiry als Verfallsdatum / Haltbar bis identifiziert.</li>
-                <li>099. expiry wird als leerer String initialisiert.</li>
-                <li>100. expiry nutzt input type="month".</li>
-                <li>101. expiry wird über updateSos in state.sos.pharmacy gespeichert.</li>
-                <li>102. expiry wurde zuvor nackt im Meta-String angezeigt.</li>
-                <li>103. Keine bestehende Statusseiten-Warnlogik für Medikamentenablauf gefunden.</li>
-                <li>104. Medikamentenfeld im Formular sichtbar als Haltbar bis / Verfallsdatum verständlicher gemacht.</li>
-                <li>105. ReadOnly-Kartenansicht zeigt expiry nicht mehr nackt, sondern als „Haltbar bis: YYYY-MM“.</li>
-                <li>106. Lokale Ablauf-Erkennung für Medikamente im Safety Hub vorbereitet.</li>
-                <li>107. expiredPharmacyItems eingeführt.</li>
-                <li>108. soonExpiringPharmacyItems eingeführt.</li>
-                <li>109. YYYY-MM wird als gültig bis zum letzten Tag des Monats interpretiert.</li>
-                <li>110. Abgelaufene Medikamente werden erkannt.</li>
-                <li>111. Bald ablaufende Medikamente werden erkannt.</li>
-                <li>112. Einträge ohne expiry werden ignoriert.</li>
-                <li>113. Ungültige expiry-Werte werden ignoriert.</li>
-                <li>114. Abgelaufene Medikamente werden nicht zusätzlich als bald fällig gezählt.</li>
-                <li>115. Sicherheitsprüfung für Monatswerte ergänzt bzw. empfohlen: Monat muss zwischen 1 und 12 liegen.</li>
-                <li>116. Lokale Medikamenten-Ablaufübersicht im Safety Hub ergänzt.</li>
-                <li>117. Abgelaufene Medikamente werden im Medikamentenbereich gesammelt angezeigt.</li>
-                <li>118. Bald ablaufende Medikamente werden im Medikamentenbereich gesammelt angezeigt.</li>
-                <li>119. Ablaufübersicht zeigt maximal die ersten 3 betroffenen Einträge.</li>
-                <li>120. Ablaufübersicht zeigt „+ X weitere“, wenn mehr als 3 Einträge betroffen sind.</li>
-                <li>121. Statusseite um Sammelwarnung für abgelaufene Medikamente erweitert.</li>
-                <li>122. Statusseite um Sammelwarnung für bald ablaufende Medikamente erweitert.</li>
-                <li>123. Statusseite zeigt keine Medikamentennamen und keine Lagerorte.</li>
-                <li>124. Details bleiben im Safety Hub / Apotheke.</li>
-                <li>125. Entscheidung getroffen: Medikamentenwarnungen nutzen gleiche Warnlogik mit Warndreieck wie technische Hinweise.</li>
-                <li>126. Entscheidung getroffen: Statusseite bleibt Zusammenfassung, Safety Hub bleibt Detailzentrale.</li>
-                <li>127. Medikamentenformular-Raster auf sauberes 2-Spalten-Grid umgestellt.</li>
-                <li>128. Felder Medikament und Zweck in einheitlichem Raster angeordnet.</li>
-                <li>129. Felder Verfallsdatum und Lagerort in einheitlichem Raster angeordnet.</li>
-                <li>130. Felder Menge und Einheit in einheitlichem Raster angeordnet.</li>
-                <li>131. Felder Gewicht/Stk. und Gewichtseinheit in einheitlichem Raster angeordnet.</li>
-                <li>132. Fertig-Button über beide Spalten gesetzt.</li>
-                <li>133. Äußeres Label „HALTBAR BIS“ entfernt.</li>
-                <li>134. Verfallsdatum als visueller Text ins Feld verlegt.</li>
-                <li>135. Native Month-Striche im leeren Datumsfeld als Problem erkannt.</li>
-                <li>136. Fake-Field-Lösung für Verfallsdatum eingeführt.</li>
-                <li>137. Sichtbares Fake-Field zeigt bei leerem Wert „Verfallsdatum“.</li>
-                <li>138. Sichtbares Fake-Field zeigt bei gesetztem Wert YYYY-MM.</li>
-                <li>139. Echter input type="month" liegt unsichtbar über dem Fake-Field.</li>
-                <li>140. Kalender-/Month-Picker-Funktion bleibt erhalten.</li>
-                <li>141. Äußeres Label „GEWICHT/STK.“ entfernt.</li>
-                <li>142. Gewichtsfeld nutzt Placeholder „Gewicht/Stk.“.</li>
-                <li>143. Doppelte Medikamenten-Löschbuttons analysiert.</li>
-                <li>144. Innerer Löschbutton im geöffneten Medikamentenformular als redundant erkannt.</li>
-                <li>145. Innerer Medikamenten-Löschbutton entfernt.</li>
-                <li>146. Äußerer Medikamenten-Löschbutton behalten.</li>
-                <li>147. Medikamenten-Löschen mit window.confirm abgesichert.</li>
-                <li>148. Bestätigungstext „Medikament wirklich löschen?“ ergänzt.</li>
-                <li>149. Medikamentenname und Verfallsdatum als Pflichtfelder festgelegt.</li>
-                <li>150. Zweck, Lagerort, Menge, Einheit, Gewicht/Stk. und Gewichtseinheit bleiben optional.</li>
-                <li>151. Fertig-Button schließt den Editor nicht mehr, wenn Medikamentenname fehlt.</li>
-                <li>152. Fertig-Button schließt den Editor nicht mehr, wenn Verfallsdatum fehlt.</li>
-                <li>153. Fehlender Medikamentenname wird sichtbar rot markiert.</li>
-                <li>154. Fehlendes Verfallsdatum wird sichtbar rot markiert.</li>
-                <li>155. Fehlerhinweis „Medikament und Verfallsdatum ausfüllen.“ ergänzt.</li>
-                <li>156. Entscheidung getroffen: Medikamenten-Vorwarnzeit von 90 Tagen auf 30 Tage reduzieren.</li>
-                <li>157. Entscheidung getroffen: Einträge ohne Name sollen nicht in Medikamenten-Ablaufwarnungen erscheinen.</li>
-                <li>158. Audio-Level-Assist im Reise-Tab analysiert.</li>
-                <li>159. Audio-Logik in ReiseView lokalisiert.</li>
-                <li>160. Verwendete Web Audio API bestätigt.</li>
-                <li>161. AudioContext / webkitAudioContext bestätigt.</li>
-                <li>162. OscillatorNode für Richtungstöne bestätigt.</li>
-                <li>163. GainNode für Lautstärke-Hüllkurve bestätigt.</li>
-                <li>164. StereoPannerNode für Links/Rechts-Panning bestätigt.</li>
-                <li>165. Start/Stop über handleAudioToggle analysiert.</li>
-                <li>166. scheduleNextPulse als Loop-Steuerung analysiert.</li>
-                <li>167. playDirectionTone als Richtungston-Funktion analysiert.</li>
-                <li>168. playLockTone als Zentrum-/Lock-Ton analysiert.</li>
-                <li>169. Eingehende Level-Werte calibratedPitch und calibratedRoll identifiziert.</li>
-                <li>170. tiltIntensity als Pythagoras-Intensität aus Pitch/Roll identifiziert.</li>
-                <li>171. Aktuelle Richtungslogik mit needRaiseFront / needRaiseLeft etc. analysiert.</li>
-                <li>172. Tonhöhe als Richtungsindikator analysiert: vorne höher, hinten tiefer, links/rechts mittig.</li>
-                <li>173. Lautstärke bisher als konstant erkannt.</li>
-                <li>174. Hartes Stereo-Panning -1 / 1 erkannt.</li>
-                <li>175. Pulslogik als setTimeout-Loop erkannt.</li>
-                <li>176. Bisherige stufenlose Pulslogik als schlecht hörbar bewertet.</li>
-                <li>177. Entscheidung getroffen: Audio soll als Zielannäherungs-System funktionieren.</li>
-                <li>178. Audio-Ziel festgelegt: weit weg vom Level = langsamer Puls.</li>
-                <li>179. Audio-Ziel festgelegt: näher am Level = schnellerer Puls.</li>
-                <li>180. Audio-Ziel festgelegt: fast Level = sehr schneller Puls.</li>
-                <li>181. Audio-Ziel festgelegt: im grünen Bereich = Lock-/Zentrumston.</li>
-                <li>182. Audio Schritt 1: Intervalllogik in scheduleNextPulse stufig gemacht.</li>
-                <li>183. Delay-Stufen zuerst auf 1200 / 800 / 450 / 250 ms gesetzt.</li>
-                <li>184. Audio Schritt 2: Richtungston von sine auf triangle geändert.</li>
-                <li>185. Richtungston-Hüllkurve kurz/trocken gehalten.</li>
-                <li>186. Audio-Test: Richtungston als zu leise erkannt.</li>
-                <li>187. Audio-Test: Pulsfrequenz als zu langsam erkannt.</li>
-                <li>188. Richtungston-Gain von 0.1 auf 0.28 erhöht.</li>
-                <li>189. Delay-Stufen beschleunigt auf 500 / 350 / 220 / 120 ms.</li>
-                <li>190. Versionsanzeige CamperGuard Pro v0.1.0-dev unten ergänzt.</li>
-                <li>191. Versionsanzeige klein, unaufdringlich und no-print gesetzt.</li>
-                <li>192. Horizontal-/Vertikal-Zahlen im Reise-Tab analysiert.</li>
-                <li>193. Box X (Roll) als Horizontal-Anzeige identifiziert.</li>
-                <li>194. Box Y (Pitch) als Vertikal-Anzeige identifiziert.</li>
-                <li>195. Werte basieren auf calibratedPitch / calibratedRoll und Normalisierung.</li>
-                <li>196. Zahlenformatierung mit Math.abs und Math.round bestätigt.</li>
-                <li>197. Gradient-Text-Technik als Ursache schlechter Lesbarkeit erkannt.</li>
-                <li>198. WebkitBackgroundClip/TextFillColor-Ansatz als problematisch erkannt.</li>
-                <li>199. Starker textShadow als zusätzliche Ursache schlechter Lesbarkeit erkannt.</li>
-                <li>200. Horizontal-/Vertikal-Zahlen auf solide Textfarben umgestellt.</li>
-                <li>201. Gradient-Text für Horizontal-/Vertikal-Zahlen entfernt.</li>
-                <li>202. Text-Glow der Zahlen stark reduziert.</li>
-                <li>203. Zahlenklasse von text-3xl auf text-4xl erhöht.</li>
-                <li>204. Berechnung der Horizontal-/Vertikal-Werte unverändert gelassen.</li>
-                <li>205. Bubble-/Luftblasen-Position im Reise-Tab analysiert.</li>
-                <li>206. Bubble unter Kommentar „The Bubble (LED Sphere) - Z-30“ identifiziert.</li>
-                <li>207. Bubble-Position wird über rollNormalized * 3.8 und pitchNormalized * 3.8 gesteuert.</li>
-                <li>208. Rechteckiger Clamp von pitchNormalized / rollNormalized erkannt.</li>
-                <li>209. Diagonales Herausspringen durch rechteckigen Clamp und Spring-Overshoot erklärt.</li>
-                <li>210. Framer-Motion-Spring-Overshoot als Ursache erkannt.</li>
-                <li>211. Fehlendes overflow-hidden am wirksamen Bubble-Container erkannt.</li>
-                <li>212. Runder overflow-hidden Wrapper um zentrale Bubble ergänzt.</li>
-                <li>213. Bubble bleibt dadurch optisch im Instrumentbereich begrenzt.</li>
-                <li>214. Sensorlogik der Bubble unverändert gelassen.</li>
-                <li>215. Bubble-Animation unverändert gelassen.</li>
-                <li>216. Mathematischer Kreis-Clamp für Bubble-Zielposition als nächster möglicher Schritt notiert.</li>
-                <li>217. Offener nächster Bubble-Schritt: prüfen, ob Wrapper reicht.</li>
-                <li>218. Offener nächster Bubble-Schritt: falls nötig kreisförmiges Clamping der Zielposition ergänzen.</li>
-                <li>219. Offener Sound-Schritt: neuen schnelleren, lauteren Audio-Test auf Handy und Kopfhörer prüfen.</li>
-                <li>220. Offener Sound-Schritt: falls Grundgefühl passt, vorne/hinten über Rhythmusmuster unterscheiden.</li>
-                <li>221. Offener Sound-Schritt: vorne = Doppel-Tack prüfen.</li>
                 <li>222. Offener Sound-Schritt: hinten = längerer Tack prüfen.</li>
+                <li>221. Offener Sound-Schritt: vorne = Doppel-Tack prüfen.</li>
+                <li>220. Offener Sound-Schritt: falls Grundgefühl passt, vorne/hinten über Rhythmusmuster unterscheiden.</li>
+                <li>219. Offener Sound-Schritt: neuen schnelleren, lauteren Audio-Test auf Handy und Kopfhörer prüfen.</li>
+                <li>218. Offener nächster Bubble-Schritt: falls nötig kreisförmiges Clamping der Zielposition ergänzen.</li>
+                <li>217. Offener nächster Bubble-Schritt: prüfen, ob Wrapper reicht.</li>
+                <li>216. Mathematischer Kreis-Clamp für Bubble-Zielposition als nächster möglicher Schritt notiert.</li>
+                <li>215. Bubble-Animation unverändert gelassen.</li>
+                <li>214. Sensorlogik der Bubble unverändert gelassen.</li>
+                <li>213. Bubble bleibt dadurch optisch im Instrumentbereich begrenzt.</li>
+                <li>212. Runder overflow-hidden Wrapper um zentrale Bubble ergänzt.</li>
+                <li>211. Fehlendes overflow-hidden am wirksamen Bubble-Container erkannt.</li>
+                <li>210. Framer-Motion-Spring-Overshoot als Ursache erkannt.</li>
+                <li>209. Diagonales Herausspringen durch rechteckigen Clamp und Spring-Overshoot erklärt.</li>
+                <li>208. Rechteckiger Clamp von pitchNormalized / rollNormalized erkannt.</li>
+                <li>207. Bubble-Position wird über rollNormalized * 3.8 und pitchNormalized * 3.8 gesteuert.</li>
+                <li>206. Bubble unter Kommentar „The Bubble (LED Sphere) - Z-30“ identifiziert.</li>
+                <li>205. Bubble-/Luftblasen-Position im Reise-Tab analysiert.</li>
+                <li>204. Berechnung der Horizontal-/Vertikal-Werte unverändert gelassen.</li>
+                <li>203. Zahlenklasse von text-3xl auf text-4xl erhöht.</li>
+                <li>202. Text-Glow der Zahlen stark reduziert.</li>
+                <li>201. Gradient-Text für Horizontal-/Vertikal-Zahlen entfernt.</li>
+                <li>200. Horizontal-/Vertikal-Zahlen auf solide Textfarben umgestellt.</li>
+                <li>199. Starker textShadow als zusätzliche Ursache schlechter Lesbarkeit erkannt.</li>
+                <li>198. WebkitBackgroundClip/TextFillColor-Ansatz als problematisch erkannt.</li>
+                <li>197. Gradient-Text-Technik als Ursache schlechter Lesbarkeit erkannt.</li>
+                <li>196. Zahlenformatierung mit Math.abs und Math.round bestätigt.</li>
+                <li>195. Werte basieren auf calibratedPitch / calibratedRoll und Normalisierung.</li>
+                <li>194. Box Y (Pitch) als Vertikal-Anzeige identifiziert.</li>
+                <li>193. Box X (Roll) als Horizontal-Anzeige identifiziert.</li>
+                <li>192. Horizontal-/Vertikal-Zahlen im Reise-Tab analysiert.</li>
+                <li>191. Versionsanzeige klein, unaufdringlich und no-print gesetzt.</li>
+                <li>190. Versionsanzeige CamperGuard Pro v0.1.0-dev unten ergänzt.</li>
+                <li>189. Delay-Stufen beschleunigt auf 500 / 350 / 220 / 120 ms.</li>
+                <li>188. Richtungston-Gain von 0.1 auf 0.28 erhöht.</li>
+                <li>187. Audio-Test: Pulsfrequenz als zu langsam erkannt.</li>
+                <li>186. Audio-Test: Richtungston als zu leise erkannt.</li>
+                <li>185. Richtungston-Hüllkurve kurz/trocken gehalten.</li>
+                <li>184. Audio Schritt 2: Richtungston von sine auf triangle geändert.</li>
+                <li>183. Delay-Stufen zuerst auf 1200 / 800 / 450 / 250 ms gesetzt.</li>
+                <li>182. Audio Schritt 1: Intervalllogik in scheduleNextPulse stufig gemacht.</li>
+                <li>181. Audio-Ziel festgelegt: im grünen Bereich = Lock-/Zentrumston.</li>
+                <li>180. Audio-Ziel festgelegt: fast Level = sehr schneller Puls.</li>
+                <li>179. Audio-Ziel festgelegt: näher am Level = schnellerer Puls.</li>
+                <li>178. Audio-Ziel festgelegt: weit weg vom Level = langsamer Puls.</li>
+                <li>177. Entscheidung getroffen: Audio soll als Zielannäherungs-System funktionieren.</li>
+                <li>176. Bisherige stufenlose Pulslogik als schlecht hörbar bewertet.</li>
+                <li>175. Pulslogik als setTimeout-Loop erkannt.</li>
+                <li>174. Hartes Stereo-Panning -1 / 1 erkannt.</li>
+                <li>173. Lautstärke bisher als konstant erkannt.</li>
+                <li>172. Tonhöhe als Richtungsindikator analysiert: vorne höher, hinten tiefer, links/rechts mittig.</li>
+                <li>171. Aktuelle Richtungslogik mit needRaiseFront / needRaiseLeft etc. analysiert.</li>
+                <li>170. tiltIntensity als Pythagoras-Intensität aus Pitch/Roll identifiziert.</li>
+                <li>169. Eingehende Level-Werte calibratedPitch und calibratedRoll identifiziert.</li>
+                <li>168. playLockTone als Zentrum-/Lock-Ton analysiert.</li>
+                <li>167. playDirectionTone als Richtungston-Funktion analysiert.</li>
+                <li>166. scheduleNextPulse als Loop-Steuerung analysiert.</li>
+                <li>165. Start/Stop über handleAudioToggle analysiert.</li>
+                <li>164. StereoPannerNode für Links/Rechts-Panning bestätigt.</li>
+                <li>163. GainNode für Lautstärke-Hüllkurve bestätigt.</li>
+                <li>162. OscillatorNode für Richtungstöne bestätigt.</li>
+                <li>161. AudioContext / webkitAudioContext bestätigt.</li>
+                <li>160. Verwendete Web Audio API bestätigt.</li>
+                <li>159. Audio-Logik in ReiseView lokalisiert.</li>
+                <li>158. Audio-Level-Assist im Reise-Tab analysiert.</li>
+                <li>157. Entscheidung getroffen: Einträge ohne Name sollen nicht in Medikamenten-Ablaufwarnungen erscheinen.</li>
+                <li>156. Entscheidung getroffen: Medikamenten-Vorwarnzeit von 90 Tagen auf 30 Tage reduzieren.</li>
+                <li>155. Fehlerhinweis „Medikament und Verfallsdatum ausfüllen.“ ergänzt.</li>
+                <li>154. Fehlendes Verfallsdatum wird sichtbar rot markiert.</li>
+                <li>153. Fehlender Medikamentenname wird sichtbar rot markiert.</li>
+                <li>152. Fertig-Button schließt den Editor nicht mehr, wenn Verfallsdatum fehlt.</li>
+                <li>151. Fertig-Button schließt den Editor nicht mehr, wenn Medikamentenname fehlt.</li>
+                <li>150. Zweck, Lagerort, Menge, Einheit, Gewicht/Stk. und Gewichtseinheit bleiben optional.</li>
+                <li>149. Medikamentenname und Verfallsdatum als Pflichtfelder festgelegt.</li>
+                <li>148. Bestätigungstext „Medikament wirklich löschen?“ ergänzt.</li>
+                <li>147. Medikamenten-Löschen mit window.confirm abgesichert.</li>
+                <li>146. Äußerer Medikamenten-Löschbutton behalten.</li>
+                <li>145. Innerer Medikamenten-Löschbutton entfernt.</li>
+                <li>144. Innerer Löschbutton im geöffneten Medikamentenformular als redundant erkannt.</li>
+                <li>143. Doppelte Medikamenten-Löschbuttons analysiert.</li>
+                <li>142. Gewichtsfeld nutzt Placeholder „Gewicht/Stk.“.</li>
+                <li>141. Äußeres Label „GEWICHT/STK.“ entfernt.</li>
+                <li>140. Kalender-/Month-Picker-Funktion bleibt erhalten.</li>
+                <li>139. Echter input type="month" liegt unsichtbar über dem Fake-Field.</li>
+                <li>138. Sichtbares Fake-Field zeigt bei gesetztem Wert YYYY-MM.</li>
+                <li>137. Sichtbares Fake-Field zeigt bei leerem Wert „Verfallsdatum“.</li>
+                <li>136. Fake-Field-Lösung für Verfallsdatum eingeführt.</li>
+                <li>135. Native Month-Striche im leeren Datumsfeld als Problem erkannt.</li>
+                <li>134. Verfallsdatum als visueller Text ins Feld verlegt.</li>
+                <li>133. Äußeres Label „HALTBAR BIS“ entfernt.</li>
+                <li>132. Fertig-Button über beide Spalten gesetzt.</li>
+                <li>131. Felder Gewicht/Stk. und Gewichtseinheit in einheitlichem Raster angeordnet.</li>
+                <li>130. Felder Menge und Einheit in einheitlichem Raster angeordnet.</li>
+                <li>129. Felder Verfallsdatum und Lagerort in einheitlichem Raster angeordnet.</li>
+                <li>128. Felder Medikament und Zweck in einheitlichem Raster angeordnet.</li>
+                <li>127. Medikamentenformular-Raster auf sauberes 2-Spalten-Grid umgestellt.</li>
+                <li>126. Entscheidung getroffen: Statusseite bleibt Zusammenfassung, Safety Hub bleibt Detailzentrale.</li>
+                <li>125. Entscheidung getroffen: Medikamentenwarnungen nutzen gleiche Warnlogik mit Warndreieck wie technische Hinweise.</li>
+                <li>124. Details bleiben im Safety Hub / Apotheke.</li>
+                <li>123. Statusseite zeigt keine Medikamentennamen und keine Lagerorte.</li>
+                <li>122. Statusseite um Sammelwarnung für bald ablaufende Medikamente erweitert.</li>
+                <li>121. Statusseite um Sammelwarnung für abgelaufene Medikamente erweitert.</li>
+                <li>120. Ablaufübersicht zeigt „+ X weitere“, wenn mehr als 3 Einträge betroffen sind.</li>
+                <li>119. Ablaufübersicht zeigt maximal die ersten 3 betroffenen Einträge.</li>
+                <li>118. Bald ablaufende Medikamente werden im Medikamentenbereich gesammelt angezeigt.</li>
+                <li>117. Abgelaufene Medikamente werden im Medikamentenbereich gesammelt angezeigt.</li>
+                <li>116. Lokale Medikamenten-Ablaufübersicht im Safety Hub ergänzt.</li>
+                <li>115. Sicherheitsprüfung für Monatswerte ergänzt bzw. empfohlen: Monat muss zwischen 1 und 12 liegen.</li>
+                <li>114. Abgelaufene Medikamente werden nicht zusätzlich als bald fällig gezählt.</li>
+                <li>113. Ungültige expiry-Werte werden ignoriert.</li>
+                <li>112. Einträge ohne expiry werden ignoriert.</li>
+                <li>111. Bald ablaufende Medikamente werden erkannt.</li>
+                <li>110. Abgelaufene Medikamente werden erkannt.</li>
+                <li>109. YYYY-MM wird als gültig bis zum letzten Tag des Monats interpretiert.</li>
+                <li>108. soonExpiringPharmacyItems eingeführt.</li>
+                <li>107. expiredPharmacyItems eingeführt.</li>
+                <li>106. Lokale Ablauf-Erkennung für Medikamente im Safety Hub vorbereitet.</li>
+                <li>105. ReadOnly-Kartenansicht zeigt expiry nicht mehr nackt, sondern als „Haltbar bis: YYYY-MM“.</li>
+                <li>104. Medikamentenfeld im Formular sichtbar als Haltbar bis / Verfallsdatum verständlicher gemacht.</li>
+                <li>103. Keine bestehende Statusseiten-Warnlogik für Medikamentenablauf gefunden.</li>
+                <li>102. expiry wurde zuvor nackt im Meta-String angezeigt.</li>
+                <li>101. expiry wird über updateSos in state.sos.pharmacy gespeichert.</li>
+                <li>100. expiry nutzt input type="month".</li>
+                <li>099. expiry wird als leerer String initialisiert.</li>
+                <li>098. expiry als Verfallsdatum / Haltbar bis identifiziert.</li>
+                <li>097. Medikamentenfeld expiry analysiert.</li>
+                <li>096. Positionierung festgelegt: integriertes Camper-Cockpit statt reine Stellplatz-/Community-App.</li>
+                <li>095. Nicht gesicherte Kernfunktionen notiert: Diebstahlschutz, Hardware-Sensorik, Community, Live-Tracking und Campingplatzbewertung.</li>
+                <li>094. Hauptnutzen festgelegt: Sicherheit und Kontrolle über Fahrzeugzustand, Gewicht, Beladung, Reisevorbereitung und Notfalldaten.</li>
+                <li>093. Primäre Zielgruppe festgelegt: Wohnmobilfahrer, Campervan-Besitzer, Wohnwagen-/Anhänger-Nutzer und mobile Camper.</li>
+                <li>092. CamperGuard Pro Funktionskern dokumentiert: Status, Profil, Logbuch, Inventar, Reise, Safety Hub, Druck/Export und lokale Speicherung.</li>
+                <li>091. Tab-Flackern als offener Bug notiert.</li>
+                <li>090. Checklisten-Plus als offener Bug notiert.</li>
+                <li>089. BusinessTripEntry.driver im Code bestätigt.</li>
+                <li>088. getLastKnownKm() im Code bestätigt.</li>
+                <li>087. Reise-Kompass/Wasserwaage im Code bestätigt.</li>
+                <li>086. cg-* Designklassen in index.css bestätigt.</li>
+                <li>085. Rundes Gewichtsgauge im Code bestätigt.</li>
+                <li>084. Statusseite als bereits bearbeitet bestätigt.</li>
+                <li>083. Reise-Tab mit Kompass/Wasserwaage als visuelle Master-Referenz festgelegt.</li>
+                <li>082. card-standard angepasst.</li>
+                <li>081. Klasse cg-soft-button vorhanden.</li>
+                <li>080. Klasse cg-dark-field vorhanden.</li>
+                <li>079. Klasse cg-instrument-inner vorhanden.</li>
+                <li>078. Klasse cg-instrument-frame vorhanden.</li>
+                <li>077. Klasse cg-panel vorhanden.</li>
+                <li>076. Klasse cg-card vorhanden.</li>
+                <li>075. Design-System in src/index.css vorbereitet.</li>
+                <li>074. Designziel für Status-Gauge notiert: näher an Reise-Kompass, mehr Tiefe, dunklerer Innenkörper, hochwertigerer Rahmen.</li>
+                <li>073. Status-Gauge als noch nicht final premium-final notiert.</li>
+                <li>072. Zahl, Maximalgewicht und Status im bzw. unter dem Gauge dargestellt.</li>
+                <li>071. Restgewicht bzw. Überladung wird angezeigt.</li>
+                <li>070. Gewichtstatus wird angezeigt: sicherer Bereich oder Überladen.</li>
+                <li>069. Gauge nutzt Ring-/Progress-Darstellung.</li>
+                <li>068. Rundes Gewichts-Gauge auf der Statusseite eingebaut.</li>
+                <li>067. Gesamtgewicht als Hero-Element auf der Statusseite dargestellt.</li>
+                <li>066. Statusseite deutlich überarbeitet.</li>
+                <li>065. Rückwirkende Fahrten als fachlich kritisch notiert.</li>
+                <li>064. 24h-Logik im Fahrtenbuch bleibt erhalten.</li>
+                <li>063. Fahrer wird angezeigt.</li>
+                <li>062. Fahrer wird gespeichert.</li>
+                <li>061. Zweck bei Business-Fahrten bleibt optional.</li>
+                <li>060. Pflichtfelder bei Business-Fahrten definiert: Start-KM, Ziel-KM, Kategorie und Fahrer.</li>
+                <li>059. driver ist Pflichtfeld bei Business-Fahrten.</li>
+                <li>058. Fahrer-Feld im BusinessTripLog ergänzt.</li>
+                <li>057. End-Kilometer kleiner als Start-Kilometer bleibt harter Fehler.</li>
+                <li>056. Warnung ergänzt, wenn neuer Kilometerwert kleiner als höchster bekannter Kilometerstand ist.</li>
+                <li>055. Start-Kilometer bleiben manuell änderbar.</li>
+                <li>054. Start-Kilometer werden automatisch vorgeschlagen.</li>
+                <li>053. getLastKnownKm() als globale Kilometerquelle verwendet.</li>
+                <li>052. getLastKnownKm() ermittelt höchsten bekannten Kilometerstand aus Tanklog, Fahrtenbuch und BusinessTripLog.</li>
+                <li>051. Zentrale Funktion getLastKnownKm() eingeführt.</li>
+                <li>050. Drei Kilometerquellen definiert: fuelLog.km, tripLog.toKm und businessTripLog.toKm.</li>
+                <li>049. Rundung soll nur für Anzeige erfolgen.</li>
+                <li>048. Zwischenwerte werden intern nicht mehr gerundet.</li>
+                <li>047. Rundungsfehler in der Gewichtsberechnung reduziert.</li>
+                <li>046. Prozentwerte werden für Gewichtsberechnung in Liter umgerechnet.</li>
+                <li>045. Kraftstofffaktor ca. 0.84 kg/l bestätigt.</li>
+                <li>044. Gesamtgewicht basiert auf Leergewicht, Frischwasser, Abwasser, Kraftstoff und Inventar.</li>
+                <li>043. Gewichtsberechnung geprüft.</li>
+                <li>042. Außenreifen-Logik von || auf ?? umgestellt, damit 0 nicht fälschlich als leer gilt.</li>
+                <li>041. Bug mit || bei Außenreifen erkannt.</li>
+                <li>040. Sichtbarer Fehlerhinweis für ungültige Reifendruckwerte ergänzt.</li>
+                <li>039. Maximalwert für Reifendruck auf 10 bar gesetzt.</li>
+                <li>038. Reifendruckwerte &lt;= 0 als ungültig behandelt.</li>
+                <li>037. Reifendruckwerte gegen negative Werte abgesichert.</li>
+                <li>036. Zwillingsbereifung im Reifendruckbereich bestätigt.</li>
+                <li>035. Reifendruckfelder VL, VR, HL, HR, HL außen und HR außen bestätigt.</li>
+                <li>034. Reifendruckbereich geprüft.</li>
+                <li>033. Fehler für ungültige Fahrzeugmaße werden sichtbar angezeigt.</li>
+                <li>032. Maximalwert Länge auf 1200 cm ergänzt.</li>
+                <li>031. Maximalwert Breite auf 300 cm ergänzt.</li>
+                <li>030. Maximalwert Höhe auf 500 cm ergänzt.</li>
+                <li>029. Maße dürfen nicht 0 oder negativ sein.</li>
+                <li>028. Fahrzeuglänge validiert.</li>
+                <li>027. Fahrzeugbreite validiert.</li>
+                <li>026. Fahrzeughöhe validiert.</li>
+                <li>025. Fahrzeugmaße im Profil werden in cm geführt.</li>
+                <li>024. Prozentwerte und berechnete Liter werden angezeigt.</li>
+                <li>023. Bedienbare Füllstandsbalken/Slider für Tankstände eingebaut.</li>
+                <li>022. Profilbereich „Tankstände & Füllmengen“ erweitert.</li>
+                <li>021. Aktuelle Tankfüllstände werden prozentual gepflegt.</li>
+                <li>020. Profil um Kapazitäten für Frischwasser, Abwasser und Kraftstoff erweitert.</li>
+                <li>019. Entscheidung getroffen: Tank-Löschproblem später in echter App erneut testen.</li>
+                <li>018. Mögliche Ursachen für Tank-Löschproblem notiert: alte Einträge ohne id, window.confirm im Preview-iframe, Storage-/Preview-Verhalten.</li>
+                <li>017. Löschen von Tankeinträgen in Google AI Studio Preview analysiert.</li>
+                <li>016. Tankkapazität wird gegen den Profilwert geprüft.</li>
+                <li>015. Tankformular-Eingaben gegen Minuszeichen und Sonderzeichen verbessert.</li>
+                <li>014. Fehlerhafte Tankformularfelder erhalten rote Markierung bzw. Hinweis.</li>
+                <li>013. Fehler im Tankformular werden sichtbar angezeigt.</li>
+                <li>012. Preiswerte dürfen nicht 0 oder negativ sein.</li>
+                <li>011. Literwerte dürfen nicht 0 oder negativ sein.</li>
+                <li>010. Tankformular gegen ungültige Literwerte abgesichert.</li>
+                <li>009. Fahrtenbuch-Kilometer werden nicht mehr mit Tank-Kilometern vermischt.</li>
+                <li>008. Verbrauch wird segmentweise zwischen Volltankungen berechnet.</li>
+                <li>007. Teilbetankungen werden gesammelt und korrekt in Verbrauchssegmente einbezogen.</li>
+                <li>006. Volltankungen werden in der Verbrauchsberechnung berücksichtigt.</li>
+                <li>005. Tanklogik analysiert: Verbrauchsberechnung basiert auf Tankdaten.</li>
+                <li>004. businessTripLog im App-State ergänzt.</li>
+                <li>003. BusinessTripEntry um driver: string erweitert.</li>
+                <li>002. BusinessTripEntry angelegt.</li>
+                    <li>001. BusinessTripLog im Typensystem ergänzt.</li>
                  </ul>
               </div>
             </div>
