@@ -29,6 +29,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
+  const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');
   const [soundTestIndex, setSoundTestIndex] = useState(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const latestDirectionRef = useRef<string>('level');
@@ -38,11 +39,14 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const calibratedPitchRef = useRef<number>(0);
   const calibratedRollRef = useRef<number>(0);
+  const lastSpokenDirectionRef = useRef<string>('level');
+  const audioModeRef = useRef<string>('tone');
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
   const calibratedRoll = (orientation?.roll || 0) - (state.profile.rollOffset || 0);
   calibratedPitchRef.current = calibratedPitch;
   calibratedRollRef.current = calibratedRoll;
+  audioModeRef.current = audioMode;
 
   const pitchNormalized = Math.max(-20, Math.min(20, calibratedPitch));
   const rollNormalized = Math.max(-20, Math.min(20, calibratedRoll));
@@ -199,39 +203,83 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       osc.stop(now + 0.07);
   };
 
+  const speakDirection = (direction: string) => {
+      if (direction === lastSpokenDirectionRef.current) return;
+      if (direction === 'level') {
+          lastSpokenDirectionRef.current = 'level';
+          return;
+      }
+      lastSpokenDirectionRef.current = direction;
+
+      const labels: Record<string, string> = {
+          'front': 'vorne',
+          'rear': 'hinten',
+          'left': 'links',
+          'right': 'rechts',
+          'frontLeft': 'vorne links',
+          'frontRight': 'vorne rechts',
+          'rearLeft': 'hinten links',
+          'rearRight': 'hinten rechts'
+      };
+
+      const text = labels[direction];
+      if (!text) return;
+
+      try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'de-DE';
+          utterance.rate = 1.3;
+          utterance.volume = 0.8;
+          window.speechSynthesis.speak(utterance);
+      } catch (e) {}
+  };
+
   const schedulePulse = () => {
       const pitch = calibratedPitchRef.current;
       const roll = calibratedRollRef.current;
       const dz = 0.5;
+      const mode = audioModeRef.current;
 
       const isLevel = Math.abs(pitch) <= dz && Math.abs(roll) <= dz;
 
-      // Lock-Akkord bei Level-Erreichen
+      // Lock-Akkord bei Level-Erreichen (in allen Modi)
       if (isLevel && !wasLevelRef.current) {
           playLockChord();
+          lastSpokenDirectionRef.current = 'level';
           wasLevelRef.current = true;
       } else if (!isLevel) {
           wasLevelRef.current = false;
       }
 
-      // Kein Puls im Level
+      // Kein Puls und keine Sprache im Level
       if (isLevel) {
-          pulseTimerRef.current = setTimeout(schedulePulse, 200); // Stille Überwachung
+          pulseTimerRef.current = setTimeout(schedulePulse, 200);
           return;
       }
 
-      // Panner-Position aktualisieren
+      // Panner-Position aktualisieren (für Ton-Modi)
       updatePannerPosition();
 
-      // Puls abspielen
-      playPulse();
+      // Sprachansage bei Richtungswechsel (für Sprache-Modi)
+      if (mode === 'speech+tone' || mode === 'speech') {
+          speakDirection(latestDirectionRef.current);
+      }
+
+      // Pulse abspielen (für Ton-Modi)
+      if (mode === 'tone' || mode === 'speech+tone') {
+          playPulse();
+      }
 
       // Intervall berechnen: 800ms bei 1° → 80ms bei 10°
       const tiltTotal = Math.sqrt(pitch * pitch + roll * roll);
       const clampedTilt = Math.max(0.5, Math.min(10, tiltTotal));
-      const interval = 800 - ((clampedTilt - 0.5) / 9.5) * 720; // 800ms → 80ms
+      const interval = 800 - ((clampedTilt - 0.5) / 9.5) * 720;
 
-      pulseTimerRef.current = setTimeout(schedulePulse, interval);
+      // Im reinen Sprache-Modus langsamer prüfen (Sprache braucht Zeit)
+      const checkInterval = mode === 'speech' ? Math.max(interval, 400) : interval;
+
+      pulseTimerRef.current = setTimeout(schedulePulse, checkInterval);
   };
 
   const stopPulses = () => {
@@ -240,6 +288,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           pulseTimerRef.current = null;
       }
       pannerRef.current = null;
+      lastSpokenDirectionRef.current = 'level';
+      try { window.speechSynthesis.cancel(); } catch(e) {}
   };
 
   // --- useEffect: HRTF Audio starten/stoppen ---
@@ -259,6 +309,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
 
   const handleAudioToggle = async () => {
       if (!isAudioAssistActive) {
+          // Aus → Ton (erstes Einschalten)
           try {
               if (!audioCtxRef.current) {
                   audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -267,7 +318,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                   await audioCtxRef.current.resume();
               }
 
-              // Ready-Testton (kurzer Piep damit der Nutzer weiß dass Audio aktiv ist)
+              // Ready-Testton
               const ctx = audioCtxRef.current;
               const osc = ctx.createOscillator();
               const gain = ctx.createGain();
@@ -281,12 +332,22 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
               osc.start(ctx.currentTime);
               osc.stop(ctx.currentTime + 0.5);
 
+              setAudioMode('tone');
               setIsAudioAssistActive(true);
           } catch (e) {
               console.warn("AudioContext creation failed:", e);
           }
       } else {
-          setIsAudioAssistActive(false);
+          // Durchschalten: Ton → Sprache+Ton → Sprache → Aus
+          if (audioMode === 'tone') {
+              setAudioMode('speech+tone');
+          } else if (audioMode === 'speech+tone') {
+              setAudioMode('speech');
+          } else {
+              // Sprache → Aus
+              setIsAudioAssistActive(false);
+              setAudioMode('tone');
+          }
       }
   };
 
@@ -542,7 +603,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                 className="cg-master-button"
                 title="Audio Level Assist aktivieren"
               >
-                {isAudioAssistActive ? 'AUDIO AN' : 'AUDIO ASSIST'}
+                {!isAudioAssistActive ? 'AUDIO ASSIST' : audioMode === 'tone' ? 'TON' : audioMode === 'speech+tone' ? 'SPRACHE+TON' : 'SPRACHE'}
               </button>
               {(state.profile.pitchOffset !== 0 || state.profile.rollOffset !== 0) && (
                 <button
