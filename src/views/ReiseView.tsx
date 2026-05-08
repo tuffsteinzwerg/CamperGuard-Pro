@@ -146,8 +146,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       // Roll → x-Achse (rechts zu hoch → Ton rechts)
       // Pitch → z-Achse (vorne zu hoch → Ton vorne, hinten zu hoch → Ton hinten)
       // HRTF z-Achse: negativ = vor dem Hörer, positiv = hinter dem Hörer
-      let rawX = Math.max(-1, Math.min(1, roll / 10));
-      let rawZ = Math.max(-1, Math.min(1, -pitch / 10)); // negiert: pitch>0 = vorne zu hoch = z negativ (vor dem Hörer)
+      let rawX = Math.max(-1, Math.min(1, -roll / 10));
+      let rawZ = Math.max(-1, Math.min(1, pitch / 10)); // inveriert: Ton dahin wo unterlegt werden muss
 
       // Auf Einheitskreis clampen (damit Diagonalen nicht lauter sind)
       const dist = Math.sqrt(rawX * rawX + rawZ * rawZ);
@@ -177,7 +177,15 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(660, now);
+
+      // Tonhöhe variiert mit Neigungsrichtung und -stärke
+      // Hinten unterlegen nötig (pitch < 0): hoher Ton (bis 900 Hz)
+      // Vorne unterlegen nötig (pitch > 0): tiefer Ton (bis 400 Hz)
+      // Level (pitch ≈ 0): Mittelton (660 Hz)
+      const pitch = calibratedPitchRef.current;
+      const pitchClamped = Math.max(-10, Math.min(10, pitch));
+      const freq = 660 + (pitchClamped / 10) * -260;
+      osc.frequency.setValueAtTime(freq, now);
 
       // Kurze Hüllkurve: 5ms Attack, 55ms Release = 60ms total
       gain.gain.setValueAtTime(0, now);
