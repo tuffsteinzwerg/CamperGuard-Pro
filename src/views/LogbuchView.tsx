@@ -47,6 +47,7 @@ export function LogbuchView({ state, setState }: any) {
   const [displayedTripsCount, setDisplayedTripsCount] = useState(5);
   const [displayedBusinessTripsCount, setDisplayedBusinessTripsCount] = useState(10);
   const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
+  const [archiveSelection, setArchiveSelection] = useState('tanken');
 
   const getLastKnownKm = (): number => {
     let highestKm = 0;
@@ -201,13 +202,16 @@ export function LogbuchView({ state, setState }: any) {
     <>
       <style>{`
         @media print {
-            @page { size: A4 ${logType === 'fahrt' && tripLogMode === 'strict' ? 'landscape' : 'portrait'}; margin: 15mm; }
+            @page { size: A4 ${logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: 15mm; }
             body { background: white !important; }
             .logbuch-normal { display: none !important; }
             .logbuch-print-wrapper { display: block !important; width: 100%; color: black !important; }
             .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; font-family: sans-serif; }
             .print-table th { border-bottom: 2px solid #000; padding: 6px; text-align: left; font-weight: bold; text-transform: uppercase; color: #000 !important; background: transparent !important; }
             .print-table td { border-bottom: 1px solid #ccc; padding: 6px; color: #000 !important; vertical-align: top; }
+            .tank-print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9pt; font-family: sans-serif; }
+            .tank-print-table th { border-bottom: 1px solid #666; padding: 4px 2px; text-align: left; font-weight: 500; text-transform: uppercase; color: #333 !important; background: transparent !important; font-size: 8pt; }
+            .tank-print-table td { border-bottom: 1px solid #eaeaea; padding: 4px 2px; color: #333 !important; vertical-align: middle; }
             .fahrtenbuch-table { table-layout: fixed; width: 100%; }
             .fahrtenbuch-table th, .fahrtenbuch-table td { overflow-wrap: break-word; word-wrap: break-word; hyphens: auto; }
         }
@@ -245,48 +249,55 @@ export function LogbuchView({ state, setState }: any) {
                 const totalLocal = entry.price * entry.liters;
                 const totalEur = totalLocal / (entry.exchangeRateToEur || 1);
                 return (
-                    <div key={entry.id} className="cg-master-card-small !p-3 flex justify-between items-center border-l-2 !border-l-[var(--accent)] !mb-0">
-                        <div className="flex flex-col items-start gap-1">
-                            <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
-                            <span className="cg-type-value">{formatNumber(entry.km, 0)} <span className="cg-type-label ml-0.5">KM</span></span>
-                            <span className="cg-type-label text-[var(--accent)]">{entry.fuelType}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-right flex flex-col justify-end">
-                                <div className="flex items-end justify-end gap-2 pb-[2px]">
-                                    <span className="cg-type-value block text-[var(--accent)]">{formatNumber(entry.liters, 1)}<span className="cg-type-label ml-0.5">L</span></span>
-                                    <span className="cg-type-value block">{formatNumber(totalLocal, 2)} {entry.currency}</span>
-                                </div>
-                                <div className="cg-type-meta mt-[2px]">
-                                    {formatNumber(entry.price, 2)} {entry.currency}/L 
-                                    {entry.currency !== 'EUR' && <span className="ml-1 text-[var(--text-tertiary)]">({formatNumber(totalEur, 2)} €)</span>}
-                                </div>
+                    <div key={entry.id} className="cg-master-card-small !p-3 flex justify-between items-center border-l-2 !border-l-[var(--accent)] !mb-0 gap-3">
+                        <div className="flex-1 grid grid-cols-2 gap-y-1 items-center">
+                            <div className="text-left flex items-center">
+                                <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
                             </div>
+                            <div className="text-right flex items-center justify-end">
+                                <span className="cg-type-meta text-[var(--accent)]">{formatNumber(entry.liters, 1)} <span className="cg-type-label ml-0.5">L</span></span>
+                            </div>
+                            <div className="text-left flex items-center">
+                                <span className="cg-type-value">{formatNumber(entry.km, 0)} <span className="cg-type-label ml-0.5">KM</span></span>
+                            </div>
+                            <div className="text-right flex items-center justify-end">
+                                <span className="cg-type-value">{formatNumber(totalLocal, 2)} {entry.currency === 'EUR' ? '€' : entry.currency}</span>
+                            </div>
+                            <div className="text-left flex items-center">
+                                <span className="cg-type-meta">{entry.fuelType}</span>
+                            </div>
+                            <div className="text-right flex items-center justify-end">
+                                <span className="cg-type-meta">
+                                    {formatNumber(entry.price, 2)} {entry.currency === 'EUR' ? '€' : entry.currency}/L 
+                                    {entry.currency !== 'EUR' && <span className="ml-1 text-[var(--text-tertiary)]">({formatNumber(totalEur, 2)} €)</span>}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex-shrink-0">
                             <button 
                                 onClick={() => {
-                                    let proceed = true;
-                                    try {
-                                        if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
-                                            proceed = window.confirm('Möchtest du diesen Tankeintrag wirklich löschen?');
-                                        }
-                                    } catch (e) {
-                                        proceed = true;
-                                    }
-                                    if(proceed) {
-                                        setState({
-                                            ...state, 
-                                            fuelLog: state.fuelLog.filter((f:any) => {
-                                                if (entry.id) {
-                                                    return f.id !== entry.id;
-                                                }
-                                                return !(f.km === entry.km && f.liters === entry.liters && f.date === entry.date);
-                                            })
-                                        });
-                                    }
+                                    const totalLocal = entry.price * entry.liters;
+                                    setTankForm({
+                                        date: entry.date,
+                                        km: entry.km.toString(),
+                                        liters: entry.liters.toString(),
+                                        price: entry.price.toString(),
+                                        total: totalLocal.toString()
+                                    });
+                                    setTimeout(() => {
+                                        const fuelTypeEl = document.querySelector('select[name="fuelType"]') as HTMLSelectElement;
+                                        if (fuelTypeEl) fuelTypeEl.value = entry.fuelType;
+                                        const currencyEl = document.querySelector('select[name="currency"]') as HTMLSelectElement;
+                                        if (currencyEl && entry.currency) currencyEl.value = entry.currency;
+                                        const vollgetanktEl = document.querySelector('select[name="vollgetankt"]') as HTMLSelectElement;
+                                        if (vollgetanktEl) vollgetanktEl.value = entry.vollgetankt === false ? 'false' : 'true';
+                                    }, 10);
+                                    setEditingTripId(entry.id);
+                                    setIsAdding(true);
                                 }} 
-                                className="cg-master-button-danger !p-2 !rounded flex-shrink-0 -mr-2"
+                                className="cg-master-button !p-2 !rounded flex-shrink-0 -mr-2"
                             >
-                                <Trash2 size={16}/>
+                                <Edit2 size={16}/>
                             </button>
                         </div>
                     </div>
@@ -456,6 +467,34 @@ export function LogbuchView({ state, setState }: any) {
 
       {logType === 'archiv' && (
           <div className="space-y-4">
+              <div className="cg-master-card-small !p-4 !mb-2">
+                  <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Jahr archivieren</h3>
+                  <div className="flex gap-2 items-center">
+                      <select 
+                          className="cg-master-input flex-1 !py-2" 
+                          value={archiveSelection} 
+                          onChange={(e) => setArchiveSelection(e.target.value)}
+                      >
+                          <option value="tanken">Tanken</option>
+                          <option value="reisetagebuch">Reisetagebuch</option>
+                          <option value="fahrtenbuch">Fahrtenbuch §</option>
+                          <option value="pois">POIs</option>
+                      </select>
+                      <button 
+                          className="cg-master-button !py-2 px-4 whitespace-nowrap"
+                          onClick={() => {
+                              if (archiveSelection === 'tanken') {
+                                  closeYear();
+                              } else {
+                                  alert('Archivierung für diesen Bereich ist noch nicht umgesetzt.');
+                              }
+                          }}
+                      >
+                          Archivieren
+                      </button>
+                  </div>
+              </div>
+              
               {state.archives.map((a:any) => (
                   <div key={a.year} className="cg-master-card-small !p-4 !mb-0">
                       <h3 className="cg-type-value-large flex items-center gap-2 pb-2 mb-2 border-b border-[var(--border)]"><Archive size={14}/> {a.year}</h3>
@@ -480,32 +519,29 @@ export function LogbuchView({ state, setState }: any) {
       )}
 
       {(logType === 'tank' || logType === 'fahrt' || logType === 'spots') && (
-          <div className="fixed bottom-24 right-4 z-40 flex items-center gap-3">
-              {logType === 'tank' && (
-                  <button onClick={closeYear} className="cg-master-button h-9 px-4 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)] gap-2">
-                      <Archive size={14}/> <span className="text-xs font-bold">Abschließen</span>
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md h-9 z-40 pointer-events-none flex items-center justify-center">
+              <div className="pointer-events-auto absolute right-4 bottom-0">
+                  <button 
+                    onClick={() => { 
+                        const highestKm = getLastKnownKm();
+                        if (logType === 'tank') {
+                            setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
+                        } else if (logType === 'fahrt') {
+                            setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
+                            setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
+                        } else if (logType === 'spots') {
+                            setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
+                            setSpotGpsError(false);
+                        }
+                        setEditingTripId(null);
+                        setEditingSpotId(null);
+                        setIsAdding(true); 
+                    }} 
+                    className="cg-master-button h-9 px-5 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)]"
+                  >
+                    <Plus size={20} strokeWidth={3} className="text-[var(--accent)]" />
                   </button>
-              )}
-              <button 
-                onClick={() => { 
-                    const highestKm = getLastKnownKm();
-                    if (logType === 'tank') {
-                        setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
-                    } else if (logType === 'fahrt') {
-                        setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
-                        setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
-                    } else if (logType === 'spots') {
-                        setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
-                        setSpotGpsError(false);
-                    }
-                    setEditingTripId(null);
-                    setEditingSpotId(null);
-                    setIsAdding(true); 
-                }} 
-                className="cg-master-button h-9 px-5 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)]"
-              >
-                <Plus size={20} />
-              </button>
+              </div>
           </div>
       )}
 
@@ -513,7 +549,24 @@ export function LogbuchView({ state, setState }: any) {
         {isAdding && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="cg-master-card-small w-full max-w-sm my-8">
-                    <h2 className="typo-section-title mb-4">{logType === 'tank' ? 'Tankbeleg' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Reise-Notiz') : "POI's Log"}</h2>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="typo-section-title">{logType === 'tank' ? 'Tankbeleg' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Reise-Notiz') : "POI's Log"}</h2>
+                        {logType === 'tank' && editingTripId && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if(confirm('Möchtest du diesen Tankbeleg wirklich löschen?')) {
+                                        setState({...state, fuelLog: state.fuelLog.filter((f:any) => f.id !== editingTripId)});
+                                        setEditingTripId(null);
+                                        setIsAdding(false);
+                                    }
+                                }}
+                                className="cg-master-button-danger !p-1.5 !rounded flex-shrink-0"
+                            >
+                                <Trash2 size={16}/>
+                            </button>
+                        )}
+                    </div>
                     <form onSubmit={(e:any) => {
                         e.preventDefault();
                         const fd = new FormData(e.target);
@@ -607,6 +660,7 @@ export function LogbuchView({ state, setState }: any) {
                                         <div className="w-full">
                                             <input name="liters" required type={focusedTankField === 'liters' ? "number" : "text"} min="0.01" step="0.01" max="9999" placeholder="Liter" value={focusedTankField === 'liters' ? tankForm.liters : (tankForm.liters !== '' && !isNaN(parseFloat(tankForm.liters)) ? parseFloat(tankForm.liters).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tankForm.liters)} onChange={handleTankChange} onFocus={() => setFocusedTankField('liters')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className={`cg-master-input w-full`} />
                                             {!isLitersValid && tankForm.liters !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Liter muss &gt; 0 und &lt;= 9999 sein.</span>}
+                                            {isLitersValid && tankForm.liters !== '' && parseFloat(tankForm.liters) > 250 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Literangabe wirkt ungewöhnlich hoch.</span>}
                                         </div>
                                         <select name="fuelType" className="cg-master-select w-full">
                                             {FUEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
@@ -616,9 +670,11 @@ export function LogbuchView({ state, setState }: any) {
                                         <div className="w-full">
                                             <input name="price" required type={focusedTankField === 'price' ? "number" : "text"} min="0.01" step="0.001" max="999" placeholder="Preis/Liter" value={focusedTankField === 'price' ? tankForm.price : (tankForm.price !== '' && !isNaN(parseFloat(tankForm.price)) ? parseFloat(tankForm.price).toLocaleString('de-DE', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : tankForm.price)} onChange={handleTankChange} onFocus={() => setFocusedTankField('price')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className={`cg-master-input w-full`} />
                                             {!isPriceValid && tankForm.price !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Preis muss &gt; 0 und &lt;= 999 sein.</span>}
+                                            {isPriceValid && tankForm.price !== '' && parseFloat(tankForm.price) > 5 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Preis/Liter wirkt ungewöhnlich hoch.</span>}
                                         </div>
                                         <div className="w-full">
                                             <input name="total" type={focusedTankField === 'total' ? "number" : "text"} min="0" step="0.01" placeholder="Gesamtbetrag" value={focusedTankField === 'total' ? tankForm.total : (tankForm.total !== '' && !isNaN(parseFloat(tankForm.total)) ? parseFloat(tankForm.total).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tankForm.total)} onChange={handleTankChange} onFocus={() => setFocusedTankField('total')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className="cg-master-input w-full" />
+                                            {tankForm.total !== '' && !isNaN(parseFloat(tankForm.total)) && parseFloat(tankForm.total) > 500 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Gesamtbetrag wirkt ungewöhnlich hoch.</span>}
                                         </div>
                                     </div>
                                     <select name="currency" className="cg-master-select w-full mt-2">
@@ -780,21 +836,28 @@ export function LogbuchView({ state, setState }: any) {
 
           {logType === 'tank' && (
              currentFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Kilometerstand</th><th>Kraftstoff</th><th>Liter</th><th>Preis/L</th><th>Gesamtpreis</th></tr></thead>
-                 <tbody>
-                     {currentFuelLog.map((f:any) => (
-                         <tr key={f.id}>
-                             <td>{new Date(f.date).toLocaleDateString('de-DE')}</td>
-                             <td>{formatNumber(f.km, 0)} KM</td>
-                             <td>{f.fuelType}</td>
-                             <td>{formatNumber(f.liters, 2)} L</td>
-                             <td>{formatNumber(f.price, 3)} €</td>
-                             <td>{formatNumber((f.liters * f.price) / (f.exchangeRateToEur || 1), 2)} €</td>
-                         </tr>
-                     ))}
-                 </tbody>
-             </table>
+             <>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '9pt', color: '#666', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+                     <div><strong>Gesamtliter:</strong> {formatNumber(totalLiters, 1)} L</div>
+                     <div><strong>Gesamtkosten:</strong> {formatNumber(totalEur, 2)} €</div>
+                     {result?.consumption != null && <div><strong>Verbrauch:</strong> {formatNumber(result.consumption, 1)} L/100km</div>}
+                 </div>
+                 <table className="tank-print-table">
+                     <thead><tr><th>Datum</th><th style={{ textAlign: 'right' }}>KM-Stand</th><th>Kraftstoff</th><th style={{ textAlign: 'right' }}>Liter</th><th style={{ textAlign: 'right' }}>Preis/L</th><th style={{ textAlign: 'right' }}>Gesamtbetrag</th></tr></thead>
+                     <tbody>
+                         {currentFuelLog.map((f:any) => (
+                             <tr key={f.id}>
+                                 <td>{new Date(f.date).toLocaleDateString('de-DE')}</td>
+                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.km, 0)}</td>
+                                 <td style={{ color: '#666' }}>{f.fuelType}</td>
+                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.liters, 2)}</td>
+                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.price, 3)} €/L</td>
+                                 <td style={{ textAlign: 'right', fontWeight: '600' }}>{formatNumber((f.liters * f.price) / (f.exchangeRateToEur || 1), 2)} €</td>
+                             </tr>
+                         ))}
+                     </tbody>
+                 </table>
+             </>
           )}
 
           {logType === 'fahrt' && tripLogMode === 'flex' && (
