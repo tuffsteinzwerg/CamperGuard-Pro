@@ -859,10 +859,6 @@ export function LogbuchView({ state, setState }: any) {
              </table>
           )}
 
-          <div className="mt-10 pt-4 border-t border-gray-300 flex justify-between typo-label">
-              <span>CamperGuard Pro</span>
-              <span>Gedruckt am: {new Date().toLocaleDateString('de-DE')}</span>
-          </div>
       </div>
     </>
   );
