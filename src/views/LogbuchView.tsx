@@ -837,26 +837,55 @@ export function LogbuchView({ state, setState }: any) {
           {logType === 'tank' && (
              currentFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '9pt', color: '#666', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
-                     <div><strong>Gesamtliter:</strong> {formatNumber(totalLiters, 1)} L</div>
-                     <div><strong>Gesamtkosten:</strong> {formatNumber(totalEur, 2)} €</div>
-                     {result?.consumption != null && <div><strong>Verbrauch:</strong> {formatNumber(result.consumption, 1)} L/100km</div>}
+                 <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0 0 10px 0', paddingBottom: '8px', borderBottom: '1px solid #e0e0e0', fontSize: '8pt', fontFamily: 'sans-serif' }}>
+                     <div style={{ display: 'flex', gap: '30px' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: '6pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Periode</span>
+                             <span style={{ color: '#333', fontWeight: 500 }}>Jahr {currentYear}</span>
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: '6pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Einträge</span>
+                             <span style={{ color: '#333', fontWeight: 500 }}>{currentFuelLog.length}</span>
+                         </div>
+                     </div>
+                     <div style={{ display: 'flex', gap: '30px', textAlign: 'right' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: '6pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Volumen</span>
+                             <span style={{ color: '#333', fontWeight: 500 }}>{formatNumber(totalLiters, 1)} L</span>
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                             <span style={{ fontSize: '6pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Kosten gesamt</span>
+                             <span style={{ color: '#333', fontWeight: 500 }}>{formatNumber(totalEur, 2)} €</span>
+                         </div>
+                         {result?.consumption != null && (
+                             <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                 <span style={{ fontSize: '6pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Ø Verbrauch</span>
+                                 <span style={{ color: '#333', fontWeight: 500 }}>{formatNumber(result.consumption, 1)} L/100km</span>
+                             </div>
+                         )}
+                     </div>
                  </div>
-                 <table className="tank-print-table">
-                     <thead><tr><th>Datum</th><th style={{ textAlign: 'right' }}>KM-Stand</th><th>Kraftstoff</th><th style={{ textAlign: 'right' }}>Liter</th><th style={{ textAlign: 'right' }}>Preis/L</th><th style={{ textAlign: 'right' }}>Gesamtbetrag</th></tr></thead>
-                     <tbody>
-                         {currentFuelLog.map((f:any) => (
-                             <tr key={f.id}>
-                                 <td>{new Date(f.date).toLocaleDateString('de-DE')}</td>
-                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.km, 0)}</td>
-                                 <td style={{ color: '#666' }}>{f.fuelType}</td>
-                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.liters, 2)}</td>
-                                 <td style={{ textAlign: 'right' }}>{formatNumber(f.price, 3)} €/L</td>
-                                 <td style={{ textAlign: 'right', fontWeight: '600' }}>{formatNumber((f.liters * f.price) / (f.exchangeRateToEur || 1), 2)} €</td>
-                             </tr>
-                         ))}
-                     </tbody>
-                 </table>
+                 
+                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #ccc', fontSize: '7pt', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#999', marginTop: '10px' }}>
+                     <div style={{ width: '15%' }}>Datum</div>
+                     <div style={{ width: '20%' }}>Kilometerstand</div>
+                     <div style={{ width: '20%' }}>Kraftstoff</div>
+                     <div style={{ width: '15%', textAlign: 'right' }}>Menge</div>
+                     <div style={{ width: '15%', textAlign: 'right' }}>Preis/L</div>
+                     <div style={{ width: '15%', textAlign: 'right' }}>Gesamtbetrag</div>
+                 </div>
+                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                     {currentFuelLog.map((f:any) => (
+                         <div key={f.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: '1px solid #f5f5f5', fontSize: '8pt', fontFamily: 'sans-serif', alignItems: 'center', breakInside: 'avoid' }}>
+                             <div style={{ width: '15%', color: '#666' }}>{new Date(f.date).toLocaleDateString('de-DE')}</div>
+                             <div style={{ width: '20%', color: '#111', fontWeight: 500 }}>{formatNumber(f.km, 0)}</div>
+                             <div style={{ width: '20%', color: '#888' }}>{f.fuelType}</div>
+                             <div style={{ width: '15%', textAlign: 'right', color: '#555' }}>{formatNumber(f.liters, 2)} L</div>
+                             <div style={{ width: '15%', textAlign: 'right', color: '#888' }}>{formatNumber(f.price, 3)} €/L</div>
+                             <div style={{ width: '15%', textAlign: 'right', color: '#111', fontWeight: 600 }}>{formatNumber((f.liters * f.price) / (f.exchangeRateToEur || 1), 2)} €</div>
+                         </div>
+                     ))}
+                 </div>
              </>
           )}
 
