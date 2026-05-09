@@ -220,15 +220,18 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       lastSpeakTimeRef.current = Date.now();
   };
 
-  const directionLabels: Record<string, string> = {
-      'front': 'vorne',
-      'rear': 'hinten',
-      'left': 'links',
-      'right': 'rechts',
-      'frontLeft': 'vorne links',
-      'frontRight': 'vorne rechts',
-      'rearLeft': 'hinten links',
-      'rearRight': 'hinten rechts'
+  // assistDirection sagt, wo UNTERLEGT werden muss.
+  // Für die Sprachansage brauchen wir das Gegenteil: wo es ZU HOCH ist.
+  // Beispiel: assistDirection='front' → vorne unterlegen nötig → hinten ist zu hoch
+  const highSideLabels: Record<string, string> = {
+      'front': 'hinten',
+      'rear': 'vorne',
+      'left': 'rechts',
+      'right': 'links',
+      'frontLeft': 'hinten rechts',
+      'frontRight': 'hinten links',
+      'rearLeft': 'vorne rechts',
+      'rearRight': 'vorne links'
   };
 
   const getTiltRing = (tilt: number): number => {
@@ -256,9 +259,9 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           return;
       }
 
-      // --- Richtungswechsel: Neue Richtung ansagen ---
+      // --- Richtungswechsel: Ansagen wo es zu hoch ist ---
       if (direction !== lastSpokenDirectionRef.current) {
-          const label = directionLabels[direction];
+          const label = highSideLabels[direction];
           if (label) {
               // War vorher schon aktiv? Dann war es eine Überkorrektur
               if (lastSpokenDirectionRef.current !== 'level') {
@@ -294,9 +297,9 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           return;
       }
 
-      // --- Wiederholungsansage: Wenn 1,5s lang nichts passiert ist ---
-      if (now - lastSpeakTimeRef.current > 1500) {
-          const label = directionLabels[direction];
+      // --- Wiederholungsansage: Wenn 4s lang nichts passiert ist ---
+      if (now - lastSpeakTimeRef.current > 4000) {
+          const label = highSideLabels[direction];
           if (label) {
               speak('immer noch ' + label + ' zu hoch');
           }
