@@ -926,9 +926,16 @@ export function LogbuchView({ state, setState }: any) {
                                      margin-top: 3px;
                                  }
                                  .tank-print-bottom-wrapper {
-                                     margin-top: 8mm;
+                                     position: fixed;
+                                     bottom: 12mm;
+                                     left: 0;
+                                     right: 0;
+                                     padding: 0;
+                                     margin: 0;
                                      page-break-inside: avoid;
                                      font-family: sans-serif;
+                                     background: white;
+                                     z-index: 50;
                                  }
                                  .tank-print-bottom-title {
                                      font-size: 8pt;
@@ -967,12 +974,12 @@ export function LogbuchView({ state, setState }: any) {
                          </div>
                          
                          <div className="tank-print-column-grid">
-                             <div style={{textAlign: 'left'}}>Datum</div>
-                             <div style={{textAlign: 'left'}}>Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt'}}>(seit letzter Tankung)</span></div>
-                             <div style={{textAlign: 'left'}}>Kraftstoff</div>
-                             <div style={{textAlign: 'right'}}>Liter</div>
-                             <div style={{textAlign: 'right'}}>Preis / L</div>
-                             <div style={{textAlign: 'right'}}>Gesamtpreis</div>
+                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>📅</span> Datum</div>
+                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🔧</span> Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt', marginLeft: '16px'}}>(seit letzter Tankung)</span></div>
+                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>⛽</span> Kraftstoff</div>
+                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>💧</span> Liter</div>
+                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🏷️</span> Preis / L</div>
+                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🧾</span> Gesamtpreis</div>
                          </div>
 
                          <div className="tank-print-row-list">
@@ -1006,19 +1013,19 @@ export function LogbuchView({ state, setState }: any) {
                              <div className="tank-print-bottom-title">Übersicht Zeitraum</div>
                              <div className="tank-print-bottom-summary">
                                  <div>
-                                     <div className="tank-print-bottom-label">Gefahrene Kilometer</div>
+                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>🚐</span> Gefahrene Kilometer</div>
                                      <div className="tank-print-bottom-value">{formatNumber(totalKm, 0)} km</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label">Getankte Liter</div>
+                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💧</span> Getankte Liter</div>
                                      <div className="tank-print-bottom-value">{formatNumber(totalLiters, 1)} l</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label">Gesamtkosten</div>
+                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💶</span> Gesamtkosten</div>
                                      <div className="tank-print-bottom-value">{formatNumber(totalEur, 2)} €</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label">Durchschnitt</div>
+                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>⛽</span> Durchschnitt</div>
                                      <div className="tank-print-bottom-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
                                      {totalLiters > 0 && totalEur > 0 && <div className="tank-print-bottom-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
                                  </div>

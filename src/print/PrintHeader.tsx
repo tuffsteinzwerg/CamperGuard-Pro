@@ -18,11 +18,11 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
 
     return (
         <>
-            <div className="cg-print-header-wrapper" style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: 'none', paddingBottom: '10px', marginBottom: '10px', minHeight: '22mm', width: '100%' }}>
+            <div className="cg-print-header-wrapper" style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: 'none', paddingBottom: '4px', marginBottom: '6px', minHeight: '16mm', width: '100%' }}>
                 
                 {/* Logo Area */}
                 <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '18mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
+                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '14mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
                 </div>
                 
                 {/* Center Title and Vehicle Area */}
@@ -56,11 +56,11 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                         position: relative !important;
                         border-bottom: none !important;
                         width: 100% !important;
-                        padding-bottom: 10px !important;
-                        margin-bottom: 10px !important;
+                        padding-bottom: 4px !important;
+                        margin-bottom: 6px !important;
                         align-items: flex-start !important;
                         background: transparent !important;
-                        min-height: 22mm !important;
+                        min-height: 16mm !important;
                     }
                     .cg-print-header-center {
                         position: absolute !important;
