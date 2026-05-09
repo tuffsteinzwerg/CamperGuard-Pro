@@ -18,11 +18,11 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
 
     return (
         <>
-            <div className="cg-print-header-wrapper" style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: 'none', paddingBottom: '4px', marginBottom: '6px', minHeight: '16mm', width: '100%' }}>
+            <div className="cg-print-header-wrapper" style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: 'none', paddingBottom: '2px', marginBottom: '2px', minHeight: '13mm', width: '100%' }}>
                 
                 {/* Logo Area */}
                 <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '14mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
+                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '11mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
                 </div>
                 
                 {/* Center Title and Vehicle Area */}
@@ -56,11 +56,11 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                         position: relative !important;
                         border-bottom: none !important;
                         width: 100% !important;
-                        padding-bottom: 4px !important;
-                        margin-bottom: 6px !important;
+                        padding-bottom: 2px !important;
+                        margin-bottom: 2px !important;
                         align-items: flex-start !important;
                         background: transparent !important;
-                        min-height: 16mm !important;
+                        min-height: 13mm !important;
                     }
                     .cg-print-header-center {
                         position: absolute !important;
@@ -73,12 +73,12 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                         text-align: center !important;
                     }
                     .cg-print-header-title {
-                        font-size: 22pt !important;
+                        font-size: 18pt !important;
                         font-weight: 900 !important;
                         color: #111 !important;
                         text-transform: uppercase !important;
                         letter-spacing: 2px !important;
-                        line-height: 1.2 !important;
+                        line-height: 1.1 !important;
                         font-family: sans-serif !important;
                         text-align: center !important;
                         margin: 0 !important;

@@ -849,9 +849,9 @@ export function LogbuchView({ state, setState }: any) {
                                  .tank-print-meta-grid {
                                      display: grid;
                                      grid-template-columns: 1.3fr 0.8fr 1fr 1fr 1fr;
-                                     gap: 8mm;
-                                     margin: 4mm 0 5mm 0;
-                                     padding-bottom: 3mm;
+                                     gap: 5mm;
+                                     margin: 2mm 0 2mm 0;
+                                     padding-bottom: 2mm;
                                      border-bottom: 0.4pt solid #cfcfcf;
                                      font-family: sans-serif;
                                  }
@@ -871,10 +871,10 @@ export function LogbuchView({ state, setState }: any) {
                                      display: grid;
                                      grid-template-columns: 13% 19% 18% 14% 16% 20%;
                                      align-items: center;
-                                     min-height: 8mm;
-                                     padding: 0 0 2mm 0;
+                                     min-height: 6mm;
+                                     padding: 0 0 1mm 0;
                                      border-bottom: 0.6pt solid #777;
-                                     font-size: 7pt;
+                                     font-size: 6.5pt;
                                      text-transform: uppercase;
                                      letter-spacing: 0.04em;
                                      color: #555;
@@ -888,10 +888,10 @@ export function LogbuchView({ state, setState }: any) {
                                      display: grid;
                                      grid-template-columns: 13% 19% 18% 14% 16% 20%;
                                      align-items: center;
-                                     min-height: 7mm;
-                                     padding: 1.4mm 0;
+                                     min-height: 5.5mm;
+                                     padding: 1mm 0;
                                      border-bottom: 0.25pt solid #dddddd;
-                                     font-size: 8pt;
+                                     font-size: 7.5pt;
                                      color: #222;
                                      page-break-inside: avoid;
                                      font-family: sans-serif;
@@ -906,9 +906,9 @@ export function LogbuchView({ state, setState }: any) {
                                  .tank-print-bottom-summary {
                                      display: grid;
                                      grid-template-columns: repeat(4, 1fr);
-                                     gap: 8mm;
-                                     margin-top: 6mm;
-                                     padding-top: 4mm;
+                                     gap: 4mm;
+                                     margin-top: 2mm;
+                                     padding-top: 2mm;
                                      border-top: 0.5pt solid #cfcfcf;
                                      page-break-inside: avoid;
                                      font-family: sans-serif;
@@ -920,14 +920,14 @@ export function LogbuchView({ state, setState }: any) {
                                      letter-spacing: 0.5px;
                                  }
                                  .tank-print-bottom-value {
-                                     font-size: 11pt;
+                                     font-size: 9pt;
                                      color: #111;
                                      font-weight: 700;
-                                     margin-top: 3px;
+                                     margin-top: 1px;
                                  }
                                  .tank-print-bottom-wrapper {
                                      position: fixed;
-                                     bottom: 12mm;
+                                     bottom: 10mm;
                                      left: 0;
                                      right: 0;
                                      padding: 0;
@@ -938,12 +938,12 @@ export function LogbuchView({ state, setState }: any) {
                                      z-index: 50;
                                  }
                                  .tank-print-bottom-title {
-                                     font-size: 8pt;
+                                     font-size: 7pt;
                                      font-weight: 700;
                                      color: #FF6600;
                                      text-transform: uppercase;
                                      letter-spacing: 0.5px;
-                                     margin-bottom: 3mm;
+                                     margin-bottom: 1mm;
                                      text-decoration: underline;
                                      text-underline-offset: 2px;
                                  }
