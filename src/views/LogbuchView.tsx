@@ -844,102 +844,153 @@ export function LogbuchView({ state, setState }: any) {
                      <div className="tank-print-layout">
                          <style>{`
                              @media print {
-                                 .tank-print-summary {
-                                     display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #ddd; font-size: 8pt; font-family: sans-serif;
+                                 .tank-print-meta-grid {
+                                     display: grid;
+                                     grid-template-columns: 1.3fr 0.8fr 1fr 1fr 1fr;
+                                     gap: 8mm;
+                                     margin: 4mm 0 5mm 0;
+                                     padding-bottom: 3mm;
+                                     border-bottom: 0.4pt solid #cfcfcf;
+                                     font-family: sans-serif;
                                  }
-                                 .tank-print-summary-left, .tank-print-summary-right { display: flex; gap: 30px; }
-                                 .tank-print-summary-right { text-align: right; }
-                                 .tank-print-stat { display: flex; flex-direction: column; }
-                                 .tank-print-stat-label { font-size: 6.5pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-                                 .tank-print-stat-val { color: #111; font-weight: 600; font-size: 9pt; }
+                                 .tank-print-meta-label {
+                                     font-size: 6.5pt;
+                                     color: #888;
+                                     text-transform: uppercase;
+                                     letter-spacing: 0.5px;
+                                 }
+                                 .tank-print-meta-value {
+                                     font-size: 9pt;
+                                     color: #111;
+                                     font-weight: 600;
+                                     margin-top: 2px;
+                                 }
+                                 .tank-print-column-grid {
+                                     display: grid;
+                                     grid-template-columns: 13% 19% 18% 14% 16% 20%;
+                                     align-items: center;
+                                     min-height: 8mm;
+                                     padding: 0 0 2mm 0;
+                                     border-bottom: 0.6pt solid #777;
+                                     font-size: 7pt;
+                                     text-transform: uppercase;
+                                     letter-spacing: 0.04em;
+                                     color: #555;
+                                     font-weight: 700;
+                                     font-family: sans-serif;
+                                 }
+                                 .tank-print-row-list {
+                                     display: block;
+                                 }
+                                 .tank-print-row {
+                                     display: grid;
+                                     grid-template-columns: 13% 19% 18% 14% 16% 20%;
+                                     align-items: center;
+                                     min-height: 7mm;
+                                     padding: 1.4mm 0;
+                                     border-bottom: 0.25pt solid #dddddd;
+                                     font-size: 8pt;
+                                     color: #222;
+                                     page-break-inside: avoid;
+                                     font-family: sans-serif;
+                                 }
+                                 .tank-print-col-1 { text-align: left; color: #666; font-weight: normal; }
+                                 .tank-print-col-2 { text-align: left; font-weight: 700; color: #111; }
+                                 .tank-print-col-3 { text-align: left; color: #666; font-weight: normal; }
+                                 .tank-print-col-4 { text-align: right; color: #222; }
+                                 .tank-print-col-5 { text-align: right; color: #222; }
+                                 .tank-print-col-6 { text-align: right; font-weight: 800; font-size: 8.5pt; color: #111; }
                                  
-                                 .tank-print-list-header {
-                                     display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid #bbb; margin-bottom: 4px; font-size: 7pt; font-family: sans-serif; color: #666; text-transform: uppercase; letter-spacing: 0.5px;
+                                 .tank-print-bottom-summary {
+                                     display: grid;
+                                     grid-template-columns: repeat(4, 1fr);
+                                     gap: 8mm;
+                                     margin-top: 6mm;
+                                     padding-top: 4mm;
+                                     border-top: 0.5pt solid #cfcfcf;
+                                     page-break-inside: avoid;
+                                     font-family: sans-serif;
                                  }
-                                 .tank-print-list-row {
-                                     display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 8pt; font-family: sans-serif; page-break-inside: avoid;
+                                 .tank-print-bottom-label {
+                                     font-size: 7pt;
+                                     color: #888;
+                                     text-transform: uppercase;
+                                     letter-spacing: 0.5px;
                                  }
-                                 .tank-print-col-left, .tank-print-col-mid, .tank-print-col-right {
-                                     display: flex; flex: 1; gap: 15px;
+                                 .tank-print-bottom-value {
+                                     font-size: 10pt;
+                                     color: #111;
+                                     font-weight: 700;
+                                     margin-top: 3px;
                                  }
-                                 .tank-print-col-mid { justify-content: center; }
-                                 .tank-print-col-right { justify-content: flex-end; }
-                                 
-                                 .tank-print-date { width: 70px; color: #666; font-size: 7.5pt; }
-                                 .tank-print-km { color: #111; font-weight: 600; width: 90px; }
-                                 .tank-print-fuel { color: #777; font-size: 7.5pt; width: 80px; text-align: right; }
-                                 .tank-print-liters { color: #333; width: 70px; text-align: right; }
-                                 .tank-print-price { color: #777; font-size: 7.5pt; width: 70px; text-align: right; }
-                                 .tank-print-total { color: #111; font-weight: 600; width: 80px; text-align: right; }
                              }
                          `}</style>
 
-                         <div className="tank-print-summary">
-                             <div className="tank-print-summary-left">
-                                 <div className="tank-print-stat">
-                                     <span className="tank-print-stat-label">Zeitraum</span>
-                                     <span className="tank-print-stat-val">{dateRangeStr}</span>
-                                 </div>
-                                 <div className="tank-print-stat">
-                                     <span className="tank-print-stat-label">Tankungen</span>
-                                     <span className="tank-print-stat-val">{currentFuelLog.length}</span>
-                                 </div>
+                         <div className="tank-print-meta-grid">
+                             <div>
+                                 <div className="tank-print-meta-label">Zeitraum</div>
+                                 <div className="tank-print-meta-value">{dateRangeStr}</div>
                              </div>
-                             <div className="tank-print-summary-right">
-                                 <div className="tank-print-stat">
-                                     <span className="tank-print-stat-label">Gesamtliter</span>
-                                     <span className="tank-print-stat-val">{formatNumber(totalLiters, 1)} L</span>
-                                 </div>
-                                 <div className="tank-print-stat">
-                                     <span className="tank-print-stat-label">Gesamtkosten</span>
-                                     <span className="tank-print-stat-val">{formatNumber(totalEur, 2)} €</span>
-                                 </div>
-                                 {result?.consumption != null && (
-                                     <div className="tank-print-stat">
-                                         <span className="tank-print-stat-label">Ø Verbrauch</span>
-                                         <span className="tank-print-stat-val">{formatNumber(result.consumption, 1)} L/100km</span>
-                                     </div>
-                                 )}
+                             <div>
+                                 <div className="tank-print-meta-label">Tankungen</div>
+                                 <div className="tank-print-meta-value">{currentFuelLog.length}</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-meta-label">Gesamtliter</div>
+                                 <div className="tank-print-meta-value">{formatNumber(totalLiters, 1)} L</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-meta-label">Gesamtkosten</div>
+                                 <div className="tank-print-meta-value">{formatNumber(totalEur, 2)} €</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-meta-label">Durchschnitt</div>
+                                 <div className="tank-print-meta-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
                              </div>
                          </div>
                          
-                         <div className="tank-print-list-header">
-                             <div className="tank-print-col-left">
-                                 <div className="tank-print-date">Datum</div>
-                                 <div className="tank-print-km">Kilometer</div>
-                             </div>
-                             <div className="tank-print-col-mid">
-                                 <div className="tank-print-fuel">Kraftstoff</div>
-                                 <div className="tank-print-liters">Menge</div>
-                             </div>
-                             <div className="tank-print-col-right">
-                                 <div className="tank-print-price">Preis/L</div>
-                                 <div className="tank-print-total">Betrag</div>
-                             </div>
+                         <div className="tank-print-column-grid">
+                             <div style={{textAlign: 'left'}}>Datum</div>
+                             <div style={{textAlign: 'left'}}>Kilometerstand</div>
+                             <div style={{textAlign: 'left'}}>Kraftstoff</div>
+                             <div style={{textAlign: 'right'}}>Liter</div>
+                             <div style={{textAlign: 'right'}}>Preis/L</div>
+                             <div style={{textAlign: 'right'}}>Betrag</div>
                          </div>
 
-                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                         <div className="tank-print-row-list">
                              {currentFuelLog.map((f:any) => {
                                  const totalBetrag = (f.liters * f.price) / (f.exchangeRateToEur || 1);
                                  return (
-                                     <div key={f.id} className="tank-print-list-row">
-                                         <div className="tank-print-col-left">
-                                             <div className="tank-print-date">{new Date(f.date).toLocaleDateString('de-DE')}</div>
-                                             <div className="tank-print-km">{formatNumber(f.km, 0)} KM</div>
-                                         </div>
-                                         
-                                         <div className="tank-print-col-mid">
-                                             <div className="tank-print-fuel">{f.fuelType}</div>
-                                             <div className="tank-print-liters">{formatNumber(f.liters, 2)} L</div>
-                                         </div>
-
-                                         <div className="tank-print-col-right">
-                                             <div className="tank-print-price">{formatNumber(f.price, 3)} €/L</div>
-                                             <div className="tank-print-total">{formatNumber(totalBetrag, 2)} €</div>
-                                         </div>
+                                     <div key={f.id} className="tank-print-row">
+                                         <div className="tank-print-col-1">{new Date(f.date).toLocaleDateString('de-DE')}</div>
+                                         <div className="tank-print-col-2">{formatNumber(f.km, 0)} KM</div>
+                                         <div className="tank-print-col-3">{f.fuelType}</div>
+                                         <div className="tank-print-col-4">{formatNumber(f.liters, 2)} L</div>
+                                         <div className="tank-print-col-5">{formatNumber(f.price, 3)} €/L</div>
+                                         <div className="tank-print-col-6">{formatNumber(totalBetrag, 2)} €</div>
                                      </div>
                                  );
                              })}
+                         </div>
+
+                         <div className="tank-print-bottom-summary">
+                             <div>
+                                 <div className="tank-print-bottom-label" style={{color: 'var(--accent, #FF6600)'}}>Gefahrene Kilometer</div>
+                                 <div className="tank-print-bottom-value">{formatNumber(totalKm, 0)} KM</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-bottom-label">Getankte Liter</div>
+                                 <div className="tank-print-bottom-value">{formatNumber(totalLiters, 1)} L</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-bottom-label">Gesamtkosten</div>
+                                 <div className="tank-print-bottom-value">{formatNumber(totalEur, 2)} €</div>
+                             </div>
+                             <div>
+                                 <div className="tank-print-bottom-label">Durchschnitt</div>
+                                 <div className="tank-print-bottom-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
+                             </div>
                          </div>
                      </div>
                  );
