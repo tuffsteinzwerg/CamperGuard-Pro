@@ -194,7 +194,7 @@ export function InhaltPrintView({ state }: { state: any }) {
                 }
             `}</style>
 
-            <PrintHeader title="Inventarliste" vehicleName={state.profile?.vehicleName} />
+            <PrintHeader title="Inventarliste" vehicleName={state.profile?.vehicleName} plate={state.profile?.plate} />
 
             {allCategories.map(category => {
                 const subcats = Array.from(new Set(state.subcategories[category] || []));

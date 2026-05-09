@@ -201,13 +201,15 @@ export function LogbuchView({ state, setState }: any) {
     <>
       <style>{`
         @media print {
-            @page { size: A4 portrait; margin: 15mm; }
+            @page { size: A4 ${logType === 'fahrt' && tripLogMode === 'strict' ? 'landscape' : 'portrait'}; margin: 15mm; }
             body { background: white !important; }
             .logbuch-normal { display: none !important; }
             .logbuch-print-wrapper { display: block !important; width: 100%; color: black !important; }
             .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; font-family: sans-serif; }
             .print-table th { border-bottom: 2px solid #000; padding: 6px; text-align: left; font-weight: bold; text-transform: uppercase; color: #000 !important; background: transparent !important; }
             .print-table td { border-bottom: 1px solid #ccc; padding: 6px; color: #000 !important; vertical-align: top; }
+            .fahrtenbuch-table { table-layout: fixed; width: 100%; }
+            .fahrtenbuch-table th, .fahrtenbuch-table td { overflow-wrap: break-word; word-wrap: break-word; hyphens: auto; }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
@@ -773,6 +775,7 @@ export function LogbuchView({ state, setState }: any) {
           <PrintHeader 
               title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
               vehicleName={state.profile?.vehicleName} 
+              plate={state.profile?.plate}
           />
 
           {logType === 'tank' && (
@@ -797,13 +800,12 @@ export function LogbuchView({ state, setState }: any) {
           {logType === 'fahrt' && tripLogMode === 'flex' && (
              currentTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Zielort</th><th>Zweck</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Notiz</th></tr></thead>
+                 <thead><tr><th>Datum</th><th>Zielort</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Notiz</th></tr></thead>
                  <tbody>
                      {currentTripLog.map((t:any) => (
                          <tr key={t.id}>
                              <td>{new Date(t.date).toLocaleDateString('de-DE')}</td>
                              <td>{t.destination}</td>
-                             <td>{t.purpose}</td>
                              <td>{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : t.fromKm}</td>
                              <td>{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : t.toKm}</td>
                              <td>{(t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? Number(t.toKm - t.fromKm).toLocaleString('de-DE') : (t.toKm - t.fromKm)} KM</td>
@@ -816,8 +818,23 @@ export function LogbuchView({ state, setState }: any) {
 
           {logType === 'fahrt' && tripLogMode === 'strict' && (
              currentBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Fahrer</th><th>Kategorie</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Straße</th><th>Hausnr.</th><th>PLZ</th><th>Ort</th><th>Zweck</th><th>Geschäftspartner</th><th>Notiz / Route</th></tr></thead>
+             <table className="print-table fahrtenbuch-table">
+                 <colgroup>
+                     <col style={{ width: '6%' }} />
+                     <col style={{ width: '7%' }} />
+                     <col style={{ width: '8%' }} />
+                     <col style={{ width: '6%' }} />
+                     <col style={{ width: '6%' }} />
+                     <col style={{ width: '6%' }} />
+                     <col style={{ width: '12%' }} />
+                     <col style={{ width: '4%' }} />
+                     <col style={{ width: '5%' }} />
+                     <col style={{ width: '10%' }} />
+                     <col style={{ width: '10%' }} />
+                     <col style={{ width: '10%' }} />
+                     <col style={{ width: '10%' }} />
+                 </colgroup>
+                 <thead><tr><th>Datum</th><th>Fahrer</th><th>Kategorie</th><th>Start<br/>KM</th><th>Ziel<br/>KM</th><th>Strecke</th><th>Straße</th><th>Hausnr.</th><th>PLZ</th><th>Ort</th><th>Zweck</th><th>Geschäfts-<br/>partner</th><th>Notiz /<br/>Route</th></tr></thead>
                  <tbody>
                      {currentBusinessTripLog.map((t:any) => (
                          <tr key={t.id}>
@@ -843,15 +860,14 @@ export function LogbuchView({ state, setState }: any) {
           {logType === 'spots' && (
              state.spots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Name</th><th>Kategorie</th><th>Latitude</th><th>Longitude</th><th>Notiz</th></tr></thead>
+                 <thead><tr><th style={{ width: '12%' }}>Datum</th><th>Name</th><th style={{ width: '12%' }}>Kategorie</th><th>Koordinaten</th><th style={{ width: '40%' }}>Notiz</th></tr></thead>
                  <tbody>
                      {state.spots.map((s:any) => (
                          <tr key={s.id}>
                              <td>{new Date(s.date).toLocaleDateString('de-DE')}</td>
                              <td>{s.name}</td>
                              <td>{s.category || 'Stellplatz'}</td>
-                             <td>{s.lat.toFixed(6)}</td>
-                             <td>{s.lng.toFixed(6)}</td>
+                             <td>{(s.lat != null && s.lng != null) ? `${s.lat}, ${s.lng}` : ''}</td>
                              <td>{s.note}</td>
                          </tr>
                      ))}
