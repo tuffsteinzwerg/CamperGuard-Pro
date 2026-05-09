@@ -40,6 +40,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const calibratedPitchRef = useRef<number>(0);
   const calibratedRollRef = useRef<number>(0);
   const lastSpokenDirectionRef = useRef<string>('level');
+  const prevTiltRef = useRef<number>(99);
+  const prevRingRef = useRef<number>(5);
   const audioModeRef = useRef<string>('tone');
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
@@ -203,36 +205,91 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       osc.stop(now + 0.07);
   };
 
-  const speakDirection = (direction: string) => {
-      if (direction === lastSpokenDirectionRef.current) return;
-      if (direction === 'level') {
-          lastSpokenDirectionRef.current = 'level';
-          return;
-      }
-      lastSpokenDirectionRef.current = direction;
+  // === VIRTUELLER EINWEISER ===
 
-      const labels: Record<string, string> = {
-          'front': 'vorne',
-          'rear': 'hinten',
-          'left': 'links',
-          'right': 'rechts',
-          'frontLeft': 'vorne links',
-          'frontRight': 'vorne rechts',
-          'rearLeft': 'hinten links',
-          'rearRight': 'hinten rechts'
-      };
-
-      const text = labels[direction];
-      if (!text) return;
-
+  const speak = (text: string) => {
       try {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'de-DE';
-          utterance.rate = 1.3;
-          utterance.volume = 0.8;
+          utterance.rate = 1.4;
+          utterance.volume = 0.9;
           window.speechSynthesis.speak(utterance);
       } catch (e) {}
+  };
+
+  const directionLabels: Record<string, string> = {
+      'front': 'vorne',
+      'rear': 'hinten',
+      'left': 'links',
+      'right': 'rechts',
+      'frontLeft': 'vorne links',
+      'frontRight': 'vorne rechts',
+      'rearLeft': 'hinten links',
+      'rearRight': 'hinten rechts'
+  };
+
+  const getTiltRing = (tilt: number): number => {
+      if (tilt > 6) return 5;
+      if (tilt > 4) return 4;
+      if (tilt > 2) return 3;
+      if (tilt > 1) return 2;
+      if (tilt > 0.5) return 1;
+      return 0; // Level
+  };
+
+  const handleVoiceFeedback = (direction: string, tiltTotal: number) => {
+      const prevRing = prevRingRef.current;
+      const currentRing = getTiltRing(tiltTotal);
+
+      // --- Level erreicht ---
+      if (direction === 'level' || currentRing === 0) {
+          if (lastSpokenDirectionRef.current !== 'level') {
+              speak('passt!');
+          }
+          lastSpokenDirectionRef.current = 'level';
+          prevTiltRef.current = 0;
+          prevRingRef.current = 0;
+          return;
+      }
+
+      // --- Richtungswechsel: Neue Richtung ansagen ---
+      if (direction !== lastSpokenDirectionRef.current) {
+          const label = directionLabels[direction];
+          if (label) {
+              // War vorher schon aktiv? Dann war es eine Überkorrektur
+              if (lastSpokenDirectionRef.current !== 'level') {
+                  speak('nee, jetzt ' + label + ' zu hoch');
+              } else {
+                  // Erstansage
+                  speak(label + ' zu hoch');
+              }
+          }
+          lastSpokenDirectionRef.current = direction;
+          prevTiltRef.current = tiltTotal;
+          prevRingRef.current = currentRing;
+          return;
+      }
+
+      // --- Ring-Übergang prüfen (gleiche Richtung) ---
+      if (currentRing !== prevRing) {
+          if (currentRing < prevRing) {
+              // Ring nach innen = besser
+              if (currentRing === 1) {
+                  speak('fast');
+              } else if (currentRing === 2) {
+                  speak('gleich');
+              } else {
+                  speak('gut');
+              }
+          } else {
+              // Ring nach außen = schlechter
+              speak('nee');
+          }
+          prevRingRef.current = currentRing;
+      }
+
+      prevTiltRef.current = tiltTotal;
   };
 
   const schedulePulse = () => {
@@ -243,10 +300,15 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
 
       const isLevel = Math.abs(pitch) <= dz && Math.abs(roll) <= dz;
 
-      // Lock-Akkord bei Level-Erreichen (in allen Modi)
+      // Lock-Akkord + Sprache bei Level-Erreichen (in allen Modi)
       if (isLevel && !wasLevelRef.current) {
           playLockChord();
+          if (mode === 'speech+tone' || mode === 'speech') {
+              speak('passt!');
+          }
           lastSpokenDirectionRef.current = 'level';
+          prevTiltRef.current = 0;
+          prevRingRef.current = 0;
           wasLevelRef.current = true;
       } else if (!isLevel) {
           wasLevelRef.current = false;
@@ -261,9 +323,12 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       // Panner-Position aktualisieren (für Ton-Modi)
       updatePannerPosition();
 
-      // Sprachansage bei Richtungswechsel (für Sprache-Modi)
+      // tiltTotal berechnen (wird für Einweiser UND Intervall gebraucht)
+      const tiltTotal = Math.sqrt(pitch * pitch + roll * roll);
+
+      // Einweiser-Sprachfeedback (für Sprache-Modi)
       if (mode === 'speech+tone' || mode === 'speech') {
-          speakDirection(latestDirectionRef.current);
+          handleVoiceFeedback(latestDirectionRef.current, tiltTotal);
       }
 
       // Pulse abspielen (für Ton-Modi)
@@ -272,7 +337,6 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       }
 
       // Intervall berechnen: 800ms bei 1° → 80ms bei 10°
-      const tiltTotal = Math.sqrt(pitch * pitch + roll * roll);
       const clampedTilt = Math.max(0.5, Math.min(10, tiltTotal));
       const interval = 800 - ((clampedTilt - 0.5) / 9.5) * 720;
 
@@ -289,6 +353,8 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       }
       pannerRef.current = null;
       lastSpokenDirectionRef.current = 'level';
+      prevTiltRef.current = 99;
+      prevRingRef.current = 5;
       try { window.speechSynthesis.cancel(); } catch(e) {}
   };
 
