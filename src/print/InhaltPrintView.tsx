@@ -33,7 +33,7 @@ export function InhaltPrintView({ state }: { state: any }) {
         subcats.forEach((sub: any) => {
             const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
             itemsInSubcat.forEach((item: any) => {
-                totalWeightKg += getWeightInKg(item.weight, item.weightUnit);
+                totalWeightKg += getWeightInKg(item.weight, item.weightUnit) * (item.quantity || 1);
             });
         });
     });
@@ -140,61 +140,136 @@ export function InhaltPrintView({ state }: { state: any }) {
         return acc;
     }, {});
 
+    const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
     return (
         <div className="hidden print-only inhalt-print-wrapper bg-white">
             <style>{`
                 @media print {
-                    @page { size: A4 portrait; margin: 10mm 20mm; }
+                    @page { size: A4 portrait; margin: 10mm 15mm; }
                     .inhalt-print-wrapper {
                         display: block !important;
                         width: 100%;
                         color: black !important;
+                        font-family: sans-serif;
                     }
-                    .print-category {
-                        font-weight: bold;
-                        font-size: 9pt !important;
-                        margin-top: 5px;
-                        margin-bottom: 0px;
+                    .inv-section-title {
+                        font-size: 8pt;
+                        font-weight: 700;
+                        color: #FF6600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        margin-top: 4mm;
+                        margin-bottom: 1mm;
+                        padding-bottom: 1mm;
+                        border-bottom: 0.5pt solid #FF6600;
                     }
-                    .print-location {
-                        font-weight: bold;
-                        font-size: 7pt !important;
+                    .inv-location-title {
+                        font-size: 7pt;
+                        font-weight: 600;
+                        color: #555;
+                        margin-top: 2mm;
+                        margin-bottom: 0.5mm;
+                        padding-left: 1mm;
+                    }
+                    .inv-col-header {
+                        display: grid;
+                        grid-template-columns: 5% 55% 20% 20%;
+                        align-items: center;
+                        min-height: 5mm;
+                        padding: 0 0 1mm 0;
+                        border-bottom: 0.5pt solid #999;
+                        font-size: 6pt;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #888;
+                        font-weight: 700;
+                        margin-top: 1mm;
+                    }
+                    .inv-row {
+                        display: grid;
+                        grid-template-columns: 5% 55% 20% 20%;
+                        align-items: center;
+                        min-height: 4.5mm;
+                        padding: 0.6mm 0;
+                        border-bottom: 0.2pt solid #e0e0e0;
+                        font-size: 7pt;
+                        color: #222;
+                        page-break-inside: avoid;
+                    }
+                    .inv-row .inv-check { text-align: center; font-size: 7pt; color: #ccc; }
+                    .inv-row .inv-name { text-align: left; padding-left: 1mm; }
+                    .inv-row .inv-qty { text-align: right; color: #555; }
+                    .inv-row .inv-weight { text-align: right; color: #555; }
+                    .inv-med-col-header {
+                        display: grid;
+                        grid-template-columns: 5% 25% 22% 16% 16% 16%;
+                        align-items: center;
+                        min-height: 5mm;
+                        padding: 0 0 1mm 0;
+                        border-bottom: 0.5pt solid #999;
+                        font-size: 6pt;
+                        text-transform: uppercase;
+                        letter-spacing: 0.04em;
+                        color: #888;
+                        font-weight: 700;
+                        margin-top: 1mm;
+                    }
+                    .inv-med-row {
+                        display: grid;
+                        grid-template-columns: 5% 25% 22% 16% 16% 16%;
+                        align-items: center;
+                        min-height: 4.5mm;
+                        padding: 0.6mm 0;
+                        border-bottom: 0.2pt solid #e0e0e0;
+                        font-size: 7pt;
+                        color: #222;
+                        page-break-inside: avoid;
+                    }
+                    .inv-med-row .inv-check { text-align: center; font-size: 7pt; color: #ccc; }
+                    .inv-med-row .inv-name { text-align: left; padding-left: 1mm; }
+                    .inv-med-row .inv-purpose { text-align: left; color: #555; }
+                    .inv-med-row .inv-expiry { text-align: center; color: #555; }
+                    .inv-med-row .inv-qty { text-align: right; color: #555; }
+                    .inv-med-row .inv-weight { text-align: right; color: #555; }
+                    .inv-weight-footer {
+                        position: fixed;
+                        bottom: 10mm;
+                        left: 0;
+                        right: 0;
+                        padding: 2mm 0 0 0;
+                        margin: 0;
+                        border-top: 0.5pt solid #cfcfcf;
+                        background: white;
+                        z-index: 50;
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        font-family: sans-serif;
+                    }
+                    .inv-weight-footer-label {
+                        font-size: 7pt;
+                        color: #888;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .inv-weight-footer-value {
+                        font-size: 9pt;
+                        color: #111;
+                        font-weight: 700;
                         margin-top: 1px;
-                        margin-bottom: 0px;
-                        margin-left: 4mm;
-                        color: #333;
                     }
-                    .print-item-wrap {
-                        display: flex;
-                        flex-direction: column;
-                        font-size: 7pt !important;
-                        padding: 0;
-                        margin-left: 8mm;
-                        line-height: 1.4;
-                    }
-                    .print-item-line {
-                        display: flex;
-                        justify-content: space-between;
-                        width: 100%;
-                    }
-                    .col-check { flex: 0 0 4mm; }
-                    .col-name { flex: 1; padding-left: 2mm; }
-                    .col-med-name { flex: 1 1 30%; padding-left: 2mm; }
-                    .col-med-purpose { flex: 1 1 30%; padding-left: 2mm; }
-                    .col-med-exp { flex: 0 0 22mm; padding-left: 2mm; }
-                    .col-qty { flex: 0 0 18mm; text-align: right; }
-                    .col-weight { flex: 0 0 16mm; text-align: right; }
-                    .print-weight-sum {
-                        margin-top: 8px;
-                        font-size: 8pt !important;
-                        font-weight: bold;
+                    .inv-article-count {
                         text-align: right;
-                        padding-top: 2px;
                     }
                 }
             `}</style>
 
-            <PrintHeader title="Inventarliste" vehicleName={state.profile?.vehicleName} plate={state.profile?.plate} />
+            <PrintHeader 
+                title="Inventarliste" 
+                vehicleName={state.profile?.vehicleName} 
+                plate={state.profile?.plate}
+                createdDate={today}
+            />
 
             {allCategories.map(category => {
                 const subcats = Array.from(new Set(state.subcategories[category] || []));
@@ -204,25 +279,31 @@ export function InhaltPrintView({ state }: { state: any }) {
 
                 return (
                     <div key={category}>
-                        <div className="print-category">{category.toUpperCase()}</div>
+                        <div className="inv-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>📦</span> {category.toUpperCase()}</div>
+                        
+                        <div className="inv-col-header">
+                            <div style={{textAlign: 'center'}}>✓</div>
+                            <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Artikel</div>
+                            <div style={{textAlign: 'right'}}>Menge</div>
+                            <div style={{textAlign: 'right'}}>Gewicht</div>
+                        </div>
+
                         {subcats.map((sub: any) => {
                             const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
                             if (itemsInSubcat.length === 0) return null;
 
                             return (
                                 <div key={sub}>
-                                    <div className="print-location">{sub}</div>
+                                    <div className="inv-location-title">📍 {sub}</div>
                                     {itemsInSubcat.map((item: any) => (
-                                        <div className="print-item-wrap" key={item.id}>
-                                            <div className="print-item-line">
-                                                <div className="col-check">□</div>
-                                                <div className="col-name">{item.name}</div>
-                                                <div className="col-qty">{item.quantity} {formatUnit(item.unit)}</div>
-                                                <div className="col-weight">
-                                                    {item.weight !== undefined && item.weight !== null && item.weight !== '' 
-                                                        ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}` 
-                                                        : ''}
-                                                </div>
+                                        <div className="inv-row" key={item.id}>
+                                            <div className="inv-check">□</div>
+                                            <div className="inv-name">{item.name}</div>
+                                            <div className="inv-qty">{item.quantity} {formatUnit(item.unit)}</div>
+                                            <div className="inv-weight">
+                                                {item.weight !== undefined && item.weight !== null && item.weight !== '' 
+                                                    ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}` 
+                                                    : ''}
                                             </div>
                                         </div>
                                     ))}
@@ -235,21 +316,27 @@ export function InhaltPrintView({ state }: { state: any }) {
 
             {Object.keys(groupedGear).length > 0 && (
                 <div>
-                    <div className="print-category">Notfallausrüstung</div>
+                    <div className="inv-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>🛡️</span> Notfallausrüstung</div>
+                    
+                    <div className="inv-col-header">
+                        <div style={{textAlign: 'center'}}>✓</div>
+                        <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Ausrüstung</div>
+                        <div style={{textAlign: 'right'}}>Menge</div>
+                        <div style={{textAlign: 'right'}}>Gewicht</div>
+                    </div>
+
                     {Object.keys(groupedGear).map(loc => (
                         <div key={loc}>
-                            <div className="print-location">{loc}</div>
+                            <div className="inv-location-title">📍 {loc}</div>
                             {groupedGear[loc].map((g: any, _idx: number) => (
-                                <div className="print-item-wrap" key={`${g.id}-${_idx}`}>
-                                    <div className="print-item-line">
-                                        <div className="col-check">□</div>
-                                        <div className="col-name">{g.name}</div>
-                                        <div className="col-qty">{g.printCount} Stk</div>
-                                        <div className="col-weight">
-                                            {g.weight !== undefined && g.weight !== null && g.weight !== ''
-                                                ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
-                                                : ''}
-                                        </div>
+                                <div className="inv-row" key={`${g.id}-${_idx}`}>
+                                    <div className="inv-check">□</div>
+                                    <div className="inv-name">{g.name}</div>
+                                    <div className="inv-qty">{g.printCount} Stk</div>
+                                    <div className="inv-weight">
+                                        {g.weight !== undefined && g.weight !== null && g.weight !== ''
+                                            ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`
+                                            : ''}
                                     </div>
                                 </div>
                             ))}
@@ -260,23 +347,31 @@ export function InhaltPrintView({ state }: { state: any }) {
 
             {pharmacyFilter.length > 0 && (
                 <div>
-                    <div className="print-category">Apotheke / Medikamente</div>
+                    <div className="inv-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>💊</span> Apotheke / Medikamente</div>
+                    
+                    <div className="inv-med-col-header">
+                        <div style={{textAlign: 'center'}}>✓</div>
+                        <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Medikament</div>
+                        <div style={{textAlign: 'left'}}>Zweck</div>
+                        <div style={{textAlign: 'center'}}>Ablaufdatum</div>
+                        <div style={{textAlign: 'right'}}>Menge</div>
+                        <div style={{textAlign: 'right'}}>Gewicht</div>
+                    </div>
+
                     {Object.keys(groupedPharmacy).map(loc => (
                         <div key={loc}>
-                            <div className="print-location">{loc}</div>
+                            <div className="inv-location-title">📍 {loc}</div>
                             {groupedPharmacy[loc].map((p: any) => (
-                                <div className="print-item-wrap" key={p.id}>
-                                    <div className="print-item-line">
-                                        <div className="col-check">□</div>
-                                        <div className="col-med-name">{p.name}</div>
-                                        <div className="col-med-purpose">{p.purpose}</div>
-                                        <div className="col-med-exp">{p.expiry ? `Exp: ${p.expiry}` : ''}</div>
-                                        <div className="col-qty">{p.quantity} {formatUnit(p.unit)}</div>
-                                        <div className="col-weight">
-                                            {p.weight !== undefined && p.weight !== null && p.weight !== ''
-                                                ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
-                                                : ''}
-                                        </div>
+                                <div className="inv-med-row" key={p.id}>
+                                    <div className="inv-check">□</div>
+                                    <div className="inv-name">{p.name}</div>
+                                    <div className="inv-purpose">{p.purpose}</div>
+                                    <div className="inv-expiry">{p.expiry || ''}</div>
+                                    <div className="inv-qty">{p.quantity} {formatUnit(p.unit)}</div>
+                                    <div className="inv-weight">
+                                        {p.weight !== undefined && p.weight !== null && p.weight !== ''
+                                            ? `${p.weight} ${formatUnit(p.weightUnit || 'kg')}`
+                                            : ''}
                                     </div>
                                 </div>
                             ))}
@@ -286,11 +381,21 @@ export function InhaltPrintView({ state }: { state: any }) {
             )}
             
             {totalWeightKg > 0 && (
-                <div className="print-weight-sum">
-                    Gesamtgewicht der gedruckten Liste: {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g / ` : ''}{totalWeightKg.toFixed(2)} kg
+                <div className="inv-weight-footer">
+                    <div>
+                        <div className="inv-weight-footer-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>⚖️</span> Gesamtgewicht</div>
+                        <div className="inv-weight-footer-value">
+                            {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g` : `${totalWeightKg.toFixed(2)} kg`}
+                        </div>
+                    </div>
+                    <div className="inv-article-count">
+                        <div className="inv-weight-footer-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📋</span> Artikel gesamt</div>
+                        <div className="inv-weight-footer-value">
+                            {state.inventory.length + printableGear.length + pharmacyFilter.length}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
-
