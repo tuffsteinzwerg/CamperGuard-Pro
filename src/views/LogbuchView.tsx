@@ -288,6 +288,80 @@ export function LogbuchView({ state, setState }: any) {
                 font-weight: 700;
                 margin-top: 1px;
             }
+            .poi-print-column-grid {
+                display: grid;
+                grid-template-columns: 12% 22% 14% 18% 34%;
+                align-items: center;
+                min-height: 6mm;
+                padding: 0 0 1mm 0;
+                border-bottom: 0.6pt solid #777;
+                font-size: 6.5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #555;
+                font-weight: 700;
+                font-family: sans-serif;
+                margin-top: 2mm;
+            }
+            .poi-print-row {
+                display: grid;
+                grid-template-columns: 12% 22% 14% 18% 34%;
+                align-items: center;
+                min-height: 5.5mm;
+                padding: 1mm 0;
+                border-bottom: 0.25pt solid #dddddd;
+                font-size: 7.5pt;
+                color: #222;
+                page-break-inside: avoid;
+                font-family: sans-serif;
+            }
+            .poi-col-date { text-align: left; color: #666; }
+            .poi-col-name { text-align: left; font-weight: 600; color: #111; }
+            .poi-col-cat { text-align: left; color: #555; }
+            .poi-col-coords { text-align: left; color: #888; font-size: 6.5pt; font-family: monospace; }
+            .poi-col-note { text-align: left; color: #555; padding-left: 2mm; font-size: 7pt; line-height: 1.3; }
+            .poi-print-summary {
+                position: fixed;
+                bottom: 10mm;
+                left: 0;
+                right: 0;
+                padding: 0;
+                margin: 0;
+                page-break-inside: avoid;
+                font-family: sans-serif;
+                background: white;
+                z-index: 50;
+            }
+            .poi-print-summary-title {
+                font-size: 7pt;
+                font-weight: 700;
+                color: #FF6600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 1mm;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+            }
+            .poi-print-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4mm;
+                margin-top: 2mm;
+                padding-top: 2mm;
+                border-top: 0.5pt solid #cfcfcf;
+            }
+            .poi-print-summary-label {
+                font-size: 7pt;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .poi-print-summary-value {
+                font-size: 9pt;
+                color: #111;
+                font-weight: 700;
+                margin-top: 1px;
+            }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
@@ -906,8 +980,8 @@ export function LogbuchView({ state, setState }: any) {
               title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
               vehicleName={state.profile?.vehicleName} 
               plate={state.profile?.plate}
-              dateRange={(logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'flex')) ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
-              createdDate={(logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'flex')) ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
+              dateRange={(logType === 'tank' || logType === 'fahrt' || logType === 'spots') ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
+              createdDate={(logType === 'tank' || logType === 'fahrt' || logType === 'spots') ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
           />
 
           {logType === 'tank' && (
@@ -1199,20 +1273,43 @@ export function LogbuchView({ state, setState }: any) {
 
           {logType === 'spots' && (
              state.spots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <table className="print-table">
-                 <thead><tr><th style={{ width: '12%' }}>Datum</th><th>Name</th><th style={{ width: '12%' }}>Kategorie</th><th>Koordinaten</th><th style={{ width: '40%' }}>Notiz</th></tr></thead>
-                 <tbody>
+             <div>
+                 <div className="poi-print-column-grid">
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Name</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorie</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Koordinaten</div>
+                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
+                 </div>
+                 <div>
                      {state.spots.map((s:any) => (
-                         <tr key={s.id}>
-                             <td>{new Date(s.date).toLocaleDateString('de-DE')}</td>
-                             <td>{s.name}</td>
-                             <td>{s.category || 'Stellplatz'}</td>
-                             <td>{(s.lat != null && s.lng != null) ? `${s.lat}, ${s.lng}` : ''}</td>
-                             <td>{s.note}</td>
-                         </tr>
+                         <div key={s.id} className="poi-print-row">
+                             <div className="poi-col-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
+                             <div className="poi-col-name">{s.name}</div>
+                             <div className="poi-col-cat">{s.category || 'Stellplatz'}</div>
+                             <div className="poi-col-coords">{(s.lat != null && s.lng != null) ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : ''}</div>
+                             <div className="poi-col-note">{s.note}</div>
+                         </div>
                      ))}
-                 </tbody>
-             </table>
+                 </div>
+                 <div className="poi-print-summary">
+                     <div className="poi-print-summary-title">Übersicht</div>
+                     <div className="poi-print-summary-grid">
+                         <div>
+                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Gespeicherte Orte</div>
+                             <div className="poi-print-summary-value">{state.spots.length}</div>
+                         </div>
+                         <div>
+                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorien</div>
+                             <div className="poi-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
+                         </div>
+                         <div>
+                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Mit Koordinaten</div>
+                             <div className="poi-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
           )}
 
       </div>
