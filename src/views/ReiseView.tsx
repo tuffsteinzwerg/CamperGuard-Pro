@@ -265,7 +265,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           if (label) {
               // War vorher schon aktiv? Dann war es eine Überkorrektur
               if (lastSpokenDirectionRef.current !== 'level') {
-                  speak('nee, jetzt ' + label + ' zu hoch');
+                  speak('stopp, jetzt ' + label + ' zu hoch');
               } else {
                   // Erstansage
                   speak(label + ' zu hoch');
@@ -290,7 +290,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
               }
           } else {
               // Ring nach außen = schlechter
-              speak('nee');
+              speak('stopp');
           }
           prevRingRef.current = currentRing;
           prevTiltRef.current = tiltTotal;
