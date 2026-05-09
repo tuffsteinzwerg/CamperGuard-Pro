@@ -832,6 +832,8 @@ export function LogbuchView({ state, setState }: any) {
               title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
               vehicleName={state.profile?.vehicleName} 
               plate={state.profile?.plate}
+              dateRange={logType === 'tank' ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
+              createdDate={logType === 'tank' ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
           />
 
           {logType === 'tank' && (
@@ -918,10 +920,25 @@ export function LogbuchView({ state, setState }: any) {
                                      letter-spacing: 0.5px;
                                  }
                                  .tank-print-bottom-value {
-                                     font-size: 10pt;
+                                     font-size: 11pt;
                                      color: #111;
                                      font-weight: 700;
                                      margin-top: 3px;
+                                 }
+                                 .tank-print-bottom-wrapper {
+                                     margin-top: 8mm;
+                                     page-break-inside: avoid;
+                                     font-family: sans-serif;
+                                 }
+                                 .tank-print-bottom-title {
+                                     font-size: 8pt;
+                                     font-weight: 700;
+                                     color: #FF6600;
+                                     text-transform: uppercase;
+                                     letter-spacing: 0.5px;
+                                     margin-bottom: 3mm;
+                                     text-decoration: underline;
+                                     text-underline-offset: 2px;
                                  }
                              }
                          `}</style>
@@ -951,45 +968,60 @@ export function LogbuchView({ state, setState }: any) {
                          
                          <div className="tank-print-column-grid">
                              <div style={{textAlign: 'left'}}>Datum</div>
-                             <div style={{textAlign: 'left'}}>Kilometerstand</div>
+                             <div style={{textAlign: 'left'}}>Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt'}}>(seit letzter Tankung)</span></div>
                              <div style={{textAlign: 'left'}}>Kraftstoff</div>
                              <div style={{textAlign: 'right'}}>Liter</div>
-                             <div style={{textAlign: 'right'}}>Preis/L</div>
-                             <div style={{textAlign: 'right'}}>Betrag</div>
+                             <div style={{textAlign: 'right'}}>Preis / L</div>
+                             <div style={{textAlign: 'right'}}>Gesamtpreis</div>
                          </div>
 
                          <div className="tank-print-row-list">
-                             {currentFuelLog.map((f:any) => {
+                             {currentFuelLog.map((f:any, idx:number) => {
                                  const totalBetrag = (f.liters * f.price) / (f.exchangeRateToEur || 1);
+                                 const sortedByKm = [...currentFuelLog].filter((e:any) => e.km != null && !isNaN(e.km)).sort((a:any, b:any) => a.km - b.km);
+                                 const isFirstTankung = sortedByKm.length > 0 && f.id === sortedByKm[0].id;
+                                 const prevEntry = sortedByKm.find((e:any, i:number) => i < sortedByKm.length - 1 && sortedByKm[i + 1].id === f.id);
+                                 const kmDelta = (prevEntry && f.km != null && !isNaN(f.km)) ? f.km - prevEntry.km : null;
+                                 const hasKm = f.km != null && !isNaN(f.km);
+                                 let kmDeltaStr = '(—)';
+                                 if (isFirstTankung) kmDeltaStr = '(Erste Tankung)';
+                                 else if (kmDelta != null && kmDelta > 0) kmDeltaStr = `(${formatNumber(kmDelta, 0)} km)`;
+
                                  return (
                                      <div key={f.id} className="tank-print-row">
                                          <div className="tank-print-col-1">{new Date(f.date).toLocaleDateString('de-DE')}</div>
-                                         <div className="tank-print-col-2">{formatNumber(f.km, 0)} KM</div>
+                                         <div className="tank-print-col-2">
+                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span style={{color: '#888', fontWeight: 400, fontSize: '7.5pt', marginLeft: '4px'}}>{kmDeltaStr}</span></> : <span style={{color: '#888'}}>-</span>}
+                                         </div>
                                          <div className="tank-print-col-3">{f.fuelType}</div>
-                                         <div className="tank-print-col-4">{formatNumber(f.liters, 2)} L</div>
-                                         <div className="tank-print-col-5">{formatNumber(f.price, 3)} €/L</div>
-                                         <div className="tank-print-col-6">{formatNumber(totalBetrag, 2)} €</div>
+                                         <div className="tank-print-col-4">{formatNumber(f.liters, 2)} l</div>
+                                         <div className="tank-print-col-5">{formatNumber(f.price, 3)} €</div>
+                                         <div className="tank-print-col-6" style={{color: '#FF6600'}}>{formatNumber(totalBetrag, 2)} €</div>
                                      </div>
                                  );
                              })}
                          </div>
 
-                         <div className="tank-print-bottom-summary">
-                             <div>
-                                 <div className="tank-print-bottom-label" style={{color: 'var(--accent, #FF6600)'}}>Gefahrene Kilometer</div>
-                                 <div className="tank-print-bottom-value">{formatNumber(totalKm, 0)} KM</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-bottom-label">Getankte Liter</div>
-                                 <div className="tank-print-bottom-value">{formatNumber(totalLiters, 1)} L</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-bottom-label">Gesamtkosten</div>
-                                 <div className="tank-print-bottom-value">{formatNumber(totalEur, 2)} €</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-bottom-label">Durchschnitt</div>
-                                 <div className="tank-print-bottom-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
+                         <div className="tank-print-bottom-wrapper">
+                             <div className="tank-print-bottom-title">Übersicht Zeitraum</div>
+                             <div className="tank-print-bottom-summary">
+                                 <div>
+                                     <div className="tank-print-bottom-label">Gefahrene Kilometer</div>
+                                     <div className="tank-print-bottom-value">{formatNumber(totalKm, 0)} km</div>
+                                 </div>
+                                 <div>
+                                     <div className="tank-print-bottom-label">Getankte Liter</div>
+                                     <div className="tank-print-bottom-value">{formatNumber(totalLiters, 1)} l</div>
+                                 </div>
+                                 <div>
+                                     <div className="tank-print-bottom-label">Gesamtkosten</div>
+                                     <div className="tank-print-bottom-value">{formatNumber(totalEur, 2)} €</div>
+                                 </div>
+                                 <div>
+                                     <div className="tank-print-bottom-label">Durchschnitt</div>
+                                     <div className="tank-print-bottom-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
+                                     {totalLiters > 0 && totalEur > 0 && <div className="tank-print-bottom-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
+                                 </div>
                              </div>
                          </div>
                      </div>
