@@ -202,7 +202,7 @@ export function LogbuchView({ state, setState }: any) {
     <>
       <style>{`
         @media print {
-            @page { size: A4 ${logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: 15mm; }
+            @page { size: A4 ${logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: ${logType === 'tank' ? '15mm' : '10mm 15mm'}; }
             body { background: white !important; }
             .logbuch-normal { display: none !important; }
             .logbuch-print-wrapper { display: block !important; width: 100%; color: black !important; }
@@ -214,6 +214,80 @@ export function LogbuchView({ state, setState }: any) {
             .tank-print-table td { border-bottom: 1px solid #eaeaea; padding: 4px 2px; color: #333 !important; vertical-align: middle; }
             .fahrtenbuch-table { table-layout: fixed; width: 100%; }
             .fahrtenbuch-table th, .fahrtenbuch-table td { overflow-wrap: break-word; word-wrap: break-word; hyphens: auto; }
+            .reise-print-column-grid {
+                display: grid;
+                grid-template-columns: 12% 22% 12% 12% 12% 30%;
+                align-items: center;
+                min-height: 6mm;
+                padding: 0 0 1mm 0;
+                border-bottom: 0.6pt solid #777;
+                font-size: 6.5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #555;
+                font-weight: 700;
+                font-family: sans-serif;
+                margin-top: 2mm;
+            }
+            .reise-print-row {
+                display: grid;
+                grid-template-columns: 12% 22% 12% 12% 12% 30%;
+                align-items: center;
+                min-height: 5.5mm;
+                padding: 1mm 0;
+                border-bottom: 0.25pt solid #dddddd;
+                font-size: 7.5pt;
+                color: #222;
+                page-break-inside: avoid;
+                font-family: sans-serif;
+            }
+            .reise-col-date { text-align: left; color: #666; }
+            .reise-col-dest { text-align: left; font-weight: 600; color: #111; }
+            .reise-col-km { text-align: right; color: #444; }
+            .reise-col-dist { text-align: right; font-weight: 700; color: #111; }
+            .reise-col-note { text-align: left; color: #555; padding-left: 2mm; font-size: 7pt; line-height: 1.3; }
+            .reise-print-summary {
+                position: fixed;
+                bottom: 10mm;
+                left: 0;
+                right: 0;
+                padding: 0;
+                margin: 0;
+                page-break-inside: avoid;
+                font-family: sans-serif;
+                background: white;
+                z-index: 50;
+            }
+            .reise-print-summary-title {
+                font-size: 7pt;
+                font-weight: 700;
+                color: #FF6600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 1mm;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+            }
+            .reise-print-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4mm;
+                margin-top: 2mm;
+                padding-top: 2mm;
+                border-top: 0.5pt solid #cfcfcf;
+            }
+            .reise-print-summary-label {
+                font-size: 7pt;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .reise-print-summary-value {
+                font-size: 9pt;
+                color: #111;
+                font-weight: 700;
+                margin-top: 1px;
+            }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
@@ -832,8 +906,8 @@ export function LogbuchView({ state, setState }: any) {
               title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
               vehicleName={state.profile?.vehicleName} 
               plate={state.profile?.plate}
-              dateRange={logType === 'tank' ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
-              createdDate={logType === 'tank' ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
+              dateRange={(logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'flex')) ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
+              createdDate={(logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'flex')) ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
           />
 
           {logType === 'tank' && (
@@ -1038,21 +1112,48 @@ export function LogbuchView({ state, setState }: any) {
 
           {logType === 'fahrt' && tripLogMode === 'flex' && (
              currentTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <table className="print-table">
-                 <thead><tr><th>Datum</th><th>Zielort</th><th>Start KM</th><th>Ziel KM</th><th>Strecke</th><th>Notiz</th></tr></thead>
-                 <tbody>
-                     {currentTripLog.map((t:any) => (
-                         <tr key={t.id}>
-                             <td>{new Date(t.date).toLocaleDateString('de-DE')}</td>
-                             <td>{t.destination}</td>
-                             <td>{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : t.fromKm}</td>
-                             <td>{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : t.toKm}</td>
-                             <td>{(t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? Number(t.toKm - t.fromKm).toLocaleString('de-DE') : (t.toKm - t.fromKm)} KM</td>
-                             <td>{t.note}</td>
-                         </tr>
-                     ))}
-                 </tbody>
-             </table>
+             <div>
+                 <div className="reise-print-column-grid">
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Zielort</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Start km</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Ziel km</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Strecke</div>
+                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
+                 </div>
+                 <div>
+                     {currentTripLog.map((t:any) => {
+                         const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
+                         return (
+                             <div key={t.id} className="reise-print-row">
+                                 <div className="reise-col-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
+                                 <div className="reise-col-dest">{t.destination}</div>
+                                 <div className="reise-col-km">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
+                                 <div className="reise-col-km">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
+                                 <div className="reise-col-dist">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
+                                 <div className="reise-col-note">{t.purpose || t.note || ''}</div>
+                             </div>
+                         );
+                     })}
+                 </div>
+                 <div className="reise-print-summary">
+                     <div className="reise-print-summary-title">Übersicht Zeitraum</div>
+                     <div className="reise-print-summary-grid">
+                         <div>
+                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🗺️</span> Fahrten</div>
+                             <div className="reise-print-summary-value">{currentTripLog.length}</div>
+                         </div>
+                         <div>
+                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
+                             <div className="reise-print-summary-value">{Number(totalKm).toLocaleString('de-DE')} km</div>
+                         </div>
+                         <div>
+                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Ø pro Fahrt</div>
+                             <div className="reise-print-summary-value">{currentTripLog.length > 0 ? Number(Math.round(totalKm / currentTripLog.length)).toLocaleString('de-DE') : '0'} km</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
           )}
 
           {logType === 'fahrt' && tripLogMode === 'strict' && (
