@@ -221,17 +221,19 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   };
 
   // assistDirection sagt, wo UNTERLEGT werden muss.
-  // Für die Sprachansage brauchen wir das Gegenteil: wo es ZU HOCH ist.
-  // Beispiel: assistDirection='front' → vorne unterlegen nötig → hinten ist zu hoch
+  // Für die Sprachansage brauchen wir: wo es ZU HOCH ist.
+  // Vorne/hinten wird umgekehrt (front→hinten, rear→vorne).
+  // Links/rechts wird NICHT umgekehrt, weil die Roll-Achse im Sensor
+  // bereits invertiert ist (rawBubbleX = -rollNormalized).
   const highSideLabels: Record<string, string> = {
       'front': 'hinten',
       'rear': 'vorne',
-      'left': 'rechts',
-      'right': 'links',
-      'frontLeft': 'hinten rechts',
-      'frontRight': 'hinten links',
-      'rearLeft': 'vorne rechts',
-      'rearRight': 'vorne links'
+      'left': 'links',
+      'right': 'rechts',
+      'frontLeft': 'hinten links',
+      'frontRight': 'hinten rechts',
+      'rearLeft': 'vorne links',
+      'rearRight': 'vorne rechts'
   };
 
   const getTiltRing = (tilt: number): number => {
