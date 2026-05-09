@@ -6,6 +6,43 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.1.5-dev",
+    "date": "09.05.2026",
+    "entries": [
+      "501. highSideLabels-Mapping korrigiert: Links/Rechts wird nicht mehr doppelt invertiert, Sprachansage stimmt jetzt mit sichtbarer Blasenposition überein.",
+      "500. Wording 'nee' durch 'stopp' ersetzt — klingt klarer mit synthetischer Sprachausgabe.",
+      "499. Wiederholungsansage alle 4 Sekunden: App sagt 'immer noch [Richtung] zu hoch' wenn sich nichts ändert.",
+      "498. Puls-Intervall invertiert: Schnelle Pulse nahe der Mitte (80ms), langsame weit weg (800ms) — wie ein Einparksensor.",
+      "497. Virtueller Einweiser: Eventbasierte Sprachführung mit 5-Ring-System statt fester Zeitintervalle.",
+      "496. Ring-Übergänge nach innen lösen Bestätigung aus ('gut', 'gleich', 'fast').",
+      "495. Ring-Übergänge nach außen lösen Warnung aus ('stopp').",
+      "494. Überkorrektur-Erkennung: Bei Richtungswechsel kommt 'stopp, jetzt [Richtung] zu hoch'.",
+      "493. Erstansage sagt jetzt wo es zu hoch ist statt wo unterlegt werden muss ('[Richtung] zu hoch').",
+      "492. Level-Erreichen sagt jetzt 'passt!' zusätzlich zum Lock-Akkord (in Sprache-Modi).",
+      "491. Neue Refs: prevTiltRef, prevRingRef, lastSpeakTimeRef für Ring-Tracking und Wiederholungslogik.",
+      "490. speak()-Hilfsfunktion extrahiert mit lastSpeakTimeRef-Tracking.",
+      "489. getTiltRing()-Funktion: Mappt tiltTotal auf 5 Ringe (0.5°/1°/2°/4°/6° Grenzen).",
+      "488. handleVoiceFeedback() ersetzt alte speakDirection()-Funktion komplett.",
+      "487. tiltTotal-Berechnung in schedulePulse vor handleVoiceFeedback verschoben.",
+      "486. Ballast-Dateien entfernt: _archive-root-cleanup/, app/, workspace/, old_list.txt, old_list_reversed.txt, updater.cjs, src/test.tsx.",
+      "485. Tote Icon-Imports entfernt: Save, Navigation, Volume2, Truck aus lucide-react.",
+      "484. tsconfig.json: exclude-Eintrag für _archive-root-cleanup entfernt.",
+      "483. Changelog nach src/data/changelog.ts ausgelagert mit ChangelogVersion-Interface.",
+      "482. 469 Einträge über 5 Versionsblöcke in changelog.ts strukturiert.",
+      "481. App.tsx Changelog-Modal rendert per .map() aus importierter CHANGELOG-Konstante.",
+      "480. ProfilView nach src/views/ProfilView.tsx ausgelagert inkl. faqData und FAQ-Modal.",
+      "479. InhaltView nach src/views/InhaltView.tsx ausgelagert inkl. Kategorien, Lagerorte, Suche, Druckansicht.",
+      "478. LogbuchView nach src/views/LogbuchView.tsx ausgelagert inkl. CURRENCIES und FUEL_TYPES Konstanten.",
+      "477. ReiseView nach src/views/ReiseView.tsx ausgelagert inkl. globalLeafletMap, Kompass, Wasserwaage, Audio-Engine, Karte.",
+      "476. Verwaiste Imports in App.tsx bereinigt (Icons, Leaflet, react-leaflet, fuelCalculator, Types, PrintHeader, InhaltPrintView).",
+      "475. App.tsx von ca. 3.414 auf ca. 400 Zeilen reduziert (Shell, DB-Init, State, Tab-Routing, Navigation).",
+      "474. Medikamenten-Vorwarnzeit von 90 auf 30 Tage korrigiert (diffDays <= 30 in StatusView.tsx).",
+      "473. Doppelte CSS-Klasse .cg-panel: Erste (alte) Definition entfernt, zweite (Design-System) bleibt.",
+      "472. formatWeight(0) gibt jetzt '0,0 kg' statt leerem String zurück (kg < 0 statt kg <= 0).",
+      "471. Deaktivierter Tankstände-Block ({false && (...)}) komplett aus StatusView.tsx entfernt."
+    ]
+  },
+  {
     "version": "v0.1.4-dev",
     "date": "08.05.2026",
     "entries": [
