@@ -42,6 +42,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const lastSpokenDirectionRef = useRef<string>('level');
   const prevTiltRef = useRef<number>(99);
   const prevRingRef = useRef<number>(5);
+  const lastSpeakTimeRef = useRef<number>(0);
   const audioModeRef = useRef<string>('tone');
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
@@ -216,6 +217,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           utterance.volume = 0.9;
           window.speechSynthesis.speak(utterance);
       } catch (e) {}
+      lastSpeakTimeRef.current = Date.now();
   };
 
   const directionLabels: Record<string, string> = {
@@ -241,6 +243,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const handleVoiceFeedback = (direction: string, tiltTotal: number) => {
       const prevRing = prevRingRef.current;
       const currentRing = getTiltRing(tiltTotal);
+      const now = Date.now();
 
       // --- Level erreicht ---
       if (direction === 'level' || currentRing === 0) {
@@ -287,6 +290,16 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
               speak('nee');
           }
           prevRingRef.current = currentRing;
+          prevTiltRef.current = tiltTotal;
+          return;
+      }
+
+      // --- Wiederholungsansage: Wenn 1,5s lang nichts passiert ist ---
+      if (now - lastSpeakTimeRef.current > 1500) {
+          const label = directionLabels[direction];
+          if (label) {
+              speak('immer noch ' + label + ' zu hoch');
+          }
       }
 
       prevTiltRef.current = tiltTotal;
@@ -336,9 +349,10 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           playPulse();
       }
 
-      // Intervall berechnen: 800ms bei 1° → 80ms bei 10°
+      // Intervall berechnen (INVERTIERT): 80ms bei 0.5° (nah) → 800ms bei 10° (weit)
+      // Je näher an der Mitte, desto schneller die Pulse — wie ein Einparksensor
       const clampedTilt = Math.max(0.5, Math.min(10, tiltTotal));
-      const interval = 800 - ((clampedTilt - 0.5) / 9.5) * 720;
+      const interval = 80 + ((clampedTilt - 0.5) / 9.5) * 720;
 
       // Im reinen Sprache-Modus langsamer prüfen (Sprache braucht Zeit)
       const checkInterval = mode === 'speech' ? Math.max(interval, 400) : interval;
@@ -355,6 +369,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       lastSpokenDirectionRef.current = 'level';
       prevTiltRef.current = 99;
       prevRingRef.current = 5;
+      lastSpeakTimeRef.current = 0;
       try { window.speechSynthesis.cancel(); } catch(e) {}
   };
 
