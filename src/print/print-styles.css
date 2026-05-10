@@ -1,0 +1,307 @@
+/* ============================================================
+   CamperGuard Pro — Zentrale Print-Styles
+   ============================================================
+   ALLE Print-Typografie und Layout-Klassen.
+   Importiert in main.tsx.
+   
+   Schriftgrößen-System (4 Stufen + Titel):
+     9pt  = Meta, Fußzeile, Labels
+    10pt  = Spaltenüberschriften, Nebentext, Section-Titel
+    11pt  = Haupttext (Tabellenzeilen)
+    12pt  = Zusammenfassungswerte (max.)
+    16pt  = Seitentitel
+   
+   Schriftart: Arial, Helvetica, sans-serif
+   ============================================================ */
+
+@media print {
+
+    /* --- GLOBALE RESETS --- */
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    body { padding-bottom: 25px !important; }
+
+    /* --- A) KOPFZEILE --- */
+    .cg-print-header-wrapper {
+        display: flex !important;
+        position: relative !important;
+        justify-content: space-between !important;
+        border-bottom: none !important;
+        width: 100% !important;
+        padding-bottom: 4px !important;
+        margin-bottom: 4px !important;
+        align-items: flex-start !important;
+        background: transparent !important;
+        min-height: 18mm !important;
+    }
+
+    .cg-print-logo {
+        height: 16mm !important;
+        width: auto !important;
+        display: block !important;
+        object-fit: contain !important;
+    }
+
+    .cg-print-header-center {
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .cg-print-header-title {
+        font-size: 16pt !important;
+        font-weight: 900 !important;
+        color: #111 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        line-height: 1.2 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .cg-print-header-vehicle {
+        font-size: 10pt !important;
+        color: #666 !important;
+        font-weight: 500 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        line-height: 1.4 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        text-align: center !important;
+        margin-top: 2px !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+    }
+
+    .cg-print-header-right {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        text-align: right !important;
+    }
+
+    .cg-print-header-meta-label {
+        font-size: 9pt !important;
+        color: #999 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .cg-print-header-meta-value {
+        font-size: 10pt !important;
+        color: #111 !important;
+        font-weight: 700 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* --- B) FUSSZEILE --- */
+    .cg-print-footer {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        border-top: 1px solid #e0e0e0 !important;
+        padding: 4px 0 6px 0 !important;
+        justify-content: space-between !important;
+        background: white !important;
+        z-index: 100 !important;
+        margin: 0 !important;
+    }
+
+    .cg-print-footer-text {
+        font-size: 9pt !important;
+        color: #999 !important;
+        font-weight: normal !important;
+        line-height: 1.2 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-transform: none !important;
+        border: none !important;
+        background: transparent !important;
+    }
+
+    .cg-print-footer-page::after {
+        content: "Seite " counter(page) " von " counter(pages) !important;
+    }
+
+    /* --- C) SPALTENÜBERSCHRIFTEN --- */
+    .cg-print-col-header {
+        align-items: center !important;
+        min-height: 7mm !important;
+        padding: 0 0 1.5mm 0 !important;
+        border-bottom: 0.6pt solid #777 !important;
+        font-size: 10pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+        color: #555 !important;
+        font-weight: 700 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        margin-top: 3mm !important;
+    }
+
+    .cg-print-col-header-sub {
+        align-items: center !important;
+        min-height: 5.5mm !important;
+        padding: 0 0 1mm 0 !important;
+        font-size: 9pt !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.04em !important;
+        color: #999 !important;
+        font-weight: 600 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        border-bottom: 0.3pt solid #bbb !important;
+    }
+
+    /* --- D) TABELLENZEILEN --- */
+    .cg-print-row {
+        align-items: center !important;
+        min-height: 6mm !important;
+        padding: 1mm 0 !important;
+        border-bottom: 0.25pt solid #dddddd !important;
+        font-size: 11pt !important;
+        color: #222 !important;
+        page-break-inside: avoid !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-row-sub {
+        align-items: center !important;
+        min-height: 5.5mm !important;
+        padding: 0 0 1mm 0 !important;
+        border-bottom: 0.5pt solid #ccc !important;
+        font-size: 10pt !important;
+        color: #555 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-row + .cg-print-row-sub {
+        border-top: 0.15pt dashed #e0e0e0 !important;
+    }
+
+    /* --- E) ZELLEN-TYPEN --- */
+    .cg-print-cell-date   { text-align: left !important; color: #666 !important; }
+    .cg-print-cell-name   { text-align: left !important; font-weight: 600 !important; color: #111 !important; }
+    .cg-print-cell-num    { text-align: right !important; font-variant-numeric: tabular-nums !important; color: #444 !important; }
+    .cg-print-cell-bold   { text-align: right !important; font-weight: 700 !important; color: #111 !important; }
+    .cg-print-cell-orange { text-align: right !important; font-weight: 700 !important; color: #FF6600 !important; }
+    .cg-print-cell-muted  { text-align: left !important; color: #555 !important; }
+    .cg-print-cell-note   { text-align: left !important; color: #555 !important; padding-left: 2mm !important; font-size: 10pt !important; line-height: 1.3 !important; }
+    .cg-print-cell-coords { text-align: left !important; color: #888 !important; font-size: 10pt !important; font-family: 'Courier New', monospace !important; }
+    .cg-print-cell-time   { text-align: center !important; color: #444 !important; font-variant-numeric: tabular-nums !important; }
+    .cg-print-cell-check  { text-align: center !important; font-size: 11pt !important; color: #ccc !important; }
+
+    /* Kategorie-Farben */
+    .cg-print-cat-dienstlich { color: #FF6600 !important; font-weight: 600 !important; }
+    .cg-print-cat-privat     { color: #888 !important; font-weight: 600 !important; }
+    .cg-print-cat-arbeitsweg { color: #2266aa !important; font-weight: 600 !important; }
+
+    /* KM-Delta */
+    .cg-print-km-delta {
+        color: #888 !important;
+        font-weight: 400 !important;
+        font-size: 10pt !important;
+        margin-left: 4px !important;
+    }
+
+    /* --- F) SECTION-TITEL --- */
+    .cg-print-section-title {
+        font-size: 10pt !important;
+        font-weight: 700 !important;
+        color: #FF6600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-top: 4mm !important;
+        margin-bottom: 1.5mm !important;
+        padding-bottom: 1mm !important;
+        border-bottom: 0.5pt solid #FF6600 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-location-title {
+        font-size: 9pt !important;
+        font-weight: 600 !important;
+        color: #555 !important;
+        margin-top: 2.5mm !important;
+        margin-bottom: 1mm !important;
+        padding-left: 1mm !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    /* --- G) META-GRID --- */
+    .cg-print-meta-label {
+        font-size: 9pt !important;
+        color: #888 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-meta-value {
+        font-size: 11pt !important;
+        color: #111 !important;
+        font-weight: 700 !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    /* --- H) ZUSAMMENFASSUNGSBOX --- */
+    .cg-print-summary-wrapper {
+        position: fixed !important;
+        bottom: 12mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        page-break-inside: avoid !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        background: white !important;
+        z-index: 50 !important;
+    }
+
+    .cg-print-summary-title {
+        font-size: 9pt !important;
+        font-weight: 700 !important;
+        color: #FF6600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 1.5mm !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-summary-label {
+        font-size: 9pt !important;
+        color: #888 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    .cg-print-summary-value {
+        font-size: 12pt !important;
+        color: #111 !important;
+        font-weight: 700 !important;
+        margin-top: 1px !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    /* --- I) ICON-SPANS --- */
+    .cg-print-icon {
+        margin-right: 3px !important;
+        font-size: 10pt !important;
+    }
+}
