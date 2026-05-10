@@ -217,150 +217,26 @@ export function LogbuchView({ state, setState }: any) {
             .reise-print-column-grid {
                 display: grid;
                 grid-template-columns: 12% 22% 12% 12% 12% 30%;
-                align-items: center;
-                min-height: 6mm;
-                padding: 0 0 1mm 0;
-                border-bottom: 0.6pt solid #777;
-                font-size: 6.5pt;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: #555;
-                font-weight: 700;
-                font-family: sans-serif;
-                margin-top: 2mm;
             }
             .reise-print-row {
                 display: grid;
                 grid-template-columns: 12% 22% 12% 12% 12% 30%;
-                align-items: center;
-                min-height: 5.5mm;
-                padding: 1mm 0;
-                border-bottom: 0.25pt solid #dddddd;
-                font-size: 7.5pt;
-                color: #222;
-                page-break-inside: avoid;
-                font-family: sans-serif;
-            }
-            .reise-col-date { text-align: left; color: #666; }
-            .reise-col-dest { text-align: left; font-weight: 600; color: #111; }
-            .reise-col-km { text-align: right; color: #444; }
-            .reise-col-dist { text-align: right; font-weight: 700; color: #111; }
-            .reise-col-note { text-align: left; color: #555; padding-left: 2mm; font-size: 7pt; line-height: 1.3; }
-            .reise-print-summary {
-                position: fixed;
-                bottom: 10mm;
-                left: 0;
-                right: 0;
-                padding: 0;
-                margin: 0;
-                page-break-inside: avoid;
-                font-family: sans-serif;
-                background: white;
-                z-index: 50;
-            }
-            .reise-print-summary-title {
-                font-size: 7pt;
-                font-weight: 700;
-                color: #FF6600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 1mm;
-                text-decoration: underline;
-                text-underline-offset: 2px;
             }
             .reise-print-summary-grid {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                gap: 4mm;
-                margin-top: 2mm;
-                padding-top: 2mm;
-                border-top: 0.5pt solid #cfcfcf;
-            }
-            .reise-print-summary-label {
-                font-size: 7pt;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .reise-print-summary-value {
-                font-size: 9pt;
-                color: #111;
-                font-weight: 700;
-                margin-top: 1px;
             }
             .poi-print-column-grid {
                 display: grid;
                 grid-template-columns: 12% 22% 14% 18% 34%;
-                align-items: center;
-                min-height: 6mm;
-                padding: 0 0 1mm 0;
-                border-bottom: 0.6pt solid #777;
-                font-size: 6.5pt;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: #555;
-                font-weight: 700;
-                font-family: sans-serif;
-                margin-top: 2mm;
             }
             .poi-print-row {
                 display: grid;
                 grid-template-columns: 12% 22% 14% 18% 34%;
-                align-items: center;
-                min-height: 5.5mm;
-                padding: 1mm 0;
-                border-bottom: 0.25pt solid #dddddd;
-                font-size: 7.5pt;
-                color: #222;
-                page-break-inside: avoid;
-                font-family: sans-serif;
-            }
-            .poi-col-date { text-align: left; color: #666; }
-            .poi-col-name { text-align: left; font-weight: 600; color: #111; }
-            .poi-col-cat { text-align: left; color: #555; }
-            .poi-col-coords { text-align: left; color: #888; font-size: 6.5pt; font-family: monospace; }
-            .poi-col-note { text-align: left; color: #555; padding-left: 2mm; font-size: 7pt; line-height: 1.3; }
-            .poi-print-summary {
-                position: fixed;
-                bottom: 10mm;
-                left: 0;
-                right: 0;
-                padding: 0;
-                margin: 0;
-                page-break-inside: avoid;
-                font-family: sans-serif;
-                background: white;
-                z-index: 50;
-            }
-            .poi-print-summary-title {
-                font-size: 7pt;
-                font-weight: 700;
-                color: #FF6600;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 1mm;
-                text-decoration: underline;
-                text-underline-offset: 2px;
             }
             .poi-print-summary-grid {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                gap: 4mm;
-                margin-top: 2mm;
-                padding-top: 2mm;
-                border-top: 0.5pt solid #cfcfcf;
-            }
-            .poi-print-summary-label {
-                font-size: 7pt;
-                color: #888;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .poi-print-summary-value {
-                font-size: 9pt;
-                color: #111;
-                font-weight: 700;
-                margin-top: 1px;
             }
             .fb-print-hdr1 {
                 display: grid;
@@ -1028,127 +904,46 @@ export function LogbuchView({ state, setState }: any) {
                                      margin: 2mm 0 2mm 0;
                                      padding-bottom: 2mm;
                                      border-bottom: 0.4pt solid #cfcfcf;
-                                     font-family: sans-serif;
-                                 }
-                                 .tank-print-meta-label {
-                                     font-size: 6.5pt;
-                                     color: #888;
-                                     text-transform: uppercase;
-                                     letter-spacing: 0.5px;
-                                 }
-                                 .tank-print-meta-value {
-                                     font-size: 9pt;
-                                     color: #111;
-                                     font-weight: 600;
-                                     margin-top: 2px;
                                  }
                                  .tank-print-column-grid {
                                      display: grid;
                                      grid-template-columns: 13% 19% 18% 14% 16% 20%;
-                                     align-items: center;
-                                     min-height: 6mm;
-                                     padding: 0 0 1mm 0;
-                                     border-bottom: 0.6pt solid #777;
-                                     font-size: 6.5pt;
-                                     text-transform: uppercase;
-                                     letter-spacing: 0.04em;
-                                     color: #555;
-                                     font-weight: 700;
-                                     font-family: sans-serif;
-                                 }
-                                 .tank-print-row-list {
-                                     display: block;
                                  }
                                  .tank-print-row {
                                      display: grid;
                                      grid-template-columns: 13% 19% 18% 14% 16% 20%;
-                                     align-items: center;
-                                     min-height: 5.5mm;
-                                     padding: 1mm 0;
-                                     border-bottom: 0.25pt solid #dddddd;
-                                     font-size: 7.5pt;
-                                     color: #222;
-                                     page-break-inside: avoid;
-                                     font-family: sans-serif;
                                  }
-                                 .tank-print-col-1 { text-align: left; color: #666; font-weight: normal; }
-                                 .tank-print-col-2 { text-align: left; font-weight: 700; color: #111; }
-                                 .tank-print-col-3 { text-align: left; color: #666; font-weight: normal; }
-                                 .tank-print-col-4 { text-align: right; color: #222; }
-                                 .tank-print-col-5 { text-align: right; color: #222; }
-                                 .tank-print-col-6 { text-align: right; font-weight: 800; font-size: 8.5pt; color: #111; }
-                                 
                                  .tank-print-bottom-summary {
                                      display: grid;
                                      grid-template-columns: repeat(4, 1fr);
-                                     gap: 4mm;
-                                     margin-top: 2mm;
-                                     padding-top: 2mm;
-                                     border-top: 0.5pt solid #cfcfcf;
-                                     page-break-inside: avoid;
-                                     font-family: sans-serif;
-                                 }
-                                 .tank-print-bottom-label {
-                                     font-size: 7pt;
-                                     color: #888;
-                                     text-transform: uppercase;
-                                     letter-spacing: 0.5px;
-                                 }
-                                 .tank-print-bottom-value {
-                                     font-size: 9pt;
-                                     color: #111;
-                                     font-weight: 700;
-                                     margin-top: 1px;
-                                 }
-                                 .tank-print-bottom-wrapper {
-                                     position: fixed;
-                                     bottom: 10mm;
-                                     left: 0;
-                                     right: 0;
-                                     padding: 0;
-                                     margin: 0;
-                                     page-break-inside: avoid;
-                                     font-family: sans-serif;
-                                     background: white;
-                                     z-index: 50;
-                                 }
-                                 .tank-print-bottom-title {
-                                     font-size: 7pt;
-                                     font-weight: 700;
-                                     color: #FF6600;
-                                     text-transform: uppercase;
-                                     letter-spacing: 0.5px;
-                                     margin-bottom: 1mm;
-                                     text-decoration: underline;
-                                     text-underline-offset: 2px;
                                  }
                              }
                          `}</style>
 
                          <div className="tank-print-meta-grid">
                              <div>
-                                 <div className="tank-print-meta-label">Zeitraum</div>
-                                 <div className="tank-print-meta-value">{dateRangeStr}</div>
+                                 <div className="tank-print-meta-label cg-print-meta-label">Zeitraum</div>
+                                 <div className="tank-print-meta-value cg-print-meta-value">{dateRangeStr}</div>
                              </div>
                              <div>
-                                 <div className="tank-print-meta-label">Tankungen</div>
-                                 <div className="tank-print-meta-value">{currentFuelLog.length}</div>
+                                 <div className="tank-print-meta-label cg-print-meta-label">Tankungen</div>
+                                 <div className="tank-print-meta-value cg-print-meta-value">{currentFuelLog.length}</div>
                              </div>
                              <div>
-                                 <div className="tank-print-meta-label">Gesamtliter</div>
-                                 <div className="tank-print-meta-value">{formatNumber(totalLiters, 1)} L</div>
+                                 <div className="tank-print-meta-label cg-print-meta-label">Gesamtliter</div>
+                                 <div className="tank-print-meta-value cg-print-meta-value">{formatNumber(totalLiters, 1)} L</div>
                              </div>
                              <div>
-                                 <div className="tank-print-meta-label">Gesamtkosten</div>
-                                 <div className="tank-print-meta-value">{formatNumber(totalEur, 2)} €</div>
+                                 <div className="tank-print-meta-label cg-print-meta-label">Gesamtkosten</div>
+                                 <div className="tank-print-meta-value cg-print-meta-value">{formatNumber(totalEur, 2)} €</div>
                              </div>
                              <div>
-                                 <div className="tank-print-meta-label">Durchschnitt</div>
-                                 <div className="tank-print-meta-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
+                                 <div className="tank-print-meta-label cg-print-meta-label">Durchschnitt</div>
+                                 <div className="tank-print-meta-value cg-print-meta-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
                              </div>
                          </div>
                          
-                         <div className="tank-print-column-grid">
+                         <div className="tank-print-column-grid cg-print-col-header">
                              <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>📅</span> Datum</div>
                              <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🔧</span> Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt', marginLeft: '16px'}}>(seit letzter Tankung)</span></div>
                              <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>⛽</span> Kraftstoff</div>
@@ -1170,39 +965,39 @@ export function LogbuchView({ state, setState }: any) {
                                  else if (kmDelta != null && kmDelta > 0) kmDeltaStr = `(${formatNumber(kmDelta, 0)} km)`;
 
                                  return (
-                                     <div key={f.id} className="tank-print-row">
-                                         <div className="tank-print-col-1">{new Date(f.date).toLocaleDateString('de-DE')}</div>
-                                         <div className="tank-print-col-2">
-                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span style={{color: '#888', fontWeight: 400, fontSize: '7.5pt', marginLeft: '4px'}}>{kmDeltaStr}</span></> : <span style={{color: '#888'}}>-</span>}
+                                     <div key={f.id} className="tank-print-row cg-print-row">
+                                         <div className="cg-print-cell-date">{new Date(f.date).toLocaleDateString('de-DE')}</div>
+                                         <div className="cg-print-cell-name">
+                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span className="cg-print-km-delta">{kmDeltaStr}</span></> : <span style={{color: '#888'}}>-</span>}
                                          </div>
-                                         <div className="tank-print-col-3">{f.fuelType}</div>
-                                         <div className="tank-print-col-4">{formatNumber(f.liters, 2)} l</div>
-                                         <div className="tank-print-col-5">{formatNumber(f.price, 3)} €</div>
-                                         <div className="tank-print-col-6" style={{color: '#FF6600'}}>{formatNumber(totalBetrag, 2)} €</div>
+                                         <div className="cg-print-cell-muted">{f.fuelType}</div>
+                                         <div className="cg-print-cell-num">{formatNumber(f.liters, 2)} l</div>
+                                         <div className="cg-print-cell-num">{formatNumber(f.price, 3)} €</div>
+                                         <div className="cg-print-cell-orange">{formatNumber(totalBetrag, 2)} €</div>
                                      </div>
                                  );
                              })}
                          </div>
 
-                         <div className="tank-print-bottom-wrapper">
-                             <div className="tank-print-bottom-title">Übersicht Zeitraum</div>
-                             <div className="tank-print-bottom-summary">
+                         <div className="tank-print-bottom-wrapper cg-print-summary-wrapper">
+                             <div className="cg-print-summary-title">Übersicht Zeitraum</div>
+                             <div className="tank-print-bottom-summary cg-print-summary-grid">
                                  <div>
-                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>🚐</span> Gefahrene Kilometer</div>
-                                     <div className="tank-print-bottom-value">{formatNumber(totalKm, 0)} km</div>
+                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>🚐</span> Gefahrene Kilometer</div>
+                                     <div className="cg-print-summary-value">{formatNumber(totalKm, 0)} km</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💧</span> Getankte Liter</div>
-                                     <div className="tank-print-bottom-value">{formatNumber(totalLiters, 1)} l</div>
+                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💧</span> Getankte Liter</div>
+                                     <div className="cg-print-summary-value">{formatNumber(totalLiters, 1)} l</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💶</span> Gesamtkosten</div>
-                                     <div className="tank-print-bottom-value">{formatNumber(totalEur, 2)} €</div>
+                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💶</span> Gesamtkosten</div>
+                                     <div className="cg-print-summary-value">{formatNumber(totalEur, 2)} €</div>
                                  </div>
                                  <div>
-                                     <div className="tank-print-bottom-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>⛽</span> Durchschnitt</div>
-                                     <div className="tank-print-bottom-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
-                                     {totalLiters > 0 && totalEur > 0 && <div className="tank-print-bottom-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
+                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>⛽</span> Durchschnitt</div>
+                                     <div className="cg-print-summary-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
+                                     {totalLiters > 0 && totalEur > 0 && <div className="cg-print-summary-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
                                  </div>
                              </div>
                          </div>
@@ -1214,7 +1009,7 @@ export function LogbuchView({ state, setState }: any) {
           {logType === 'fahrt' && tripLogMode === 'flex' && (
              currentTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
-                 <div className="reise-print-column-grid">
+                 <div className="reise-print-column-grid cg-print-col-header">
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Zielort</div>
                      <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Start km</div>
@@ -1226,31 +1021,31 @@ export function LogbuchView({ state, setState }: any) {
                      {currentTripLog.map((t:any) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          return (
-                             <div key={t.id} className="reise-print-row">
-                                 <div className="reise-col-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
-                                 <div className="reise-col-dest">{t.destination}</div>
-                                 <div className="reise-col-km">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
-                                 <div className="reise-col-km">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
-                                 <div className="reise-col-dist">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
-                                 <div className="reise-col-note">{t.purpose || t.note || ''}</div>
+                             <div key={t.id} className="reise-print-row cg-print-row">
+                                 <div className="cg-print-cell-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
+                                 <div className="cg-print-cell-name">{t.destination}</div>
+                                 <div className="cg-print-cell-num">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
+                                 <div className="cg-print-cell-num">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
+                                 <div className="cg-print-cell-bold">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
+                                 <div className="cg-print-cell-note">{t.purpose || t.note || ''}</div>
                              </div>
                          );
                      })}
                  </div>
-                 <div className="reise-print-summary">
-                     <div className="reise-print-summary-title">Übersicht Zeitraum</div>
-                     <div className="reise-print-summary-grid">
+                 <div className="cg-print-summary-wrapper">
+                     <div className="cg-print-summary-title">Übersicht Zeitraum</div>
+                     <div className="reise-print-summary-grid cg-print-summary-grid">
                          <div>
-                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🗺️</span> Fahrten</div>
-                             <div className="reise-print-summary-value">{currentTripLog.length}</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🗺️</span> Fahrten</div>
+                             <div className="cg-print-summary-value">{currentTripLog.length}</div>
                          </div>
                          <div>
-                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
-                             <div className="reise-print-summary-value">{Number(totalKm).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
+                             <div className="cg-print-summary-value">{Number(totalKm).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
-                             <div className="reise-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Ø pro Fahrt</div>
-                             <div className="reise-print-summary-value">{currentTripLog.length > 0 ? Number(Math.round(totalKm / currentTripLog.length)).toLocaleString('de-DE') : '0'} km</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Ø pro Fahrt</div>
+                             <div className="cg-print-summary-value">{currentTripLog.length > 0 ? Number(Math.round(totalKm / currentTripLog.length)).toLocaleString('de-DE') : '0'} km</div>
                          </div>
                      </div>
                  </div>
@@ -1332,7 +1127,7 @@ export function LogbuchView({ state, setState }: any) {
           {logType === 'spots' && (
              state.spots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
-                 <div className="poi-print-column-grid">
+                 <div className="poi-print-column-grid cg-print-col-header">
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Name</div>
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorie</div>
@@ -1341,29 +1136,29 @@ export function LogbuchView({ state, setState }: any) {
                  </div>
                  <div>
                      {state.spots.map((s:any) => (
-                         <div key={s.id} className="poi-print-row">
-                             <div className="poi-col-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
-                             <div className="poi-col-name">{s.name}</div>
-                             <div className="poi-col-cat">{s.category || 'Stellplatz'}</div>
-                             <div className="poi-col-coords">{(s.lat != null && s.lng != null) ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : ''}</div>
-                             <div className="poi-col-note">{s.note}</div>
+                         <div key={s.id} className="poi-print-row cg-print-row">
+                             <div className="cg-print-cell-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
+                             <div className="cg-print-cell-name">{s.name}</div>
+                             <div className="cg-print-cell-muted">{s.category || 'Stellplatz'}</div>
+                             <div className="cg-print-cell-coords">{(s.lat != null && s.lng != null) ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : ''}</div>
+                             <div className="cg-print-cell-note">{s.note}</div>
                          </div>
                      ))}
                  </div>
-                 <div className="poi-print-summary">
-                     <div className="poi-print-summary-title">Übersicht</div>
-                     <div className="poi-print-summary-grid">
+                 <div className="cg-print-summary-wrapper">
+                     <div className="cg-print-summary-title">Übersicht</div>
+                     <div className="poi-print-summary-grid cg-print-summary-grid">
                          <div>
-                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Gespeicherte Orte</div>
-                             <div className="poi-print-summary-value">{state.spots.length}</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Gespeicherte Orte</div>
+                             <div className="cg-print-summary-value">{state.spots.length}</div>
                          </div>
                          <div>
-                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorien</div>
-                             <div className="poi-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorien</div>
+                             <div className="cg-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
                          </div>
                          <div>
-                             <div className="poi-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Mit Koordinaten</div>
-                             <div className="poi-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
+                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Mit Koordinaten</div>
+                             <div className="cg-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
                          </div>
                      </div>
                  </div>
