@@ -46,6 +46,8 @@ export interface TripEntry {
 export interface BusinessTripEntry {
   id: string;
   date: string;
+  departureTime: string;
+  arrivalTime: string;
   driver: string;
   fromKm: number;
   toKm: number;

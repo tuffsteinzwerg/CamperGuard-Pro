@@ -34,7 +34,7 @@ export function LogbuchView({ state, setState }: any) {
 
   const [tankForm, setTankForm] = useState({ date: new Date().toISOString().split('T')[0], km: '', liters: '', price: '', total: '' });
   const [tripForm, setTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', destination: '', purpose: '', category: '', note: '' });
-  const [businessTripForm, setBusinessTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: '' });
+  const [businessTripForm, setBusinessTripForm] = useState({ date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: '' });
   const [spotForm, setSpotForm] = useState({ date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz' });
   const [spotGpsError, setSpotGpsError] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
@@ -362,6 +362,112 @@ export function LogbuchView({ state, setState }: any) {
                 font-weight: 700;
                 margin-top: 1px;
             }
+            .fb-print-hdr1 {
+                display: grid;
+                grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%;
+                align-items: end;
+                min-height: 6mm;
+                padding: 0 0 1mm 0;
+                border-bottom: 0.6pt solid #777;
+                font-size: 5.5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #555;
+                font-weight: 700;
+                font-family: sans-serif;
+                margin-top: 2mm;
+            }
+            .fb-print-hdr2 {
+                display: grid;
+                grid-template-columns: 30% 25% 25% 20%;
+                align-items: end;
+                min-height: 4.5mm;
+                padding: 0 0 0.5mm 0;
+                font-size: 5pt;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: #999;
+                font-weight: 600;
+                font-family: sans-serif;
+                border-bottom: 0.3pt solid #bbb;
+            }
+            .fb-row1 {
+                display: grid;
+                grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%;
+                align-items: center;
+                min-height: 5mm;
+                padding: 0.8mm 0 0.3mm 0;
+                font-size: 6.5pt;
+                color: #222;
+                font-family: sans-serif;
+            }
+            .fb-row2 {
+                display: grid;
+                grid-template-columns: 30% 25% 25% 20%;
+                align-items: center;
+                min-height: 4.5mm;
+                padding: 0 0 0.8mm 0;
+                border-bottom: 0.5pt solid #ccc;
+                font-size: 6pt;
+                color: #555;
+                font-family: sans-serif;
+            }
+            .fb-row1 + .fb-row2 { border-top: 0.15pt dashed #e0e0e0; }
+            .fb-date { text-align: left; color: #666; }
+            .fb-time { text-align: center; color: #444; font-variant-numeric: tabular-nums; }
+            .fb-driver { text-align: left; }
+            .fb-cat { text-align: left; font-weight: 600; }
+            .fb-km { text-align: right; font-variant-numeric: tabular-nums; }
+            .fb-dist { text-align: right; font-weight: 700; color: #111; }
+            .fb-addr { text-align: left; padding-left: 1mm; }
+            .fb-purp { text-align: left; font-weight: 600; color: #333; }
+            .fb-part { text-align: left; }
+            .fb-note { text-align: left; color: #888; font-style: italic; }
+            .fb-cat-d { color: #FF6600; }
+            .fb-cat-p { color: #888; }
+            .fb-cat-w { color: #2266aa; }
+            .fb-summary {
+                position: fixed;
+                bottom: 10mm;
+                left: 0;
+                right: 0;
+                padding: 0;
+                margin: 0;
+                page-break-inside: avoid;
+                font-family: sans-serif;
+                background: white;
+                z-index: 50;
+            }
+            .fb-summary-title {
+                font-size: 7pt;
+                font-weight: 700;
+                color: #FF6600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 1mm;
+                text-decoration: underline;
+                text-underline-offset: 2px;
+            }
+            .fb-summary-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4mm;
+                margin-top: 2mm;
+                padding-top: 2mm;
+                border-top: 0.5pt solid #cfcfcf;
+            }
+            .fb-summary-label {
+                font-size: 7pt;
+                color: #888;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .fb-summary-value {
+                font-size: 9pt;
+                color: #111;
+                font-weight: 700;
+                margin-top: 1px;
+            }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
@@ -552,6 +658,8 @@ export function LogbuchView({ state, setState }: any) {
                                                     setEditingTripId(entry.id);
                                                     setBusinessTripForm({
                                                         date: entry.date,
+                                                        departureTime: entry.departureTime || '',
+                                                        arrivalTime: entry.arrivalTime || '',
                                                         fromKm: entry.fromKm.toString(),
                                                         toKm: entry.toKm.toString(),
                                                         category: entry.category,
@@ -676,7 +784,7 @@ export function LogbuchView({ state, setState }: any) {
                             setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
                         } else if (logType === 'fahrt') {
                             setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
-                            setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
+                            setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
                         } else if (logType === 'spots') {
                             setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
                             setSpotGpsError(false);
@@ -841,11 +949,15 @@ export function LogbuchView({ state, setState }: any) {
                                     <>
                                         <select name="category" value={businessTripForm.category} onChange={e => setBusinessTripForm({...businessTripForm, category: e.target.value})} className="cg-master-input w-full">
                                             <option value="Dienstlich">Dienstlich</option>
+                                            <option value="Wohnung – Arbeitsstätte">Wohnung – Arbeitsstätte</option>
                                             <option value="Privat">Privat</option>
-                                            <option value="Betriebsstätte">Betriebsstätte</option>
                                         </select>
                                         <input name="driver" required placeholder="Fahrer" value={businessTripForm.driver} onChange={e => setBusinessTripForm({...businessTripForm, driver: e.target.value})} className={`cg-master-input w-full`} />
                                         {!isBusinessTripDriverValid && businessTripForm.driver === '' && <span className="typo-tiny block mt-1 cg-master-muted">Fahrer ist ein Pflichtfeld.</span>}
+                                        <div className="flex gap-2">
+                                            <input name="departureTime" type="time" placeholder="Abfahrt" value={businessTripForm.departureTime} onChange={e => setBusinessTripForm({...businessTripForm, departureTime: e.target.value})} className="cg-master-input w-1/2" />
+                                            <input name="arrivalTime" type="time" placeholder="Ankunft" value={businessTripForm.arrivalTime} onChange={e => setBusinessTripForm({...businessTripForm, arrivalTime: e.target.value})} className="cg-master-input w-1/2" />
+                                        </div>
                                         <div className="flex gap-2">
                                             <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Start KM" value={businessTripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setBusinessTripForm({...businessTripForm, fromKm: digitsOnly}); }} className={`cg-master-input w-1/2`} />
                                             <input name="toKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Ziel KM" value={businessTripForm.toKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setBusinessTripForm({...businessTripForm, toKm: digitsOnly}); }} className={`cg-master-input w-1/2`} />
@@ -1232,43 +1344,74 @@ export function LogbuchView({ state, setState }: any) {
 
           {logType === 'fahrt' && tripLogMode === 'strict' && (
              currentBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <table className="print-table fahrtenbuch-table">
-                 <colgroup>
-                     <col style={{ width: '6%' }} />
-                     <col style={{ width: '7%' }} />
-                     <col style={{ width: '8%' }} />
-                     <col style={{ width: '6%' }} />
-                     <col style={{ width: '6%' }} />
-                     <col style={{ width: '6%' }} />
-                     <col style={{ width: '12%' }} />
-                     <col style={{ width: '4%' }} />
-                     <col style={{ width: '5%' }} />
-                     <col style={{ width: '10%' }} />
-                     <col style={{ width: '10%' }} />
-                     <col style={{ width: '10%' }} />
-                     <col style={{ width: '10%' }} />
-                 </colgroup>
-                 <thead><tr><th>Datum</th><th>Fahrer</th><th>Kategorie</th><th>Start<br/>KM</th><th>Ziel<br/>KM</th><th>Strecke</th><th>Straße</th><th>Hausnr.</th><th>PLZ</th><th>Ort</th><th>Zweck</th><th>Geschäfts-<br/>partner</th><th>Notiz /<br/>Route</th></tr></thead>
-                 <tbody>
-                     {currentBusinessTripLog.map((t:any) => (
-                         <tr key={t.id}>
-                             <td>{new Date(t.date).toLocaleDateString('de-DE')}</td>
-                             <td>{t.driver}</td>
-                             <td>{t.category}</td>
-                             <td>{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : t.fromKm}</td>
-                             <td>{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : t.toKm}</td>
-                             <td>{(t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? Number(t.toKm - t.fromKm).toLocaleString('de-DE') : (t.toKm - t.fromKm)} KM</td>
-                             <td>{t.street}</td>
-                             <td>{t.houseNumber}</td>
-                             <td>{t.zip}</td>
-                             <td>{t.city}</td>
-                             <td>{t.purpose}</td>
-                             <td>{t.businessPartner}</td>
-                             <td>{t.note}</td>
-                         </tr>
-                     ))}
-                 </tbody>
-             </table>
+             <div>
+                 <div className="fb-print-hdr1">
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📅</span> Datum</div>
+                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> Ab</div>
+                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> An</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>👤</span> Fahrer</div>
+                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏷️</span> Kategorie</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Start km</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Ziel km</div>
+                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📏</span> Strecke</div>
+                 </div>
+                 <div className="fb-print-hdr2">
+                     <div style={{textAlign: 'left', paddingLeft: '1mm'}}>📍 Reiseziel (Straße Nr, PLZ Ort)</div>
+                     <div style={{textAlign: 'left'}}>📝 Reisezweck</div>
+                     <div style={{textAlign: 'left'}}>🤝 Geschäftspartner</div>
+                     <div style={{textAlign: 'left'}}>📌 Notiz / Route</div>
+                 </div>
+                 <div>
+                     {currentBusinessTripLog.map((t:any) => {
+                         const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
+                         const addrParts = [t.street, t.houseNumber].filter(Boolean).join(' ');
+                         const plzOrt = [t.zip, t.city].filter(Boolean).join(' ');
+                         const fullAddr = [addrParts, plzOrt].filter(Boolean).join(', ');
+                         const catClass = t.category === 'Dienstlich' ? 'fb-cat-d' : t.category === 'Privat' ? 'fb-cat-p' : 'fb-cat-w';
+                         return (
+                             <div key={t.id}>
+                                 <div className="fb-row1">
+                                     <div className="fb-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
+                                     <div className="fb-time">{t.departureTime || '—'}</div>
+                                     <div className="fb-time">{t.arrivalTime || '—'}</div>
+                                     <div className="fb-driver">{t.driver}</div>
+                                     <div className={`fb-cat ${catClass}`}>{t.category}</div>
+                                     <div className="fb-km">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
+                                     <div className="fb-km">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
+                                     <div className="fb-dist">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
+                                 </div>
+                                 <div className="fb-row2">
+                                     <div className="fb-addr">{fullAddr || '—'}</div>
+                                     <div className="fb-purp">{t.purpose || '—'}</div>
+                                     <div className="fb-part">{t.businessPartner || '—'}</div>
+                                     <div className="fb-note">{t.note || ''}</div>
+                                 </div>
+                             </div>
+                         );
+                     })}
+                 </div>
+                 <div className="fb-summary">
+                     <div className="fb-summary-title">Übersicht Zeitraum</div>
+                     <div className="fb-summary-grid">
+                         <div>
+                             <div className="fb-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📋</span> Fahrten</div>
+                             <div className="fb-summary-value">{currentBusinessTripLog.length}</div>
+                         </div>
+                         <div>
+                             <div className="fb-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
+                             <div className="fb-summary-value">{Number(currentBusinessTripLog.reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                         </div>
+                         <div>
+                             <div className="fb-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>💼</span> Dienstlich</div>
+                             <div className="fb-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category === 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                         </div>
+                         <div>
+                             <div className="fb-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏠</span> Privat / Arbeitsweg</div>
+                             <div className="fb-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category !== 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
           )}
 
           {logType === 'spots' && (

@@ -22,7 +22,7 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                 
                 {/* Logo Area */}
                 <div style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
-                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '11mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
+                    <img src="/CGProLogo.png" alt="CamperGuard Pro" style={{ height: '14mm', width: 'auto', display: 'block', objectFit: 'contain' }} />
                 </div>
                 
                 {/* Center Title and Vehicle Area */}
