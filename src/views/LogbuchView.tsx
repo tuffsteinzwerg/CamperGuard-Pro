@@ -330,7 +330,7 @@ export function LogbuchView({ state, setState }: any) {
   };
 
   const createTripLogArchive = () => {
-      let archiveTripLog = [...state.tripLog];
+      let archiveTripLog = [...currentTripLog];
 
       if (tripArchiveMode === 'range') {
           if (!tripArchiveRange.from || !tripArchiveRange.to) {
@@ -933,7 +933,11 @@ export function LogbuchView({ state, setState }: any) {
                       key={a.id || a.year}
                       onClick={() => {
                           setSelectedArchive(a);
-                          setArchiveViewTab('tank');
+                          if (a.type === 'triplog') {
+                              setArchiveViewTab('trip');
+                          } else {
+                              setArchiveViewTab('tank');
+                          }
                       }}
                       className="cg-master-card-small !p-4 !mb-0 w-full text-left"
                   >
