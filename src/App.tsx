@@ -175,9 +175,43 @@ export default function App() {
              });
            }
 
+           const loadedArchives = Array.isArray(saved.archives)
+             ? saved.archives.map((archive: any) => {
+                 if (archive && archive.id && archive.summary) return archive;
+
+                 const legacyYear = Number(archive?.year || new Date().getFullYear());
+                 const legacyFuelLog = Array.isArray(archive?.fuelLog) ? archive.fuelLog : [];
+                 const legacyTripLog = Array.isArray(archive?.tripLog) ? archive.tripLog : [];
+                 const legacyTotalKm = Number(archive?.totalKm || 0);
+                 const legacyTotalLiters = Number(archive?.totalLiters || 0);
+                 const legacyTotalEur = Number(archive?.totalEur || 0);
+
+                 return {
+                   id: `archive-year-${legacyYear}-${Date.now()}`,
+                   type: 'year',
+                   name: String(legacyYear),
+                   year: legacyYear,
+                   dateFrom: `${legacyYear}-01-01`,
+                   dateTo: `${legacyYear}-12-31`,
+                   createdAt: new Date().toISOString(),
+                   fuelLog: legacyFuelLog,
+                   tripLog: legacyTripLog,
+                   businessTripLog: [],
+                   spots: [],
+                   summary: {
+                     totalKm: legacyTotalKm,
+                     totalLiters: legacyTotalLiters,
+                     totalEur: legacyTotalEur,
+                     fuelConsumption: legacyTotalKm > 0 && legacyTotalLiters > 0 ? legacyTotalLiters / legacyTotalKm * 100 : null,
+                   },
+                 };
+               })
+             : INITIAL_STATE.archives;
+
            setState({ 
              ...INITIAL_STATE, 
              ...saved, 
+             archives: loadedArchives,
              profile: { ...INITIAL_STATE.profile, ...loadedProfile },
              wasteWaterLevel: migratedWasteWaterLevel,
              dieselLevel: migratedDieselLevel,

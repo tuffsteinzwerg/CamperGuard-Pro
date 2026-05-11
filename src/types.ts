@@ -61,6 +61,30 @@ export interface BusinessTripEntry {
   note: string;
 }
 
+export interface ArchiveSummary {
+  totalKm: number;
+  totalLiters: number;
+  totalEur: number;
+  fuelConsumption: number | null;
+}
+
+export interface Archive {
+  id: string;
+  type: 'year' | 'trip';
+  name: string;
+  year?: number;
+  dateFrom: string;
+  dateTo: string;
+  createdAt: string;
+  fuelLog: FuelEntry[];
+  tripLog: TripEntry[];
+  businessTripLog: BusinessTripEntry[];
+  spots: SpotEntry[];
+  summary: ArchiveSummary;
+}
+
+// Legacy-Format vor Archiv-Umbau.
+// Nur für Migration alter IndexedDB-Daten behalten.
 export interface YearArchive {
   year: number;
   totalKm: number;
@@ -168,7 +192,7 @@ export interface AppState {
   fuelLog: FuelEntry[];
   tripLog: TripEntry[];
   businessTripLog: BusinessTripEntry[];
-  archives: YearArchive[];
+  archives: Archive[];
   spots: SpotEntry[];
   faqs: FAQEntry[];
   checklist: { id: string; label: string; checked: boolean }[];

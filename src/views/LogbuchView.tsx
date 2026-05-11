@@ -46,6 +46,15 @@ export function LogbuchView({ state, setState }: any) {
   
   const [displayedTripsCount, setDisplayedTripsCount] = useState(5);
   const [displayedBusinessTripsCount, setDisplayedBusinessTripsCount] = useState(10);
+
+  const [tripArchiveForm, setTripArchiveForm] = useState({
+      name: '',
+      dateFrom: '',
+      dateTo: ''
+  });
+
+  const [selectedArchive, setSelectedArchive] = useState<any | null>(null);
+  const [archiveViewTab, setArchiveViewTab] = useState<'tank' | 'trip' | 'business' | 'spots'>('tank');
   const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
   const [archiveSelection, setArchiveSelection] = useState('tanken');
 
@@ -178,13 +187,157 @@ export function LogbuchView({ state, setState }: any) {
 
   const closeYear = () => {
       if(!confirm(`Möchtest du das Jahr ${currentYear} abschließen und archivieren?`)) return;
-      const archive = { year: currentYear, totalKm, totalLiters, totalEur, fuelLog: currentFuelLog, tripLog: currentTripLog };
+
+      const currentSpots = (state.spots || []).filter((s:any) => new Date(s.date).getFullYear() === currentYear);
+
+      const archive = {
+          id: `archive-year-${currentYear}-${Date.now()}`,
+          type: 'year' as const,
+          name: String(currentYear),
+          year: currentYear,
+          dateFrom: `${currentYear}-01-01`,
+          dateTo: `${currentYear}-12-31`,
+          createdAt: new Date().toISOString(),
+          fuelLog: currentFuelLog,
+          tripLog: currentTripLog,
+          businessTripLog: currentBusinessTripLog,
+          spots: currentSpots,
+          summary: {
+              totalKm,
+              totalLiters,
+              totalEur,
+              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
+          },
+      };
+
       setState({
           ...state, 
           archives: [...state.archives, archive],
           fuelLog: state.fuelLog.filter((f:any) => new Date(f.date).getFullYear() !== currentYear),
-          tripLog: state.tripLog.filter((t:any) => new Date(t.date).getFullYear() !== currentYear)
+          tripLog: state.tripLog.filter((t:any) => new Date(t.date).getFullYear() !== currentYear),
+          businessTripLog: state.businessTripLog.filter((t:any) => new Date(t.date).getFullYear() !== currentYear),
+          spots: state.spots.filter((s:any) => new Date(s.date).getFullYear() !== currentYear)
       });
+  };
+
+  const createTripArchive = () => {
+      if (!tripArchiveForm.name.trim()) {
+          alert('Bitte einen Archivnamen eingeben.');
+          return;
+      }
+
+      if (!tripArchiveForm.dateFrom || !tripArchiveForm.dateTo) {
+          alert('Bitte Start- und Enddatum auswählen.');
+          return;
+      }
+
+      const from = new Date(tripArchiveForm.dateFrom);
+      const to = new Date(tripArchiveForm.dateTo);
+
+      if (from > to) {
+          alert('Das Startdatum darf nicht nach dem Enddatum liegen.');
+          return;
+      }
+
+      const isInRange = (dateString: string) => {
+          const date = new Date(dateString);
+          return date >= from && date <= to;
+      };
+
+      const archiveFuelLog = state.fuelLog.filter((f:any) => isInRange(f.date));
+      const archiveTripLog = state.tripLog.filter((t:any) => isInRange(t.date));
+      const archiveBusinessTripLog = state.businessTripLog.filter((t:any) => isInRange(t.date));
+      const archiveSpots = state.spots.filter((s:any) => isInRange(s.date));
+
+      if (
+          archiveFuelLog.length === 0 &&
+          archiveTripLog.length === 0 &&
+          archiveBusinessTripLog.length === 0 &&
+          archiveSpots.length === 0
+      ) {
+          alert('Im gewählten Zeitraum wurden keine Daten gefunden.');
+          return;
+      }
+
+      const totalKm = archiveTripLog.reduce((sum:number, trip:any) => {
+          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
+          return sum + (isNaN(diff) ? 0 : diff);
+      }, 0);
+
+      const totalLiters = archiveFuelLog.reduce((sum:number, fuel:any) => {
+          return sum + Number(fuel.liters || 0);
+      }, 0);
+
+      const totalEur = archiveFuelLog.reduce((sum:number, fuel:any) => {
+          return sum + ((Number(fuel.price || 0) * Number(fuel.liters || 0)) / Number(fuel.exchangeRateToEur || 1));
+      }, 0);
+
+      const archive = {
+          id: `archive-trip-${Date.now()}`,
+          type: 'trip' as const,
+          name: tripArchiveForm.name.trim(),
+          dateFrom: tripArchiveForm.dateFrom,
+          dateTo: tripArchiveForm.dateTo,
+          createdAt: new Date().toISOString(),
+          fuelLog: archiveFuelLog,
+          tripLog: archiveTripLog,
+          businessTripLog: archiveBusinessTripLog,
+          spots: archiveSpots,
+          summary: {
+              totalKm,
+              totalLiters,
+              totalEur,
+              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
+          },
+      };
+
+      if (!confirm(`Möchtest du die Reise "${archive.name}" wirklich archivieren? Die archivierten Einträge werden aus den aktiven Listen entfernt.`)) {
+          return;
+      }
+
+      setState({
+          ...state,
+          archives: [...state.archives, archive],
+          fuelLog: state.fuelLog.filter((f:any) => !isInRange(f.date)),
+          tripLog: state.tripLog.filter((t:any) => !isInRange(t.date)),
+          businessTripLog: state.businessTripLog.filter((t:any) => !isInRange(t.date)),
+          spots: state.spots.filter((s:any) => !isInRange(s.date))
+      });
+
+      setTripArchiveForm({
+          name: '',
+          dateFrom: '',
+          dateTo: ''
+      });
+  };
+
+  const deleteArchive = (archive: any) => {
+      const isYearArchive = archive.type === 'year';
+
+      const warningText = isYearArchive
+          ? 'Dieses Archiv enthält möglicherweise steuerrelevante Fahrtenbuchdaten mit gesetzlicher Aufbewahrungspflicht von bis zu 10 Jahren.'
+          : 'Dieses Reise-Archiv wird dauerhaft gelöscht.';
+
+      const firstConfirm = confirm(
+          `${warningText}\n\nMöchtest du das Archiv "${archive.name}" wirklich löschen?`
+      );
+
+      if (!firstConfirm) return;
+
+      const secondConfirm = confirm(
+          `LETZTE WARNUNG:\n\nDas Archiv "${archive.name}" wird unwiderruflich entfernt.\n\nFortfahren?`
+      );
+
+      if (!secondConfirm) return;
+
+      setState({
+          ...state,
+          archives: state.archives.filter((a:any) => a.id !== archive.id)
+      });
+
+      if (selectedArchive?.id === archive.id) {
+          setSelectedArchive(null);
+      }
   };
 
   const getPosition = () => {
@@ -197,6 +350,35 @@ export function LogbuchView({ state, setState }: any) {
   };
 
   const fuelStats = calculateFuelLogStats(state.fuelLog);
+
+  const printFuelLog = selectedArchive ? selectedArchive.fuelLog : currentFuelLog;
+  const printTripLog = selectedArchive ? selectedArchive.tripLog : currentTripLog;
+  const printBusinessTripLog = selectedArchive ? selectedArchive.businessTripLog : currentBusinessTripLog;
+  const printSpots = selectedArchive ? selectedArchive.spots : state.spots;
+
+  const printTitle = selectedArchive
+      ? (
+          archiveViewTab === 'tank'
+              ? 'Archiv · Tankprotokoll'
+              : archiveViewTab === 'trip'
+              ? 'Archiv · Reisetagebuch'
+              : archiveViewTab === 'business'
+              ? 'Archiv · Fahrtenbuch §'
+              : 'Archiv · Standorte / POI'
+      )
+      : (
+          logType === 'tank'
+              ? 'Tankprotokoll'
+              : logType === 'fahrt'
+              ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch')
+              : logType === 'spots'
+              ? 'Standorte / POI'
+              : 'Archiv'
+      );
+
+  const printDateRange = selectedArchive
+      ? `${new Date(selectedArchive.dateFrom).toLocaleDateString('de-DE')} – ${new Date(selectedArchive.dateTo).toLocaleDateString('de-DE')}`
+      : `01.01.${currentYear} – 31.12.${currentYear}`;
 
   return (
     <>
@@ -514,52 +696,105 @@ export function LogbuchView({ state, setState }: any) {
 
       {logType === 'archiv' && (
           <div className="space-y-4">
-              <div className="cg-master-card-small !p-4 !mb-2">
-                  <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Jahr archivieren</h3>
-                  <div className="flex gap-2 items-center">
-                      <select 
-                          className="cg-master-input flex-1 !py-2" 
-                          value={archiveSelection} 
-                          onChange={(e) => setArchiveSelection(e.target.value)}
-                      >
-                          <option value="tanken">Tanken</option>
-                          <option value="reisetagebuch">Reisetagebuch</option>
-                          <option value="fahrtenbuch">Fahrtenbuch §</option>
-                          <option value="pois">POIs</option>
-                      </select>
+              <div className="cg-master-card space-y-6">
+                  <div className="space-y-4">
+                      <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Jahresabschluss</h3>
                       <button 
-                          className="cg-master-button !py-2 px-4 whitespace-nowrap"
+                          className="cg-master-button-danger w-full py-3"
                           onClick={() => {
-                              if (archiveSelection === 'tanken') {
-                                  closeYear();
-                              } else {
-                                  alert('Archivierung für diesen Bereich ist noch nicht umgesetzt.');
-                              }
+                              closeYear();
                           }}
                       >
-                          Archivieren
+                          Jahr archivieren
+                      </button>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+                      <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Reise archivieren</h3>
+
+                      <input
+                          type="text"
+                          placeholder="z. B. Skandinavien-Tour 2026"
+                          value={tripArchiveForm.name}
+                          onChange={(e) => setTripArchiveForm({...tripArchiveForm, name: e.target.value})}
+                          className="cg-master-input"
+                      />
+
+                      <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                              <label className="cg-type-meta">Von</label>
+                              <input
+                                  type="date"
+                                  value={tripArchiveForm.dateFrom}
+                                  onChange={(e) => setTripArchiveForm({...tripArchiveForm, dateFrom: e.target.value})}
+                                  className="cg-master-input"
+                              />
+                          </div>
+
+                          <div className="space-y-1">
+                              <label className="cg-type-meta">Bis</label>
+                              <input
+                                  type="date"
+                                  value={tripArchiveForm.dateTo}
+                                  onChange={(e) => setTripArchiveForm({...tripArchiveForm, dateTo: e.target.value})}
+                                  className="cg-master-input"
+                              />
+                          </div>
+                      </div>
+
+                      <button
+                          onClick={createTripArchive}
+                          className="cg-master-button w-full py-3"
+                      >
+                          Reise archivieren
                       </button>
                   </div>
               </div>
               
               {state.archives.map((a:any) => (
-                  <div key={a.year} className="cg-master-card-small !p-4 !mb-0">
-                      <h3 className="cg-type-value-large flex items-center gap-2 pb-2 mb-2 border-b border-[var(--border)]"><Archive size={14}/> {a.year}</h3>
+                  <button
+                      key={a.id || a.year}
+                      onClick={() => {
+                          setSelectedArchive(a);
+                          setArchiveViewTab('tank');
+                      }}
+                      className="cg-master-card-small !p-4 !mb-0 w-full text-left"
+                  >
+                      <div className="flex items-start justify-between gap-3 pb-2 mb-2 border-b border-[var(--border)]">
+                          <div className="flex flex-col gap-1">
+                              <h3 className="cg-type-value-large flex items-center gap-2">
+                                  <Archive size={14}/>
+                                  {a.name || a.year}
+                              </h3>
+
+                              <div className="flex flex-wrap items-center gap-2">
+                                  <span className="cg-type-meta uppercase tracking-wide">
+                                      {a.type === 'trip' ? 'Reisearchiv' : 'Jahresabschluss'}
+                                  </span>
+
+                                  <span className="cg-type-meta">
+                                      {new Date(a.dateFrom).toLocaleDateString('de-DE')}
+                                      {' — '}
+                                      {new Date(a.dateTo).toLocaleDateString('de-DE')}
+                                  </span>
+                              </div>
+                          </div>
+                      </div>
                       <div className="grid grid-cols-3 gap-2 text-center mt-3">
                           <div>
                               <div className="cg-type-label text-[var(--text-muted)]">Distanz</div>
-                              <div className="cg-type-value">{formatNumber(a.totalKm, 0)} <span className="cg-type-label ml-0.5">KM</span></div>
+                              <div className="cg-type-value">{formatNumber(a.summary?.totalKm ?? a.totalKm, 0)} <span className="cg-type-label ml-0.5">KM</span></div>
                           </div>
                           <div>
                               <div className="cg-type-label text-[var(--text-muted)]">Liter</div>
-                              <div className="cg-type-value">{formatNumber(a.totalLiters, 1)} <span className="cg-type-label ml-0.5">L</span></div>
+                              <div className="cg-type-value">{formatNumber(a.summary?.totalLiters ?? a.totalLiters, 1)} <span className="cg-type-label ml-0.5">L</span></div>
                           </div>
                           <div>
                               <div className="cg-type-label text-[var(--text-muted)]">Kosten</div>
-                              <div className="cg-type-value text-[var(--accent)]">{formatNumber(a.totalEur, 2)} <span className="cg-type-label ml-0.5">€</span></div>
+                              <div className="cg-type-value text-[var(--accent)]">{formatNumber(a.summary?.totalEur ?? a.totalEur, 2)} <span className="cg-type-label ml-0.5">€</span></div>
                           </div>
                       </div>
-                  </div>
+                  </button>
               ))}
               {state.archives.length === 0 && <div className="text-center cg-type-meta py-8">Keine Archive</div>}
           </div>
@@ -593,6 +828,295 @@ export function LogbuchView({ state, setState }: any) {
       )}
 
       <AnimatePresence>
+        {selectedArchive && (
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black/95 flex items-start justify-center p-4 overflow-y-auto"
+            >
+                <div className="w-full max-w-4xl my-8 space-y-4">
+                    <div className="cg-master-card">
+                        <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="cg-type-meta uppercase tracking-wide">
+                                        {selectedArchive.type === 'trip' ? 'Reisearchiv' : 'Jahresabschluss'}
+                                    </span>
+                                </div>
+
+                                <h2 className="cg-type-page-title !text-left">
+                                    {selectedArchive.name}
+                                </h2>
+
+                                <div className="cg-type-meta">
+                                    {new Date(selectedArchive.dateFrom).toLocaleDateString('de-DE')}
+                                    {' — '}
+                                    {new Date(selectedArchive.dateTo).toLocaleDateString('de-DE')}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => deleteArchive(selectedArchive)}
+                                    className="cg-master-button-danger !p-2"
+                                >
+                                    Löschen
+                                </button>
+
+                                <button
+                                    onClick={() => window.print()}
+                                    className="cg-master-button !p-2"
+                                >
+                                    Drucken
+                                </button>
+
+                                <button
+                                    onClick={() => setSelectedArchive(null)}
+                                    className="cg-master-button !p-2"
+                                >
+                                    Schließen
+                                </button>
+                            </div>
+                        </div>
+
+                        {selectedArchive.type === 'year' && (
+                            <div className="cg-master-card-small !mb-0 !p-3 border border-[var(--status-warning)] bg-[rgba(255,165,0,0.08)]">
+                                <div className="cg-type-meta leading-relaxed">
+                                    Dieses Jahresarchiv kann steuerrelevante Fahrtenbuchdaten enthalten.
+                                    Gesetzliche Aufbewahrungsfristen können bis zu 10 Jahre betragen.
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                            <div className="cg-master-card-small !mb-0 !p-3">
+                                <div className="cg-type-label">KM</div>
+                                <div className="cg-type-value-large">
+                                    {formatNumber(selectedArchive.summary?.totalKm || 0, 0)}
+                                </div>
+                            </div>
+
+                            <div className="cg-master-card-small !mb-0 !p-3">
+                                <div className="cg-type-label">Liter</div>
+                                <div className="cg-type-value-large">
+                                    {formatNumber(selectedArchive.summary?.totalLiters || 0, 1)}
+                                </div>
+                            </div>
+
+                            <div className="cg-master-card-small !mb-0 !p-3">
+                                <div className="cg-type-label">Kosten</div>
+                                <div className="cg-type-value-large text-[var(--accent)]">
+                                    {formatNumber(selectedArchive.summary?.totalEur || 0, 2)} €
+                                </div>
+                            </div>
+
+                            <div className="cg-master-card-small !mb-0 !p-3">
+                                <div className="cg-type-label">Verbrauch</div>
+                                <div className="cg-type-value-large">
+                                    {selectedArchive.summary?.fuelConsumption != null
+                                        ? `${formatNumber(selectedArchive.summary.fuelConsumption, 1)} L`
+                                        : '—'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="cg-master-inset cg-master-tabs p-1 overflow-x-auto hide-scrollbar">
+                        <button
+                            onClick={() => setArchiveViewTab('tank')}
+                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'tank' ? 'cg-master-tab-active' : ''}`}
+                        >
+                            Tanken
+                        </button>
+
+                        <button
+                            onClick={() => setArchiveViewTab('trip')}
+                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'trip' ? 'cg-master-tab-active' : ''}`}
+                        >
+                            Reisen
+                        </button>
+
+                        <button
+                            onClick={() => setArchiveViewTab('business')}
+                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'business' ? 'cg-master-tab-active' : ''}`}
+                        >
+                            Fahrtenbuch §
+                        </button>
+
+                        <button
+                            onClick={() => setArchiveViewTab('spots')}
+                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'spots' ? 'cg-master-tab-active' : ''}`}
+                        >
+                            POIs
+                        </button>
+                    </div>
+
+                    {archiveViewTab === 'tank' && (
+                        <div className="space-y-3">
+                            {selectedArchive.fuelLog.map((entry:any) => (
+                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="space-y-1">
+                                            <div className="cg-type-meta">
+                                                {new Date(entry.date).toLocaleDateString('de-DE')}
+                                            </div>
+
+                                            <div className="cg-type-card-title">
+                                                {entry.km?.toLocaleString('de-DE')} KM
+                                            </div>
+
+                                            <div className="cg-type-meta">
+                                                {formatNumber(entry.liters, 1)} L · {formatNumber(entry.price, 3)} {entry.currency || '€'}
+                                            </div>
+                                        </div>
+
+                                        <div className="cg-type-value text-[var(--accent)]">
+                                            {formatNumber((entry.liters * entry.price) / (entry.exchangeRateToEur || 1), 2)} €
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {selectedArchive.fuelLog.length === 0 && (
+                                <div className="cg-type-meta text-center py-8">
+                                    Keine archivierten Tankeinträge
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {archiveViewTab === 'trip' && (
+                        <div className="space-y-3">
+                            {selectedArchive.tripLog.map((entry:any) => (
+                                <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0">
+                                    <div className="flex justify-between items-start gap-3">
+                                        <div className="space-y-1">
+                                            <div className="cg-type-meta">
+                                                {new Date(entry.date).toLocaleDateString('de-DE')}
+                                            </div>
+
+                                            <div className="cg-type-card-title">
+                                                {entry.destination}
+                                            </div>
+
+                                            {entry.purpose && (
+                                                <div className="cg-type-meta">
+                                                    {entry.purpose}
+                                                </div>
+                                            )}
+
+                                            {entry.note && (
+                                                <div className="cg-type-meta italic">
+                                                    {entry.note}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="cg-type-value text-[var(--accent)]">
+                                            +{formatNumber((entry.toKm || 0) - (entry.fromKm || 0), 0)} KM
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {selectedArchive.tripLog.length === 0 && (
+                                <div className="cg-type-meta text-center py-8">
+                                    Keine archivierten Reisen
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {archiveViewTab === 'business' && (
+                        <div className="space-y-3">
+                            {selectedArchive.businessTripLog.map((entry:any) => (
+                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div>
+                                                <div className="cg-type-meta">
+                                                    {new Date(entry.date).toLocaleDateString('de-DE')}
+                                                </div>
+
+                                                <div className="cg-type-card-title">
+                                                    {entry.city ? `${entry.zip} ${entry.city}` : 'Fahrtenbuch'}
+                                                </div>
+                                            </div>
+
+                                            <div className="cg-type-value text-[var(--accent)]">
+                                                +{formatNumber((entry.toKm || 0) - (entry.fromKm || 0), 0)} KM
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="cg-type-meta">
+                                                {entry.departureTime || '—'} → {entry.arrivalTime || '—'}
+                                            </span>
+
+                                            <span className="cg-type-meta">
+                                                {entry.category}
+                                            </span>
+                                        </div>
+
+                                        {entry.purpose && (
+                                            <div className="cg-type-meta">
+                                                {entry.purpose}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {selectedArchive.businessTripLog.length === 0 && (
+                                <div className="cg-type-meta text-center py-8">
+                                    Keine archivierten Fahrtenbuch-Einträge
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {archiveViewTab === 'spots' && (
+                        <div className="space-y-3">
+                            {selectedArchive.spots.map((entry:any) => (
+                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
+                                    <div className="space-y-1">
+                                        <div className="cg-type-meta">
+                                            {new Date(entry.date).toLocaleDateString('de-DE')}
+                                        </div>
+
+                                        <div className="cg-type-card-title">
+                                            {entry.name}
+                                        </div>
+
+                                        <div className="cg-type-meta">
+                                            {entry.category}
+                                        </div>
+
+                                        <div className="cg-type-meta text-[var(--accent)]">
+                                            {Number(entry.lat).toFixed(4)}, {Number(entry.lng).toFixed(4)}
+                                        </div>
+
+                                        {entry.note && (
+                                            <div className="cg-type-meta italic">
+                                                {entry.note}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {selectedArchive.spots.length === 0 && (
+                                <div className="cg-type-meta text-center py-8">
+                                    Keine archivierten POIs
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        )}
+
         {isAdding && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="cg-master-card-small w-full max-w-sm my-8">
@@ -880,17 +1404,17 @@ export function LogbuchView({ state, setState }: any) {
 
       <div className="hidden print-only logbuch-print-wrapper bg-white">
           <PrintHeader 
-              title={logType === 'tank' ? 'Tankprotokoll' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch') : logType === 'spots' ? "Standorte / POI" : 'Archiv'} 
+              title={printTitle}
               vehicleName={state.profile?.vehicleName} 
               plate={state.profile?.plate}
-              dateRange={(logType === 'tank' || logType === 'fahrt' || logType === 'spots') ? `01.01.${currentYear} – 31.12.${currentYear}` : undefined}
-              createdDate={(logType === 'tank' || logType === 'fahrt' || logType === 'spots') ? new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : undefined}
+              dateRange={printDateRange}
+              createdDate={new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
           />
 
-          {logType === 'tank' && (
-             currentFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
+          {((!selectedArchive && logType === 'tank') || (selectedArchive && archiveViewTab === 'tank')) && (
+             printFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              (() => {
-                 const sortedDates = [...currentFuelLog].sort((a:any,b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                 const sortedDates = [...printFuelLog].sort((a:any,b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
                  const dateRangeStr = sortedDates.length > 0 ? `${new Date(sortedDates[0].date).toLocaleDateString('de-DE')} - ${new Date(sortedDates[sortedDates.length - 1].date).toLocaleDateString('de-DE')}` : `Jahr ${currentYear}`;
 
                  return (
@@ -953,9 +1477,9 @@ export function LogbuchView({ state, setState }: any) {
                          </div>
 
                          <div className="tank-print-row-list">
-                             {currentFuelLog.map((f:any, idx:number) => {
+                             {printFuelLog.map((f:any, idx:number) => {
                                  const totalBetrag = (f.liters * f.price) / (f.exchangeRateToEur || 1);
-                                 const sortedByKm = [...currentFuelLog].filter((e:any) => e.km != null && !isNaN(e.km)).sort((a:any, b:any) => a.km - b.km);
+                                 const sortedByKm = [...printFuelLog].filter((e:any) => e.km != null && !isNaN(e.km)).sort((a:any, b:any) => a.km - b.km);
                                  const isFirstTankung = sortedByKm.length > 0 && f.id === sortedByKm[0].id;
                                  const prevEntry = sortedByKm.find((e:any, i:number) => i < sortedByKm.length - 1 && sortedByKm[i + 1].id === f.id);
                                  const kmDelta = (prevEntry && f.km != null && !isNaN(f.km)) ? f.km - prevEntry.km : null;
@@ -1006,8 +1530,8 @@ export function LogbuchView({ state, setState }: any) {
              })()
           )}
 
-          {logType === 'fahrt' && tripLogMode === 'flex' && (
-             currentTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
+          {((!selectedArchive && logType === 'fahrt' && tripLogMode === 'flex') || (selectedArchive && archiveViewTab === 'trip')) && (
+             printTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="reise-print-column-grid cg-print-col-header">
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
@@ -1018,7 +1542,7 @@ export function LogbuchView({ state, setState }: any) {
                      <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
                  </div>
                  <div>
-                     {currentTripLog.map((t:any) => {
+                     {printTripLog.map((t:any) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          return (
                              <div key={t.id} className="reise-print-row cg-print-row">
@@ -1052,8 +1576,8 @@ export function LogbuchView({ state, setState }: any) {
              </div>
           )}
 
-          {logType === 'fahrt' && tripLogMode === 'strict' && (
-             currentBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
+          {((!selectedArchive && logType === 'fahrt' && tripLogMode === 'strict') || (selectedArchive && archiveViewTab === 'business')) && (
+             printBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="fb-print-hdr1 cg-print-col-header">
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📅</span> Datum</div>
@@ -1072,7 +1596,7 @@ export function LogbuchView({ state, setState }: any) {
                      <div style={{textAlign: 'left'}}>📌 Notiz / Route</div>
                  </div>
                  <div>
-                     {currentBusinessTripLog.map((t:any) => {
+                     {printBusinessTripLog.map((t:any) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          const addrParts = [t.street, t.houseNumber].filter(Boolean).join(' ');
                          const plzOrt = [t.zip, t.city].filter(Boolean).join(' ');
@@ -1124,8 +1648,8 @@ export function LogbuchView({ state, setState }: any) {
              </div>
           )}
 
-          {logType === 'spots' && (
-             state.spots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
+          {((!selectedArchive && logType === 'spots') || (selectedArchive && archiveViewTab === 'spots')) && (
+             printSpots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="poi-print-column-grid cg-print-col-header">
                      <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
@@ -1135,7 +1659,7 @@ export function LogbuchView({ state, setState }: any) {
                      <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
                  </div>
                  <div>
-                     {state.spots.map((s:any) => (
+                     {printSpots.map((s:any) => (
                          <div key={s.id} className="poi-print-row cg-print-row">
                              <div className="cg-print-cell-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
                              <div className="cg-print-cell-name">{s.name}</div>
