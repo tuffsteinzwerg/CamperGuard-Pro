@@ -56,6 +56,13 @@ export function LogbuchView({ state, setState }: any) {
       from: '',
       to: ''
   });
+
+  const [tripArchiveMode, setTripArchiveMode] = useState<'all' | 'range'>('all');
+
+  const [tripArchiveRange, setTripArchiveRange] = useState({
+      from: '',
+      to: ''
+  });
   const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
   const [archiveSelection, setArchiveSelection] = useState('tanken');
 
@@ -317,6 +324,92 @@ export function LogbuchView({ state, setState }: any) {
       setFuelArchiveMode('all');
 
       setFuelArchiveRange({
+          from: '',
+          to: ''
+      });
+  };
+
+  const createTripLogArchive = () => {
+      let archiveTripLog = [...state.tripLog];
+
+      if (tripArchiveMode === 'range') {
+          if (!tripArchiveRange.from || !tripArchiveRange.to) {
+              alert('Bitte Von- und Bis-Datum auswählen.');
+              return;
+          }
+
+          archiveTripLog = state.tripLog.filter((t:any) => {
+              return (
+                  t.date >= tripArchiveRange.from &&
+                  t.date <= tripArchiveRange.to
+              );
+          });
+
+          if (archiveTripLog.length === 0) {
+              alert('Keine Reisen im gewählten Zeitraum gefunden.');
+              return;
+          }
+      }
+
+      if (archiveTripLog.length === 0) {
+          alert('Keine Reisen zum Archivieren vorhanden.');
+          return;
+      }
+
+      const totalKm = archiveTripLog.reduce((sum:number, trip:any) => {
+          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
+          return sum + (isNaN(diff) ? 0 : diff);
+      }, 0);
+
+      const archiveDateFrom =
+          tripArchiveMode === 'range'
+              ? tripArchiveRange.from
+              : archiveTripLog
+                    .map((t:any) => t.date)
+                    .sort()[0];
+
+      const archiveDateTo =
+          tripArchiveMode === 'range'
+              ? tripArchiveRange.to
+              : archiveTripLog
+                    .map((t:any) => t.date)
+                    .sort()
+                    .slice(-1)[0];
+
+      const archive = {
+          id: `archive-triplog-${Date.now()}`,
+          type: 'triplog',
+          name: `Reisetagebuch ${new Date().toLocaleDateString('de-DE')}`,
+          dateFrom: archiveDateFrom,
+          dateTo: archiveDateTo,
+          createdAt: new Date().toISOString(),
+          fuelLog: [],
+          tripLog: archiveTripLog,
+          businessTripLog: [],
+          spots: [],
+          summary: {
+              totalKm,
+              totalLiters: 0,
+              totalEur: 0,
+              fuelConsumption: null,
+          },
+      };
+
+      if (!confirm(`Reisetagebuch archivieren?\n\n${archiveTripLog.length} Einträge werden archiviert und aus dem aktiven Reisetagebuch entfernt.`)) {
+          return;
+      }
+
+      const archivedIds = new Set(archiveTripLog.map((t:any) => t.id));
+
+      setState({
+          ...state,
+          archives: [...state.archives, archive],
+          tripLog: state.tripLog.filter((t:any) => !archivedIds.has(t.id))
+      });
+
+      setTripArchiveMode('all');
+
+      setTripArchiveRange({
           from: '',
           to: ''
       });
@@ -768,14 +861,47 @@ export function LogbuchView({ state, setState }: any) {
                       )}
 
                       {archiveSelection === 'reisetagebuch' && (
-                          <button 
-                              className="cg-master-button !py-2 px-4 w-full"
-                              onClick={() => {
-                                  alert('Archivierung für Reisetagebuch folgt im nächsten Schritt.');
-                              }}
-                          >
-                              Archivieren
-                          </button>
+                          <div className="space-y-3">
+                              <select
+                                  className="cg-master-input !py-2 w-full"
+                                  value={tripArchiveMode}
+                                  onChange={(e) => setTripArchiveMode(e.target.value as 'all' | 'range')}
+                              >
+                                  <option value="all">Alle Reisen archivieren</option>
+                                  <option value="range">Reisen nach Zeitraum archivieren</option>
+                              </select>
+
+                              {tripArchiveMode === 'range' && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <input
+                                          type="date"
+                                          value={tripArchiveRange.from}
+                                          onChange={(e) => setTripArchiveRange({
+                                              ...tripArchiveRange,
+                                              from: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+
+                                      <input
+                                          type="date"
+                                          value={tripArchiveRange.to}
+                                          onChange={(e) => setTripArchiveRange({
+                                              ...tripArchiveRange,
+                                              to: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                  </div>
+                              )}
+
+                              <button 
+                                  className="cg-master-button !py-2 px-4 w-full"
+                                  onClick={createTripLogArchive}
+                              >
+                                  Reisetagebuch archivieren
+                              </button>
+                          </div>
                       )}
 
                       {archiveSelection === 'fahrtenbuch' && (
