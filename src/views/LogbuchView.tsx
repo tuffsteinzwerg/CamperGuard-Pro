@@ -47,14 +47,15 @@ export function LogbuchView({ state, setState }: any) {
   const [displayedTripsCount, setDisplayedTripsCount] = useState(5);
   const [displayedBusinessTripsCount, setDisplayedBusinessTripsCount] = useState(10);
 
-  const [tripArchiveForm, setTripArchiveForm] = useState({
-      name: '',
-      dateFrom: '',
-      dateTo: ''
-  });
-
   const [selectedArchive, setSelectedArchive] = useState<any | null>(null);
   const [archiveViewTab, setArchiveViewTab] = useState<'tank' | 'trip' | 'business' | 'spots'>('tank');
+
+  const [fuelArchiveMode, setFuelArchiveMode] = useState<'all' | 'range'>('all');
+
+  const [fuelArchiveRange, setFuelArchiveRange] = useState({
+      from: '',
+      to: ''
+  });
   const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
   const [archiveSelection, setArchiveSelection] = useState('tanken');
 
@@ -220,49 +221,32 @@ export function LogbuchView({ state, setState }: any) {
       });
   };
 
-  const createTripArchive = () => {
-      if (!tripArchiveForm.name.trim()) {
-          alert('Bitte einen Archivnamen eingeben.');
-          return;
+  const createFuelArchive = () => {
+      let archiveFuelLog = [...state.fuelLog];
+
+      if (fuelArchiveMode === 'range') {
+          if (!fuelArchiveRange.from || !fuelArchiveRange.to) {
+              alert('Bitte Von- und Bis-Datum auswählen.');
+              return;
+          }
+
+          archiveFuelLog = state.fuelLog.filter((f:any) => {
+              return (
+                  f.date >= fuelArchiveRange.from &&
+                  f.date <= fuelArchiveRange.to
+              );
+          });
+
+          if (archiveFuelLog.length === 0) {
+              alert('Keine Tankungen im gewählten Zeitraum gefunden.');
+              return;
+          }
       }
 
-      if (!tripArchiveForm.dateFrom || !tripArchiveForm.dateTo) {
-          alert('Bitte Start- und Enddatum auswählen.');
+      if (archiveFuelLog.length === 0) {
+          alert('Keine Tankungen zum Archivieren vorhanden.');
           return;
       }
-
-      const from = new Date(tripArchiveForm.dateFrom);
-      const to = new Date(tripArchiveForm.dateTo);
-
-      if (from > to) {
-          alert('Das Startdatum darf nicht nach dem Enddatum liegen.');
-          return;
-      }
-
-      const isInRange = (dateString: string) => {
-          const date = new Date(dateString);
-          return date >= from && date <= to;
-      };
-
-      const archiveFuelLog = state.fuelLog.filter((f:any) => isInRange(f.date));
-      const archiveTripLog = state.tripLog.filter((t:any) => isInRange(t.date));
-      const archiveBusinessTripLog = state.businessTripLog.filter((t:any) => isInRange(t.date));
-      const archiveSpots = state.spots.filter((s:any) => isInRange(s.date));
-
-      if (
-          archiveFuelLog.length === 0 &&
-          archiveTripLog.length === 0 &&
-          archiveBusinessTripLog.length === 0 &&
-          archiveSpots.length === 0
-      ) {
-          alert('Im gewählten Zeitraum wurden keine Daten gefunden.');
-          return;
-      }
-
-      const totalKm = archiveTripLog.reduce((sum:number, trip:any) => {
-          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
-          return sum + (isNaN(diff) ? 0 : diff);
-      }, 0);
 
       const totalLiters = archiveFuelLog.reduce((sum:number, fuel:any) => {
           return sum + Number(fuel.liters || 0);
@@ -272,42 +256,69 @@ export function LogbuchView({ state, setState }: any) {
           return sum + ((Number(fuel.price || 0) * Number(fuel.liters || 0)) / Number(fuel.exchangeRateToEur || 1));
       }, 0);
 
+      const sortedByKm = [...archiveFuelLog]
+          .filter((f:any) => !isNaN(Number(f.km)))
+          .sort((a:any, b:any) => Number(a.km) - Number(b.km));
+
+      const totalKm =
+          sortedByKm.length >= 2
+              ? Number(sortedByKm[sortedByKm.length - 1].km) - Number(sortedByKm[0].km)
+              : 0;
+
+      const archiveDateFrom =
+          fuelArchiveMode === 'range'
+              ? fuelArchiveRange.from
+              : archiveFuelLog
+                    .map((f:any) => f.date)
+                    .sort()[0];
+
+      const archiveDateTo =
+          fuelArchiveMode === 'range'
+              ? fuelArchiveRange.to
+              : archiveFuelLog
+                    .map((f:any) => f.date)
+                    .sort()
+                    .slice(-1)[0];
+
       const archive = {
-          id: `archive-trip-${Date.now()}`,
-          type: 'trip' as const,
-          name: tripArchiveForm.name.trim(),
-          dateFrom: tripArchiveForm.dateFrom,
-          dateTo: tripArchiveForm.dateTo,
+          id: `archive-fuel-${Date.now()}`,
+          type: 'fuel',
+          name: `Tankprotokoll ${new Date().toLocaleDateString('de-DE')}`,
+          dateFrom: archiveDateFrom,
+          dateTo: archiveDateTo,
           createdAt: new Date().toISOString(),
           fuelLog: archiveFuelLog,
-          tripLog: archiveTripLog,
-          businessTripLog: archiveBusinessTripLog,
-          spots: archiveSpots,
+          tripLog: [],
+          businessTripLog: [],
+          spots: [],
           summary: {
               totalKm,
               totalLiters,
               totalEur,
-              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
+              fuelConsumption:
+                  totalKm > 0 && totalLiters > 0
+                      ? totalLiters / totalKm * 100
+                      : null,
           },
       };
 
-      if (!confirm(`Möchtest du die Reise "${archive.name}" wirklich archivieren? Die archivierten Einträge werden aus den aktiven Listen entfernt.`)) {
+      if (!confirm(`Tankprotokoll archivieren?\n\n${archiveFuelLog.length} Tankungen werden archiviert und aus dem aktiven Tankprotokoll entfernt.`)) {
           return;
       }
+
+      const archivedIds = new Set(archiveFuelLog.map((f:any) => f.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => !isInRange(f.date)),
-          tripLog: state.tripLog.filter((t:any) => !isInRange(t.date)),
-          businessTripLog: state.businessTripLog.filter((t:any) => !isInRange(t.date)),
-          spots: state.spots.filter((s:any) => !isInRange(s.date))
+          fuelLog: state.fuelLog.filter((f:any) => !archivedIds.has(f.id))
       });
 
-      setTripArchiveForm({
-          name: '',
-          dateFrom: '',
-          dateTo: ''
+      setFuelArchiveMode('all');
+
+      setFuelArchiveRange({
+          from: '',
+          to: ''
       });
   };
 
@@ -696,58 +707,98 @@ export function LogbuchView({ state, setState }: any) {
 
       {logType === 'archiv' && (
           <div className="space-y-4">
-              <div className="cg-master-card space-y-6">
-                  <div className="space-y-4">
-                      <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Jahresabschluss</h3>
-                      <button 
-                          className="cg-master-button-danger w-full py-3"
-                          onClick={() => {
-                              closeYear();
-                          }}
-                      >
-                          Jahr archivieren
-                      </button>
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-[var(--border)]">
-                      <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Reise archivieren</h3>
-
-                      <input
-                          type="text"
-                          placeholder="z. B. Skandinavien-Tour 2026"
-                          value={tripArchiveForm.name}
-                          onChange={(e) => setTripArchiveForm({...tripArchiveForm, name: e.target.value})}
-                          className="cg-master-input"
-                      />
-
-                      <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                              <label className="cg-type-meta">Von</label>
-                              <input
-                                  type="date"
-                                  value={tripArchiveForm.dateFrom}
-                                  onChange={(e) => setTripArchiveForm({...tripArchiveForm, dateFrom: e.target.value})}
-                                  className="cg-master-input"
-                              />
-                          </div>
-
-                          <div className="space-y-1">
-                              <label className="cg-type-meta">Bis</label>
-                              <input
-                                  type="date"
-                                  value={tripArchiveForm.dateTo}
-                                  onChange={(e) => setTripArchiveForm({...tripArchiveForm, dateTo: e.target.value})}
-                                  className="cg-master-input"
-                              />
-                          </div>
+              <div className="cg-master-card-small !p-4 !mb-2">
+                  <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Archiv erstellen</h3>
+                  <div className="space-y-3">
+                      <div className="flex gap-2 items-center">
+                          <select 
+                              className="cg-master-input flex-1 !py-2" 
+                              value={archiveSelection} 
+                              onChange={(e) => setArchiveSelection(e.target.value)}
+                          >
+                              <option value="tanken">Tankprotokoll</option>
+                              <option value="reisetagebuch">Reisetagebuch</option>
+                              <option value="fahrtenbuch">Fahrtenbuch §</option>
+                              <option value="pois">POIs</option>
+                          </select>
                       </div>
 
-                      <button
-                          onClick={createTripArchive}
-                          className="cg-master-button w-full py-3"
-                      >
-                          Reise archivieren
-                      </button>
+                      {archiveSelection === 'tanken' && (
+                          <div className="space-y-3">
+                              <select
+                                  className="cg-master-input !py-2 w-full"
+                                  value={fuelArchiveMode}
+                                  onChange={(e) => setFuelArchiveMode(e.target.value as 'all' | 'range')}
+                              >
+                                  <option value="all">Alle Tankungen archivieren</option>
+                                  <option value="range">Tankungen nach Zeitraum archivieren</option>
+                              </select>
+
+                              {fuelArchiveMode === 'range' && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <input
+                                          type="date"
+                                          value={fuelArchiveRange.from}
+                                          onChange={(e) => setFuelArchiveRange({
+                                              ...fuelArchiveRange,
+                                              from: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+
+                                      <input
+                                          type="date"
+                                          value={fuelArchiveRange.to}
+                                          onChange={(e) => setFuelArchiveRange({
+                                              ...fuelArchiveRange,
+                                              to: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                  </div>
+                              )}
+
+                              <button 
+                                  className="cg-master-button !py-2 px-4 w-full"
+                                  onClick={createFuelArchive}
+                              >
+                                  Tankprotokoll archivieren
+                              </button>
+                          </div>
+                      )}
+
+                      {archiveSelection === 'reisetagebuch' && (
+                          <button 
+                              className="cg-master-button !py-2 px-4 w-full"
+                              onClick={() => {
+                                  alert('Archivierung für Reisetagebuch folgt im nächsten Schritt.');
+                              }}
+                          >
+                              Archivieren
+                          </button>
+                      )}
+
+                      {archiveSelection === 'fahrtenbuch' && (
+                          <button 
+                              className="cg-master-button !py-2 px-4 w-full"
+                              onClick={() => {
+                                  alert('Archivierung für Fahrtenbuch § folgt im nächsten Schritt.');
+                              }}
+                          >
+                              Archivieren
+                          </button>
+                      )}
+
+                      {archiveSelection === 'pois' && (
+                          <button 
+                              className="cg-master-button !py-2 px-4 w-full"
+                              onClick={() => {
+                                  alert('Archivierung für POIs folgt im nächsten Schritt.');
+                              }}
+                          >
+                              Archivieren
+                          </button>
+                      )}
                   </div>
               </div>
               
