@@ -284,7 +284,7 @@ export function LogbuchView({ state, setState }: any) {
 
       <div className="cg-master-inset cg-master-tabs p-1 overflow-x-auto hide-scrollbar">
       {['tank', 'fahrt', 'spots', 'archiv'].map(t => (
-        <button key={t} onClick={() => setLogType(t as any)} className={`cg-master-tab cg-type-tab ${logType === t ? 'cg-master-tab-active' : ''}`}>{t === 'tank' ? 'Tanken' : t === 'spots' ? "POI's" : t === 'fahrt' ? 'Fahrten' : t}</button>
+        <button key={t} onClick={() => setLogType(t as any)} className={`cg-master-tab cg-type-tab ${logType === t ? 'cg-master-tab-active' : ''}`}>{t === 'tank' ? 'Tanken' : t === 'spots' ? "POIs" : t === 'fahrt' ? 'Fahrten' : t}</button>
       ))}
   </div>
 
@@ -597,7 +597,7 @@ export function LogbuchView({ state, setState }: any) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
                 <div className="cg-master-card-small w-full max-w-sm my-8">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="typo-section-title">{logType === 'tank' ? 'Tankbeleg' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Reise-Notiz') : "POI's Log"}</h2>
+                        <h2 className="typo-section-title">{logType === 'tank' ? 'Tankbeleg' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Reise-Notiz') : "POI Log"}</h2>
                         {logType === 'tank' && editingTripId && (
                             <button
                                 type="button"
@@ -746,8 +746,8 @@ export function LogbuchView({ state, setState }: any) {
                                         <input name="driver" required placeholder="Fahrer" value={businessTripForm.driver} onChange={e => setBusinessTripForm({...businessTripForm, driver: e.target.value})} className={`cg-master-input w-full`} />
                                         {!isBusinessTripDriverValid && businessTripForm.driver === '' && <span className="typo-tiny block mt-1 cg-master-muted">Fahrer ist ein Pflichtfeld.</span>}
                                         <div className="flex gap-2">
-                                            <input name="departureTime" type="time" placeholder="Abfahrt" value={businessTripForm.departureTime} onChange={e => setBusinessTripForm({...businessTripForm, departureTime: e.target.value})} className="cg-master-input w-1/2" />
-                                            <input name="arrivalTime" type="time" placeholder="Ankunft" value={businessTripForm.arrivalTime} onChange={e => setBusinessTripForm({...businessTripForm, arrivalTime: e.target.value})} className="cg-master-input w-1/2" />
+                                            <input name="departureTime" type={businessTripForm.departureTime ? 'time' : 'text'} placeholder="Abfahrt (Uhrzeit)" value={businessTripForm.departureTime} onFocus={e => { e.target.type = 'time'; }} onBlur={e => { if (!e.target.value) e.target.type = 'text'; }} onChange={e => setBusinessTripForm({...businessTripForm, departureTime: e.target.value})} className="cg-master-input w-1/2" />
+                                            <input name="arrivalTime" type={businessTripForm.arrivalTime ? 'time' : 'text'} placeholder="Ankunft (Uhrzeit)" value={businessTripForm.arrivalTime} onFocus={e => { e.target.type = 'time'; }} onBlur={e => { if (!e.target.value) e.target.type = 'text'; }} onChange={e => setBusinessTripForm({...businessTripForm, arrivalTime: e.target.value})} className="cg-master-input w-1/2" />
                                         </div>
                                         <div className="flex gap-2">
                                             <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Start KM" value={businessTripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setBusinessTripForm({...businessTripForm, fromKm: digitsOnly}); }} className={`cg-master-input w-1/2`} />

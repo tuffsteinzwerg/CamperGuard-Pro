@@ -6,6 +6,34 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.1.6-dev",
+    "date": "11.05.2026",
+    "entries": [
+      "523. UX: Leere Eingabefelder global grauer Hintergrund, befüllte Felder dunkel/weiß — via :placeholder-shown in index.css.",
+      "522. UX: Uhrzeitfelder im Fahrtenbuch § mit Text/Time-Switch — zeigt Placeholder 'Abfahrt (Uhrzeit)' / 'Ankunft (Uhrzeit)' statt Striche.",
+      "521. Fix: 'POI\\'s' → 'POIs' korrigiert (Tab-Label + Formular-Überschrift).",
+      "520. UX: Auto-Scroll zum Formular bei '+' Button in SOS-Ausrüstung und Apotheke (scrollIntoView smooth).",
+      "519. Print-Migration J-6: Fahrtenbuch-§-Print-Styles auf zentrale cg-print-* Klassen migriert.",
+      "518. Print-Migration J-5: Reisetagebuch- und POI-Print-Styles auf zentrale cg-print-* Klassen migriert.",
+      "517. Print-Migration J-4: Tank-Print-Styles auf zentrale cg-print-* Klassen migriert.",
+      "516. Print-Migration J-3: InhaltPrintView.tsx auf zentrale cg-print-* Klassen migriert.",
+      "515. Print-Migration J-2: PrintHeader.tsx — lokaler <style> Block entfernt, Logo auf 16mm, zentrale Klassen.",
+      "514. Print-Migration J-1: Zentrale print-styles.css erstellt mit einheitlichem Schriftgrößen-System (9/10/11/12/16pt, Arial).",
+      "513. Fahrtenbuch § Druckansicht: Zweizeiliges Grid-Layout im Querformat mit Uhrzeiten und steuerlichen Kategorien.",
+      "512. Fahrtenbuch § Datenmodell: departureTime + arrivalTime als neue Felder in BusinessTripEntry + Formular + Edit-Funktion.",
+      "511. Fahrtenbuch § Kategorien: 'Betriebsstätte' → 'Wohnung – Arbeitsstätte' (korrekter steuerlicher Begriff).",
+      "510. Logo-Größe: Von 11mm auf 14mm (Prompt H), dann auf 16mm (J-2) — sichtbarer auf Ausdrucken.",
+      "509. Standorte/POI Druckansicht: Grid-Layout mit Icons, Koordinaten in Monospace, fixierte Übersichtsbox.",
+      "508. Reisetagebuch Druckansicht: Grid-Layout mit Icons, Zusammenfassungsbox (Fahrten, Gesamtstrecke, Ø pro Fahrt).",
+      "507. Inventarliste Druckansicht: Hochformat, Kategorien orange, Apotheke 6-spaltig, Gesamtgewicht + Artikelanzahl fixiert.",
+      "506. Kompakter-Prompt D: Kopf-/Fußbereich, Zeilen, Meta-Grid alles gestrafft — mehr Tankzeilen pro Seite.",
+      "505. Icons in Spaltenüberschriften und Übersichtsbox: Unicode-Emojis (📅🔧⛽💧🏷️🧾🚐💶).",
+      "504. Übersichtsbox fixiert über Fußzeile: position fixed bottom 10mm.",
+      "503. Fußzeile: 'CamperGuard Pro – Smart, sicher, unterwegs.' + Seitenzahl via CSS-Counter.",
+      "502. Tankprotokoll Druckansicht: Grid-Layout, KM-Delta in Klammern, orange Gesamtpreise, Zeitraum + Erstellt am im Header."
+    ]
+  },
+  {
     "version": "v0.1.5-dev",
     "date": "09.05.2026",
     "entries": [

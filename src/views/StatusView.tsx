@@ -732,14 +732,17 @@ export function StatusView({ state, setState, orientation }: any) {
                                      const emptyItem = (state.sos.gear || []).find((g: any) => (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === '')));
                                      if (emptyItem) {
                                          setEditingGearId(emptyItem.id);
+                                         setTimeout(() => document.getElementById(`gear-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      } else {
                                          const newId = Date.now().toString();
                                          updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
                                          setEditingGearId(newId);
+                                         setTimeout(() => document.getElementById(`gear-${newId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      }
                                  }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
                              {(state.sos.gear || []).map((g: any, i: number) => {
+                                 const gearElementId = `gear-${g.id}`;
                                  const validLocations = (g.locations || []).filter((l: string) => l.trim() !== '');
                                  const hasWeight = g.weight !== undefined && g.weight !== null && g.weight !== '';
                                  const weightStr = hasWeight ? `${g.weight} ${g.weightUnit || 'kg'}` : '';
@@ -747,7 +750,7 @@ export function StatusView({ state, setState, orientation }: any) {
                                  const isEditing = editingGearId === g.id;
                                  
                                  return (
-                                 <div key={g.id} className="cg-master-card-small mb-3">
+                                 <div id={gearElementId} key={g.id} className="cg-master-card-small mb-3">
                                      <div className="flex justify-between items-center select-none">
                                          <div className="flex items-start gap-3 flex-1 min-w-0 pr-3 cursor-pointer" onClick={() => {
                                              if (isEditing) setEditingGearId(null);
@@ -865,10 +868,12 @@ export function StatusView({ state, setState, orientation }: any) {
                                      const emptyItem = (state.sos.pharmacy || []).find((p: any) => (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg'));
                                      if (emptyItem) {
                                          setEditingPharmacyId(emptyItem.id);
+                                         setTimeout(() => document.getElementById(`pharmacy-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      } else {
                                          const newId = Date.now().toString(); 
                                          updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); 
-                                         setEditingPharmacyId(newId); 
+                                         setEditingPharmacyId(newId);
+                                         setTimeout(() => document.getElementById(`pharmacy-${newId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      }
                                  }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
@@ -912,13 +917,14 @@ export function StatusView({ state, setState, orientation }: any) {
 
                              {(state.sos.pharmacy || []).map((p: any, i: number) => {
                                   if (!p) return null;
+                                  const pharmacyElementId = `pharmacy-${p.id}`;
                                   const isEditing = editingPharmacyId === String(p.id);
                                   const metaParts: string[] = [];
                                   if (p.purpose) metaParts.push(String(p.purpose));
                                   if (p.location) metaParts.push(String(p.location));
                                   if (p.expiry) metaParts.push(`Haltbar bis: ${p.expiry}`);
                                   return (
-                                 <div key={p.id} className="cg-master-card-small mb-3 relative">
+                                 <div id={pharmacyElementId} key={p.id} className="cg-master-card-small mb-3 relative">
                                      {isEditing ? (
                                         <>
                                      <div className="grid grid-cols-2 gap-3">
