@@ -37,6 +37,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [orientation, setOrientation] = useState({ pitch: 0, roll: 0, heading: 0 });
   const [showChangelog, setShowChangelog] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -346,7 +347,7 @@ export default function App() {
   return (
     <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[var(--bg-app)] text-white print:min-h-0 print:pb-0 print:max-w-none print:mx-0 print:w-full">
       
-      {(() => {
+      {!onboardingDismissed && (() => {
         const p = state.profile;
         const s = state.sos;
         const needsOnboarding =
@@ -367,6 +368,7 @@ export default function App() {
           return (
             <OnboardingOverlay
               onNavigate={(target) => {
+                setOnboardingDismissed(true);
                 if (target === 'profil') {
                   setActiveTab('profil');
                 } else if (target === 'sos') {
