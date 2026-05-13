@@ -716,7 +716,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
         );
       })()}
 
-      <div className="cg-master-card-small space-y-3">
+      <div className="cg-master-inset p-4 space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
             <div className="cg-master-label">Vorname</div>
