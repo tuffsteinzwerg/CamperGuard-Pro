@@ -3,12 +3,10 @@ import { ShieldPlus, Phone, Edit2, Trash2, MapPin, AlertTriangle, Plus, Check, P
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber, formatWeight, normalizeGearName } from '../lib/formatters';
 
-export function StatusView({ state, setState, orientation }: any) {
+export function StatusView({ state, setState, orientation, showSos, setShowSos, sosTab, setSosTab }: any) {
   const [editingPharmacyId, setEditingPharmacyId] = useState<string | null>(null);
   const [editingGearId, setEditingGearId] = useState<string | null>(null);
   const [deletingGearItem, setDeletingGearItem] = useState<any>(null);
-  const [showSos, setShowSos] = useState(false);
-  const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
   const [isEditingId, setIsEditingId] = useState(false);
   const [gpsAlt, setGpsAlt] = useState<number|null>(null);
   const [gpsCoords, setGpsCoords] = useState<{lat: number, lng: number} | null>(null);

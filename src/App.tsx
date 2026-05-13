@@ -38,6 +38,8 @@ export default function App() {
   const [orientation, setOrientation] = useState({ pitch: 0, roll: 0, heading: 0 });
   const [showChangelog, setShowChangelog] = useState(false);
   const [hasUsedOnboarding, setHasUsedOnboarding] = useState(false);
+  const [showSos, setShowSos] = useState(false);
+  const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
 
   useEffect(() => {
     (async () => {
@@ -369,12 +371,15 @@ export default function App() {
         if (hideOnWorkTabs) return null;
         return (
           <OnboardingOverlay
+            state={state}
             onNavigate={(target) => {
               setHasUsedOnboarding(true);
               if (target === 'profil') {
                 setActiveTab('profil');
               } else if (target === 'sos') {
                 setActiveTab('status');
+                setShowSos(true);
+                setSosTab('id');
               }
             }}
           />
@@ -398,7 +403,7 @@ export default function App() {
       <main className="p-4 overflow-y-auto lg:max-w-6xl lg:mx-auto min-h-[80vh] print:p-0 print:overflow-visible print:min-h-0 print:h-auto print:max-w-none print:mx-0 print:w-full">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-            {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} />}
+            {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} showSos={showSos} setShowSos={setShowSos} sosTab={sosTab} setSosTab={setSosTab} />}
             {activeTab === 'inhalt' && <InhaltView state={state} setState={setState} />}
             {activeTab === 'logbuch' && <LogbuchView state={state} setState={setState} />}
             {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} orientationPermission={orientationPermission} requestOrientationPermission={requestOrientationPermission} />}

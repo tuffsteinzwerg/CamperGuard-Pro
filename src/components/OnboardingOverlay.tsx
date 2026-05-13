@@ -1,10 +1,32 @@
-import { Truck, Shield, ChevronRight, Info } from 'lucide-react';
+import { Truck, Shield, ChevronRight, Check, Info } from 'lucide-react';
+import type { AppState } from '../types';
 
 interface OnboardingOverlayProps {
   onNavigate: (target: 'profil' | 'sos') => void;
+  state: AppState;
 }
 
-export function OnboardingOverlay({ onNavigate }: OnboardingOverlayProps) {
+export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps) {
+  const p = state.profile;
+  const s = state.sos;
+
+  const profilDone =
+    !!p.vehicleName &&
+    !!p.emptyWeight &&
+    !!p.maxWeight &&
+    !!p.height &&
+    !!p.width &&
+    !!p.length &&
+    !!p.freshWaterCapacity &&
+    !!p.wasteWaterCapacity &&
+    !!p.dieselCapacity;
+
+  const sosDone =
+    !!s.firstName &&
+    !!s.lastName &&
+    !!s.ice1Name &&
+    !!s.ice1Phone;
+
   return (
     <div className="fixed inset-0 z-[200] bg-[var(--bg-app)] overflow-y-auto">
       <div className="min-h-screen flex flex-col items-center justify-start px-5 py-8 max-w-md mx-auto">
@@ -35,30 +57,38 @@ export function OnboardingOverlay({ onNavigate }: OnboardingOverlayProps) {
           <button
             onClick={() => onNavigate('profil')}
             className="card-standard flex items-center gap-3.5 w-full text-left"
+            style={profilDone ? { borderColor: 'var(--status-ok)' } : undefined}
           >
-            <div className="icon-circle">
-              <Truck size={18} />
+            <div className="icon-circle" style={profilDone ? { background: 'var(--status-ok)' } : undefined}>
+              {profilDone ? <Check size={18} className="text-black" /> : <Truck size={18} />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="typo-card-title">Fahrzeugdaten</div>
-              <div className="typo-body-dim">Name, Gewichte, Abmessungen und Kapazitäten</div>
+              <div className="typo-card-title">{profilDone ? 'Fahrzeugdaten ✓' : 'Fahrzeugdaten'}</div>
+              <div className="typo-body-dim">{profilDone ? 'Vollständig hinterlegt' : 'Name, Gewichte, Abmessungen und Kapazitäten'}</div>
             </div>
-            <ChevronRight size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
+            {profilDone
+              ? <Check size={16} className="text-[var(--status-ok)] flex-shrink-0" />
+              : <ChevronRight size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
+            }
           </button>
 
           {/* Notfalldaten */}
           <button
             onClick={() => onNavigate('sos')}
             className="card-standard flex items-center gap-3.5 w-full text-left"
+            style={sosDone ? { borderColor: 'var(--status-ok)' } : undefined}
           >
-            <div className="icon-circle">
-              <Shield size={18} />
+            <div className="icon-circle" style={sosDone ? { background: 'var(--status-ok)' } : undefined}>
+              {sosDone ? <Check size={18} className="text-black" /> : <Shield size={18} />}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="typo-card-title">Notfalldaten</div>
-              <div className="typo-body-dim">ICE-Kontakte und medizinische Daten</div>
+              <div className="typo-card-title">{sosDone ? 'Notfalldaten ✓' : 'Notfalldaten'}</div>
+              <div className="typo-body-dim">{sosDone ? 'Vollständig hinterlegt' : 'ICE-Kontakte und medizinische Daten'}</div>
             </div>
-            <ChevronRight size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
+            {sosDone
+              ? <Check size={16} className="text-[var(--status-ok)] flex-shrink-0" />
+              : <ChevronRight size={16} className="text-[var(--text-tertiary)] flex-shrink-0" />
+            }
           </button>
 
         </div>
