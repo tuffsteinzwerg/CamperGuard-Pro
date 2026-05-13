@@ -716,86 +716,88 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
         );
       })()}
 
-      <div className="cg-master-inset p-4 space-y-3">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <div className="cg-master-label">Vorname</div>
-            <input
-              type="text"
-              value={state.sos.firstName || ''}
-              onChange={e => updateSos('firstName', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="Max"
-            />
+      <div className="cg-master-card-small">
+        <div className="cg-master-inset p-3 space-y-3">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <div className="cg-master-label">Vorname</div>
+              <input
+                type="text"
+                value={state.sos.firstName || ''}
+                onChange={e => updateSos('firstName', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="Max"
+              />
+            </div>
+            <div className="flex-1">
+              <div className="cg-master-label">Nachname</div>
+              <input
+                type="text"
+                value={state.sos.lastName || ''}
+                onChange={e => updateSos('lastName', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="Mustermann"
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <div className="cg-master-label">Nachname</div>
-            <input
-              type="text"
-              value={state.sos.lastName || ''}
-              onChange={e => updateSos('lastName', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="Mustermann"
-            />
-          </div>
-        </div>
 
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <div className="cg-master-label">Straße</div>
-            <input
-              type="text"
-              value={state.sos.street || ''}
-              onChange={e => updateSos('street', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="Musterstraße"
-            />
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <div className="cg-master-label">Straße</div>
+              <input
+                type="text"
+                value={state.sos.street || ''}
+                onChange={e => updateSos('street', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="Musterstraße"
+              />
+            </div>
+            <div className="w-24">
+              <div className="cg-master-label">Nr.</div>
+              <input
+                type="text"
+                value={state.sos.houseNumber || ''}
+                onChange={e => updateSos('houseNumber', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="12"
+              />
+            </div>
           </div>
-          <div className="w-24">
-            <div className="cg-master-label">Nr.</div>
-            <input
-              type="text"
-              value={state.sos.houseNumber || ''}
-              onChange={e => updateSos('houseNumber', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="12"
-            />
-          </div>
-        </div>
 
-        <div className="flex gap-2">
-          <div className="w-28">
-            <div className="cg-master-label">PLZ</div>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={state.sos.zipCode || ''}
-              onChange={e => updateSos('zipCode', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="12345"
-            />
+          <div className="flex gap-2">
+            <div className="w-28">
+              <div className="cg-master-label">PLZ</div>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={state.sos.zipCode || ''}
+                onChange={e => updateSos('zipCode', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="12345"
+              />
+            </div>
+            <div className="flex-1">
+              <div className="cg-master-label">Ort</div>
+              <input
+                type="text"
+                value={state.sos.city || ''}
+                onChange={e => updateSos('city', e.target.value)}
+                className="w-full bg-transparent border-none outline-none cg-master-value"
+                placeholder="Musterstadt"
+              />
+            </div>
           </div>
-          <div className="flex-1">
-            <div className="cg-master-label">Ort</div>
-            <input
-              type="text"
-              value={state.sos.city || ''}
-              onChange={e => updateSos('city', e.target.value)}
-              className="w-full bg-transparent border-none outline-none cg-master-value"
-              placeholder="Musterstadt"
-            />
-          </div>
-        </div>
 
-        <div>
-          <div className="cg-master-label">Land</div>
-          <input
-            type="text"
-            value={state.sos.country || ''}
-            onChange={e => updateSos('country', e.target.value)}
-            className="w-full bg-transparent border-none outline-none cg-master-value"
-            placeholder="Deutschland"
-          />
+          <div>
+            <div className="cg-master-label">Land</div>
+            <input
+              type="text"
+              value={state.sos.country || ''}
+              onChange={e => updateSos('country', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="Deutschland"
+            />
+          </div>
         </div>
       </div>
     </div>
