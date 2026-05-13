@@ -37,13 +37,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [orientation, setOrientation] = useState({ pitch: 0, roll: 0, heading: 0 });
   const [showChangelog, setShowChangelog] = useState(false);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-
-  useEffect(() => {
-    if (activeTab !== 'profil' && activeTab !== 'status') {
-      setOnboardingDismissed(false);
-    }
-  }, [activeTab]);
+  const [hasUsedOnboarding, setHasUsedOnboarding] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -353,7 +347,7 @@ export default function App() {
   return (
     <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[var(--bg-app)] text-white print:min-h-0 print:pb-0 print:max-w-none print:mx-0 print:w-full">
       
-      {!onboardingDismissed && (() => {
+      {(() => {
         const p = state.profile;
         const s = state.sos;
         const needsOnboarding =
@@ -370,21 +364,21 @@ export default function App() {
           !s.lastName ||
           !s.ice1Name ||
           !s.ice1Phone;
-        if (needsOnboarding) {
-          return (
-            <OnboardingOverlay
-              onNavigate={(target) => {
-                setOnboardingDismissed(true);
-                if (target === 'profil') {
-                  setActiveTab('profil');
-                } else if (target === 'sos') {
-                  setActiveTab('status');
-                }
-              }}
-            />
-          );
-        }
-        return null;
+        if (!needsOnboarding) return null;
+        const hideOnWorkTabs = hasUsedOnboarding && (activeTab === 'profil' || activeTab === 'status');
+        if (hideOnWorkTabs) return null;
+        return (
+          <OnboardingOverlay
+            onNavigate={(target) => {
+              setHasUsedOnboarding(true);
+              if (target === 'profil') {
+                setActiveTab('profil');
+              } else if (target === 'sos') {
+                setActiveTab('status');
+              }
+            }}
+          />
+        );
       })()}
 
       <header className="h-[60px] px-4 bg-[var(--bg-input)] border-b-2 border-[var(--accent)] sticky top-0 z-40 flex justify-between items-center no-print overflow-hidden gap-4">
