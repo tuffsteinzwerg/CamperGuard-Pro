@@ -719,6 +719,29 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       <div className="cg-master-card-small space-y-3">
         <div className="flex gap-2">
           <div className="flex-1">
+            <div className="cg-master-label">Vorname</div>
+            <input
+              type="text"
+              value={state.sos.firstName || ''}
+              onChange={e => updateSos('firstName', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="Max"
+            />
+          </div>
+          <div className="flex-1">
+            <div className="cg-master-label">Nachname</div>
+            <input
+              type="text"
+              value={state.sos.lastName || ''}
+              onChange={e => updateSos('lastName', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="Mustermann"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <div className="flex-1">
             <div className="cg-master-label">Straße</div>
             <input
               type="text"

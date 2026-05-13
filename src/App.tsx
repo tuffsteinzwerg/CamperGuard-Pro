@@ -368,6 +368,8 @@ export default function App() {
           !p.freshWaterCapacity ||
           !p.wasteWaterCapacity ||
           !p.dieselCapacity ||
+          !s.firstName ||
+          !s.lastName ||
           !s.ice1Name ||
           !s.ice1Phone ||
           !s.bloodGroup ||

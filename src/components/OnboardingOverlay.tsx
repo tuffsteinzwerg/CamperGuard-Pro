@@ -22,6 +22,8 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
     !!p.dieselCapacity;
 
   const sosDone =
+    !!s.firstName &&
+    !!s.lastName &&
     !!s.ice1Name &&
     !!s.ice1Phone &&
     !!s.bloodGroup &&
