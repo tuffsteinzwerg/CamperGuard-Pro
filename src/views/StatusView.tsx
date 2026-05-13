@@ -635,68 +635,6 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
     </div>
 
     <div>
-      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
-        <Droplet size={16} className="text-[var(--accent)]" /> Blutgruppe
-      </h4>
-
-      <div className="cg-master-card-small">
-        <div className="cg-master-inset relative overflow-hidden">
-          <select
-            value={state.sos.bloodGroup || ""}
-            onChange={e => updateSos('bloodGroup', e.target.value)}
-            className="w-full bg-transparent border-none outline-none cg-master-value p-3 appearance-none cursor-pointer relative z-10"
-            style={{ color: state.sos.bloodGroup ? 'var(--accent)' : undefined, fontWeight: state.sos.bloodGroup ? 900 : undefined, fontSize: state.sos.bloodGroup ? '18px' : undefined }}
-          >
-            <option value="" className="text-black bg-white">Unbekannt</option>
-            <option value="A+" className="text-black bg-white">A+</option>
-            <option value="A-" className="text-black bg-white">A-</option>
-            <option value="B+" className="text-black bg-white">B+</option>
-            <option value="B-" className="text-black bg-white">B-</option>
-            <option value="AB+" className="text-black bg-white">AB+</option>
-            <option value="AB-" className="text-black bg-white">AB-</option>
-            <option value="0+" className="text-black bg-white">0+</option>
-            <option value="0-" className="text-black bg-white">0-</option>
-          </select>
-          <ChevronDown size={16} className="cg-master-muted pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 z-20" />
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
-        <HeartPulse size={16} className="text-[var(--accent)]" /> Vorerkrankungen / Allergien
-      </h4>
-
-      <div className="cg-master-card-small">
-        <div className="cg-master-inset p-3">
-          <textarea
-            value={state.sos.medicalConditions}
-            onChange={e => updateSos('medicalConditions', e.target.value)}
-            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[90px]"
-            placeholder="Bekannte Vorerkrankungen oder Allergien..."
-          />
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
-        <Pill size={16} className="text-[var(--accent)]" /> Medikamente
-      </h4>
-
-      <div className="cg-master-card-small">
-        <div className="cg-master-inset p-3">
-          <textarea
-            value={state.sos.medications}
-            onChange={e => updateSos('medications', e.target.value)}
-            placeholder="Regelmäßige Medikationen hier eintragen..."
-            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[70px]"
-          />
-        </div>
-      </div>
-    </div>
-
-    <div>
       {(() => {
         const fullAddress = [
           [state.sos.street, state.sos.houseNumber].filter(Boolean).join(' '),
@@ -801,6 +739,70 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
         </div>
       </div>
     </div>
+
+    <div>
+      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
+        <Droplet size={16} className="text-[var(--accent)]" /> Blutgruppe
+      </h4>
+
+      <div className="cg-master-card-small">
+        <div className="cg-master-inset relative overflow-hidden">
+          <select
+            value={state.sos.bloodGroup || ""}
+            onChange={e => updateSos('bloodGroup', e.target.value)}
+            className="w-full bg-transparent border-none outline-none cg-master-value p-3 appearance-none cursor-pointer relative z-10"
+            style={{ color: state.sos.bloodGroup ? 'var(--accent)' : undefined, fontWeight: state.sos.bloodGroup ? 900 : undefined, fontSize: state.sos.bloodGroup ? '18px' : undefined }}
+          >
+            <option value="" className="text-black bg-white">Unbekannt</option>
+            <option value="A+" className="text-black bg-white">A+</option>
+            <option value="A-" className="text-black bg-white">A-</option>
+            <option value="B+" className="text-black bg-white">B+</option>
+            <option value="B-" className="text-black bg-white">B-</option>
+            <option value="AB+" className="text-black bg-white">AB+</option>
+            <option value="AB-" className="text-black bg-white">AB-</option>
+            <option value="0+" className="text-black bg-white">0+</option>
+            <option value="0-" className="text-black bg-white">0-</option>
+          </select>
+          <ChevronDown size={16} className="cg-master-muted pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 z-20" />
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
+        <HeartPulse size={16} className="text-[var(--accent)]" /> Vorerkrankungen / Allergien
+      </h4>
+
+      <div className="cg-master-card-small">
+        <div className="cg-master-inset p-3">
+          <textarea
+            value={state.sos.medicalConditions}
+            onChange={e => updateSos('medicalConditions', e.target.value)}
+            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[90px]"
+            placeholder="Bekannte Vorerkrankungen oder Allergien..."
+          />
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
+        <Pill size={16} className="text-[var(--accent)]" /> Medikamente
+      </h4>
+
+      <div className="cg-master-card-small">
+        <div className="cg-master-inset p-3">
+          <textarea
+            value={state.sos.medications}
+            onChange={e => updateSos('medications', e.target.value)}
+            placeholder="Regelmäßige Medikationen hier eintragen..."
+            className="w-full bg-transparent border-none outline-none cg-master-value resize-none min-h-[70px]"
+          />
+        </div>
+      </div>
+    </div>
+
+
   </div>
 )}
 
