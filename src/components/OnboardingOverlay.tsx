@@ -12,7 +12,7 @@ export function OnboardingOverlay({ onNavigate }: OnboardingOverlayProps) {
         {/* Logo */}
         <div className="w-[140px] h-[140px] rounded-full cg-instrument-frame flex items-center justify-center mb-4 overflow-hidden">
           <img
-            src="/CGP3DLogo.png"
+            src="/CGP2DLogo.png"
             alt="CamperGuard Pro"
             className="w-[130px] h-[130px] object-cover"
           />
