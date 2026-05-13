@@ -10,13 +10,11 @@ export function OnboardingOverlay({ onNavigate }: OnboardingOverlayProps) {
       <div className="min-h-screen flex flex-col items-center justify-start px-5 py-8 max-w-md mx-auto">
 
         {/* Logo */}
-        <div className="w-[140px] h-[140px] rounded-full cg-instrument-frame flex items-center justify-center mb-4 overflow-hidden">
-          <img
-            src="/CGP2DLogo.png"
-            alt="CamperGuard Pro"
-            className="w-[130px] h-[130px] object-cover"
-          />
-        </div>
+        <img
+          src="/CGP2DLogo.png"
+          alt="CamperGuard Pro"
+          className="w-[160px] h-[160px] object-contain mb-4"
+        />
 
         {/* Titel */}
         <div className="typo-engraved text-center mb-1">Einrichtung</div>

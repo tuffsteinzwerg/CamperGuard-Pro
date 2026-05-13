@@ -40,6 +40,12 @@ export default function App() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   useEffect(() => {
+    if (activeTab !== 'profil' && activeTab !== 'status') {
+      setOnboardingDismissed(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     (async () => {
       try {
         const db = await initDB();
