@@ -15,6 +15,7 @@ import { InhaltView } from './views/InhaltView';
 import { LogbuchView } from './views/LogbuchView';
 import { ReiseView } from './views/ReiseView';
 import { CHANGELOG } from './data/changelog';
+import { OnboardingOverlay } from './components/OnboardingOverlay';
 
 const DB_NAME = 'CamperGuardDB_V2';
 
@@ -345,6 +346,39 @@ export default function App() {
   return (
     <div className="min-h-screen pb-24 lg:max-w-none max-w-md mx-auto relative bg-[var(--bg-app)] text-white print:min-h-0 print:pb-0 print:max-w-none print:mx-0 print:w-full">
       
+      {(() => {
+        const p = state.profile;
+        const s = state.sos;
+        const needsOnboarding =
+          !p.vehicleName ||
+          !p.emptyWeight ||
+          !p.maxWeight ||
+          !p.height ||
+          !p.width ||
+          !p.length ||
+          !p.freshWaterCapacity ||
+          !p.wasteWaterCapacity ||
+          !p.dieselCapacity ||
+          !s.firstName ||
+          !s.lastName ||
+          !s.ice1Name ||
+          !s.ice1Phone;
+        if (needsOnboarding) {
+          return (
+            <OnboardingOverlay
+              onNavigate={(target) => {
+                if (target === 'profil') {
+                  setActiveTab('profil');
+                } else if (target === 'sos') {
+                  setActiveTab('status');
+                }
+              }}
+            />
+          );
+        }
+        return null;
+      })()}
+
       <header className="h-[60px] px-4 bg-[var(--bg-input)] border-b-2 border-[var(--accent)] sticky top-0 z-40 flex justify-between items-center no-print overflow-hidden gap-4">
         <div className="flex items-center gap-2 flex-shrink-0">
           <ShieldCheck className="text-[var(--accent)]" size={20} />
