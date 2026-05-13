@@ -22,10 +22,14 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
     !!p.dieselCapacity;
 
   const sosDone =
-    !!s.firstName &&
-    !!s.lastName &&
     !!s.ice1Name &&
-    !!s.ice1Phone;
+    !!s.ice1Phone &&
+    !!s.bloodGroup &&
+    !!s.street &&
+    !!s.houseNumber &&
+    !!s.zipCode &&
+    !!s.city &&
+    !!s.country;
 
   return (
     <div className="fixed inset-0 z-[200] bg-[var(--bg-app)] overflow-y-auto">

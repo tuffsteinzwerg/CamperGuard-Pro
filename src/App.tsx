@@ -37,7 +37,13 @@ export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [orientation, setOrientation] = useState({ pitch: 0, roll: 0, heading: 0 });
   const [showChangelog, setShowChangelog] = useState(false);
-  const [hasUsedOnboarding, setHasUsedOnboarding] = useState(false);
+  const [dismissedForTab, setDismissedForTab] = useState<'profil' | 'status' | null>(null);
+
+  useEffect(() => {
+    if (dismissedForTab && activeTab !== dismissedForTab) {
+      setDismissedForTab(null);
+    }
+  }, [activeTab, dismissedForTab]);
   const [showSos, setShowSos] = useState(false);
   const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
 
@@ -362,21 +368,25 @@ export default function App() {
           !p.freshWaterCapacity ||
           !p.wasteWaterCapacity ||
           !p.dieselCapacity ||
-          !s.firstName ||
-          !s.lastName ||
           !s.ice1Name ||
-          !s.ice1Phone;
+          !s.ice1Phone ||
+          !s.bloodGroup ||
+          !s.street ||
+          !s.houseNumber ||
+          !s.zipCode ||
+          !s.city ||
+          !s.country;
         if (!needsOnboarding) return null;
-        const hideOnWorkTabs = hasUsedOnboarding && (activeTab === 'profil' || activeTab === 'status');
-        if (hideOnWorkTabs) return null;
+        if (dismissedForTab && activeTab === dismissedForTab) return null;
         return (
           <OnboardingOverlay
             state={state}
             onNavigate={(target) => {
-              setHasUsedOnboarding(true);
               if (target === 'profil') {
+                setDismissedForTab('profil');
                 setActiveTab('profil');
               } else if (target === 'sos') {
+                setDismissedForTab('status');
                 setActiveTab('status');
                 setShowSos(true);
                 setSosTab('id');

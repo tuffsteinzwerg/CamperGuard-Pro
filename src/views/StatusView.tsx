@@ -697,25 +697,83 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
     </div>
 
     <div>
-      <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
-        {state.sos.address?.trim() ? (
-            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.sos.address)}`} target="_blank" rel="noreferrer">
+      {(() => {
+        const fullAddress = [
+          [state.sos.street, state.sos.houseNumber].filter(Boolean).join(' '),
+          [state.sos.zipCode, state.sos.city].filter(Boolean).join(' '),
+          state.sos.country
+        ].filter(Boolean).join(', ');
+        return (
+          <h4 className="cg-master-section-title !mb-2 !mt-4 flex items-center gap-2">
+            {fullAddress.trim() ? (
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`} target="_blank" rel="noreferrer">
+                    <MapPin size={16} className="text-[var(--accent)]" />
+                </a>
+            ) : (
                 <MapPin size={16} className="text-[var(--accent)]" />
-            </a>
-        ) : (
-            <MapPin size={16} className="text-[var(--accent)]" />
-        )} Adresse
-      </h4>
+            )} Adresse
+          </h4>
+        );
+      })()}
 
-      <div className="cg-master-card-small">
-        <div className="cg-master-label">Anschrift</div>
-        <textarea 
-          value={state.sos.address || ''} 
-          onChange={e => updateSos('address', e.target.value)} 
-          className="cg-master-textarea w-full cg-master-value" 
-          rows={5}
-          placeholder={"Max Mustermann\nMusterstraße 12\n12345 Musterstadt\nDeutschland"} 
-        />
+      <div className="cg-master-card-small space-y-3">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <div className="cg-master-label">Straße</div>
+            <input
+              type="text"
+              value={state.sos.street || ''}
+              onChange={e => updateSos('street', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="Musterstraße"
+            />
+          </div>
+          <div className="w-24">
+            <div className="cg-master-label">Nr.</div>
+            <input
+              type="text"
+              value={state.sos.houseNumber || ''}
+              onChange={e => updateSos('houseNumber', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="12"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <div className="w-28">
+            <div className="cg-master-label">PLZ</div>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={state.sos.zipCode || ''}
+              onChange={e => updateSos('zipCode', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="12345"
+            />
+          </div>
+          <div className="flex-1">
+            <div className="cg-master-label">Ort</div>
+            <input
+              type="text"
+              value={state.sos.city || ''}
+              onChange={e => updateSos('city', e.target.value)}
+              className="w-full bg-transparent border-none outline-none cg-master-value"
+              placeholder="Musterstadt"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="cg-master-label">Land</div>
+          <input
+            type="text"
+            value={state.sos.country || ''}
+            onChange={e => updateSos('country', e.target.value)}
+            className="w-full bg-transparent border-none outline-none cg-master-value"
+            placeholder="Deutschland"
+          />
+        </div>
       </div>
     </div>
   </div>
