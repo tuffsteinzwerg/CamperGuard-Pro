@@ -70,7 +70,7 @@ export interface ArchiveSummary {
 
 export interface Archive {
   id: string;
-  type: 'year' | 'trip';
+  type: 'year' | 'trip' | 'fuel' | 'triplog' | 'business' | 'spots';
   name: string;
   year?: number;
   dateFrom: string;

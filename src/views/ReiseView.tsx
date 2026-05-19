@@ -6,11 +6,10 @@ import L from 'leaflet';
 
 let globalLeafletMap: L.Map | null = null;
 
-const MapHandlerComponent = ({ destination, setDestination, setDistance, range }: { destination: [number, number] | null, setDestination: (d: [number, number]) => void, setDistance: (d: number) => void, range: number }) => {
+const MapHandlerComponent = ({ destination, setDestination }: { destination: [number, number] | null, setDestination: (d: [number, number]) => void }) => {
   useMapEvents({
     click(e) {
       setDestination([e.latlng.lat, e.latlng.lng]);
-      setDistance(Math.floor(Math.random() * (range * 0.8)) + 50); // dummy dist
     },
   });
   return destination ? <Marker position={destination} /> : null;
@@ -27,7 +26,6 @@ const ResizeMapComponent = () => {
 
 export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: any) {
   const [destination, setDestination] = useState<[number, number] | null>(null);
-  const [distance, setDistance] = useState<number | null>(null);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
   const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');
   const [soundTestIndex, setSoundTestIndex] = useState(0);
@@ -455,8 +453,6 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
 
   const range = ((state.profile.dieselCapacity || 80) / avgConsumption) * 100;
 
-  const isCritical = distance ? distance > range : false;
-
   return (
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
       {orientationPermission === 'prompt' && (
@@ -817,7 +813,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
         <div className="relative overflow-hidden z-0 h-[400px] w-full cg-inset">
             <MapContainer id="map" center={[51.1657, 10.4515]} zoom={6} zoomControl={false} style={{ height: '100%', width: '100%', background: '#0a0b0c' }}>
               <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-              <MapHandlerComponent destination={destination} setDestination={setDestination} setDistance={setDistance} range={range} />
+              <MapHandlerComponent destination={destination} setDestination={setDestination} />
               <ResizeMapComponent />
             </MapContainer>
         </div>

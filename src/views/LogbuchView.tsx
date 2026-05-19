@@ -66,6 +66,12 @@ export function LogbuchView({ state, setState }: any) {
   const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
   const [archiveSelection, setArchiveSelection] = useState('tanken');
 
+  const [businessArchiveMode, setBusinessArchiveMode] = useState<'all' | 'range'>('all');
+  const [businessArchiveRange, setBusinessArchiveRange] = useState({ from: '', to: '' });
+
+  const [spotsArchiveMode, setSpotsArchiveMode] = useState<'all' | 'range'>('all');
+  const [spotsArchiveRange, setSpotsArchiveRange] = useState({ from: '', to: '' });
+
   const getLastKnownKm = (): number => {
     let highestKm = 0;
     (state.fuelLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.km) || 0));
@@ -191,41 +197,6 @@ export function LogbuchView({ state, setState }: any) {
     a.download = `Tour_${new Date().toISOString().split('T')[0]}_Spots.gpx`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const closeYear = () => {
-      if(!confirm(`Möchtest du das Jahr ${currentYear} abschließen und archivieren?`)) return;
-
-      const currentSpots = (state.spots || []).filter((s:any) => new Date(s.date).getFullYear() === currentYear);
-
-      const archive = {
-          id: `archive-year-${currentYear}-${Date.now()}`,
-          type: 'year' as const,
-          name: String(currentYear),
-          year: currentYear,
-          dateFrom: `${currentYear}-01-01`,
-          dateTo: `${currentYear}-12-31`,
-          createdAt: new Date().toISOString(),
-          fuelLog: currentFuelLog,
-          tripLog: currentTripLog,
-          businessTripLog: currentBusinessTripLog,
-          spots: currentSpots,
-          summary: {
-              totalKm,
-              totalLiters,
-              totalEur,
-              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
-          },
-      };
-
-      setState({
-          ...state, 
-          archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => new Date(f.date).getFullYear() !== currentYear),
-          tripLog: state.tripLog.filter((t:any) => new Date(t.date).getFullYear() !== currentYear),
-          businessTripLog: state.businessTripLog.filter((t:any) => new Date(t.date).getFullYear() !== currentYear),
-          spots: state.spots.filter((s:any) => new Date(s.date).getFullYear() !== currentYear)
-      });
   };
 
   const createFuelArchive = () => {
@@ -415,8 +386,167 @@ export function LogbuchView({ state, setState }: any) {
       });
   };
 
+  const createBusinessTripArchive = () => {
+      let archiveBusinessLog = [...currentBusinessTripLog];
+
+      if (businessArchiveMode === 'range') {
+          if (!businessArchiveRange.from || !businessArchiveRange.to) {
+              alert('Bitte Von- und Bis-Datum auswählen.');
+              return;
+          }
+
+          archiveBusinessLog = (state.businessTripLog || []).filter((t:any) => {
+              return (
+                  t.date >= businessArchiveRange.from &&
+                  t.date <= businessArchiveRange.to
+              );
+          });
+
+          if (archiveBusinessLog.length === 0) {
+              alert('Keine Fahrtenbuch-Einträge im gewählten Zeitraum gefunden.');
+              return;
+          }
+      }
+
+      if (archiveBusinessLog.length === 0) {
+          alert('Keine Fahrtenbuch-Einträge zum Archivieren vorhanden.');
+          return;
+      }
+
+      const totalKm = archiveBusinessLog.reduce((sum:number, trip:any) => {
+          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
+          return sum + (isNaN(diff) ? 0 : diff);
+      }, 0);
+
+      const archiveDateFrom =
+          businessArchiveMode === 'range'
+              ? businessArchiveRange.from
+              : archiveBusinessLog
+                    .map((t:any) => t.date)
+                    .sort()[0];
+
+      const archiveDateTo =
+          businessArchiveMode === 'range'
+              ? businessArchiveRange.to
+              : archiveBusinessLog
+                    .map((t:any) => t.date)
+                    .sort()
+                    .slice(-1)[0];
+
+      const archive = {
+          id: `archive-business-${Date.now()}`,
+          type: 'business',
+          name: `Fahrtenbuch § ${new Date().toLocaleDateString('de-DE')}`,
+          dateFrom: archiveDateFrom,
+          dateTo: archiveDateTo,
+          createdAt: new Date().toISOString(),
+          fuelLog: [],
+          tripLog: [],
+          businessTripLog: archiveBusinessLog,
+          spots: [],
+          summary: {
+              totalKm,
+              totalLiters: 0,
+              totalEur: 0,
+              fuelConsumption: null,
+          },
+      };
+
+      if (!confirm(`Fahrtenbuch § archivieren?\n\n${archiveBusinessLog.length} Einträge werden archiviert und aus dem aktiven Fahrtenbuch entfernt.`)) {
+          return;
+      }
+
+      const archivedIds = new Set(archiveBusinessLog.map((t:any) => t.id));
+
+      setState({
+          ...state,
+          archives: [...state.archives, archive],
+          businessTripLog: (state.businessTripLog || []).filter((t:any) => !archivedIds.has(t.id))
+      });
+
+      setBusinessArchiveMode('all');
+      setBusinessArchiveRange({ from: '', to: '' });
+  };
+
+  const createSpotsArchive = () => {
+      let archiveSpots = [...(state.spots || [])];
+
+      if (spotsArchiveMode === 'range') {
+          if (!spotsArchiveRange.from || !spotsArchiveRange.to) {
+              alert('Bitte Von- und Bis-Datum auswählen.');
+              return;
+          }
+
+          archiveSpots = (state.spots || []).filter((s:any) => {
+              return (
+                  s.date >= spotsArchiveRange.from &&
+                  s.date <= spotsArchiveRange.to
+              );
+          });
+
+          if (archiveSpots.length === 0) {
+              alert('Keine POIs im gewählten Zeitraum gefunden.');
+              return;
+          }
+      }
+
+      if (archiveSpots.length === 0) {
+          alert('Keine POIs zum Archivieren vorhanden.');
+          return;
+      }
+
+      const archiveDateFrom =
+          spotsArchiveMode === 'range'
+              ? spotsArchiveRange.from
+              : archiveSpots
+                    .map((s:any) => s.date)
+                    .sort()[0];
+
+      const archiveDateTo =
+          spotsArchiveMode === 'range'
+              ? spotsArchiveRange.to
+              : archiveSpots
+                    .map((s:any) => s.date)
+                    .sort()
+                    .slice(-1)[0];
+
+      const archive = {
+          id: `archive-spots-${Date.now()}`,
+          type: 'spots',
+          name: `POIs ${new Date().toLocaleDateString('de-DE')}`,
+          dateFrom: archiveDateFrom,
+          dateTo: archiveDateTo,
+          createdAt: new Date().toISOString(),
+          fuelLog: [],
+          tripLog: [],
+          businessTripLog: [],
+          spots: archiveSpots,
+          summary: {
+              totalKm: 0,
+              totalLiters: 0,
+              totalEur: 0,
+              fuelConsumption: null,
+          },
+      };
+
+      if (!confirm(`POIs archivieren?\n\n${archiveSpots.length} Einträge werden archiviert und aus der aktiven POI-Liste entfernt.`)) {
+          return;
+      }
+
+      const archivedIds = new Set(archiveSpots.map((s:any) => s.id));
+
+      setState({
+          ...state,
+          archives: [...state.archives, archive],
+          spots: (state.spots || []).filter((s:any) => !archivedIds.has(s.id))
+      });
+
+      setSpotsArchiveMode('all');
+      setSpotsArchiveRange({ from: '', to: '' });
+  };
+
   const deleteArchive = (archive: any) => {
-      const isYearArchive = archive.type === 'year';
+      const isYearArchive = archive.type === 'year' || archive.type === 'triplog' || archive.type === 'business';
 
       const warningText = isYearArchive
           ? 'Dieses Archiv enthält möglicherweise steuerrelevante Fahrtenbuchdaten mit gesetzlicher Aufbewahrungspflicht von bis zu 10 Jahren.'
@@ -905,25 +1035,89 @@ export function LogbuchView({ state, setState }: any) {
                       )}
 
                       {archiveSelection === 'fahrtenbuch' && (
-                          <button 
-                              className="cg-master-button !py-2 px-4 w-full"
-                              onClick={() => {
-                                  alert('Archivierung für Fahrtenbuch § folgt im nächsten Schritt.');
-                              }}
-                          >
-                              Archivieren
-                          </button>
+                          <div className="space-y-3">
+                              <select
+                                  className="cg-master-input !py-2 w-full"
+                                  value={businessArchiveMode}
+                                  onChange={(e) => setBusinessArchiveMode(e.target.value as 'all' | 'range')}
+                              >
+                                  <option value="all">Alle Einträge archivieren</option>
+                                  <option value="range">Einträge nach Zeitraum archivieren</option>
+                              </select>
+
+                              {businessArchiveMode === 'range' && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <input
+                                          type="date"
+                                          value={businessArchiveRange.from}
+                                          onChange={(e) => setBusinessArchiveRange({
+                                              ...businessArchiveRange,
+                                              from: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                      <input
+                                          type="date"
+                                          value={businessArchiveRange.to}
+                                          onChange={(e) => setBusinessArchiveRange({
+                                              ...businessArchiveRange,
+                                              to: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                  </div>
+                              )}
+
+                              <button 
+                                  className="cg-master-button !py-2 px-4 w-full"
+                                  onClick={createBusinessTripArchive}
+                              >
+                                  Fahrtenbuch § archivieren
+                              </button>
+                          </div>
                       )}
 
                       {archiveSelection === 'pois' && (
-                          <button 
-                              className="cg-master-button !py-2 px-4 w-full"
-                              onClick={() => {
-                                  alert('Archivierung für POIs folgt im nächsten Schritt.');
-                              }}
-                          >
-                              Archivieren
-                          </button>
+                          <div className="space-y-3">
+                              <select
+                                  className="cg-master-input !py-2 w-full"
+                                  value={spotsArchiveMode}
+                                  onChange={(e) => setSpotsArchiveMode(e.target.value as 'all' | 'range')}
+                              >
+                                  <option value="all">Alle POIs archivieren</option>
+                                  <option value="range">POIs nach Zeitraum archivieren</option>
+                              </select>
+
+                              {spotsArchiveMode === 'range' && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <input
+                                          type="date"
+                                          value={spotsArchiveRange.from}
+                                          onChange={(e) => setSpotsArchiveRange({
+                                              ...spotsArchiveRange,
+                                              from: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                      <input
+                                          type="date"
+                                          value={spotsArchiveRange.to}
+                                          onChange={(e) => setSpotsArchiveRange({
+                                              ...spotsArchiveRange,
+                                              to: e.target.value
+                                          })}
+                                          className="cg-master-input"
+                                      />
+                                  </div>
+                              )}
+
+                              <button 
+                                  className="cg-master-button !py-2 px-4 w-full"
+                                  onClick={createSpotsArchive}
+                              >
+                                  POIs archivieren
+                              </button>
+                          </div>
                       )}
                   </div>
               </div>
@@ -935,6 +1129,10 @@ export function LogbuchView({ state, setState }: any) {
                           setSelectedArchive(a);
                           if (a.type === 'triplog') {
                               setArchiveViewTab('trip');
+                          } else if (a.type === 'business') {
+                              setArchiveViewTab('business');
+                          } else if (a.type === 'spots') {
+                              setArchiveViewTab('spots');
                           } else {
                               setArchiveViewTab('tank');
                           }
@@ -950,7 +1148,7 @@ export function LogbuchView({ state, setState }: any) {
 
                               <div className="flex flex-wrap items-center gap-2">
                                   <span className="cg-type-meta uppercase tracking-wide">
-                                      {a.type === 'trip' ? 'Reisearchiv' : 'Jahresabschluss'}
+                                      {a.type === 'year' ? 'Jahresabschluss' : a.type === 'fuel' ? 'Tankprotokoll' : a.type === 'triplog' ? 'Reisetagebuch' : a.type === 'business' ? 'Fahrtenbuch §' : a.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv'}
                                   </span>
 
                                   <span className="cg-type-meta">
@@ -1022,7 +1220,7 @@ export function LogbuchView({ state, setState }: any) {
                             <div className="space-y-2">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="cg-type-meta uppercase tracking-wide">
-                                        {selectedArchive.type === 'trip' ? 'Reisearchiv' : 'Jahresabschluss'}
+                                        {selectedArchive.type === 'year' ? 'Jahresabschluss' : selectedArchive.type === 'fuel' ? 'Tankprotokoll' : selectedArchive.type === 'triplog' ? 'Reisetagebuch' : selectedArchive.type === 'business' ? 'Fahrtenbuch §' : selectedArchive.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv'}
                                     </span>
                                 </div>
 
@@ -1061,7 +1259,7 @@ export function LogbuchView({ state, setState }: any) {
                             </div>
                         </div>
 
-                        {selectedArchive.type === 'year' && (
+                        {(selectedArchive.type === 'year' || selectedArchive.type === 'triplog' || selectedArchive.type === 'business') && (
                             <div className="cg-master-card-small !mb-0 !p-3 border border-[var(--status-warning)] bg-[rgba(255,165,0,0.08)]">
                                 <div className="cg-type-meta leading-relaxed">
                                     Dieses Jahresarchiv kann steuerrelevante Fahrtenbuchdaten enthalten.

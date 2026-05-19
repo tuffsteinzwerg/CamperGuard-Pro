@@ -378,6 +378,29 @@ export default function App() {
           !s.zipCode ||
           !s.city ||
           !s.country;
+        if (needsOnboarding) {
+          const missing: string[] = [];
+          if (!p.vehicleName) missing.push('profile.vehicleName');
+          if (!p.emptyWeight) missing.push('profile.emptyWeight');
+          if (!p.maxWeight) missing.push('profile.maxWeight');
+          if (!p.height) missing.push('profile.height');
+          if (!p.width) missing.push('profile.width');
+          if (!p.length) missing.push('profile.length');
+          if (!p.freshWaterCapacity) missing.push('profile.freshWaterCapacity');
+          if (!p.wasteWaterCapacity) missing.push('profile.wasteWaterCapacity');
+          if (!p.dieselCapacity) missing.push('profile.dieselCapacity');
+          if (!s.firstName) missing.push('sos.firstName');
+          if (!s.lastName) missing.push('sos.lastName');
+          if (!s.ice1Name) missing.push('sos.ice1Name');
+          if (!s.ice1Phone) missing.push('sos.ice1Phone');
+          if (!s.bloodGroup) missing.push('sos.bloodGroup');
+          if (!s.street) missing.push('sos.street');
+          if (!s.houseNumber) missing.push('sos.houseNumber');
+          if (!s.zipCode) missing.push('sos.zipCode');
+          if (!s.city) missing.push('sos.city');
+          if (!s.country) missing.push('sos.country');
+          console.warn('🚨 ONBOARDING — Fehlende Felder:', missing);
+        }
         if (!needsOnboarding) return null;
         if (dismissedForTab && activeTab === dismissedForTab) return null;
         return (
