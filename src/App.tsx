@@ -235,12 +235,17 @@ export default function App() {
       }
       
       try {
-        const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 5000);
+        const res = await fetch('https://open.er-api.com/v6/latest/EUR', { signal: abortController.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data && data.rates) {
            setState(prev => ({...prev, exchangeRates: data.rates}));
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn('Exchange rates could not be loaded (offline or timeout):', e);
+      }
       
       setLoading(false);
     })();
@@ -345,11 +350,6 @@ export default function App() {
     };
   }, []);
 
-  const demoSeed = () => {
-      setState(INITIAL_STATE);
-      alert("Demo init gestartet.");
-  };
-
   if (loading) return <div className="fixed inset-0 bg-[var(--bg-app)] z-[999]" />;
 
   return (
@@ -442,14 +442,14 @@ export default function App() {
             {activeTab === 'inhalt' && <InhaltView state={state} setState={setState} />}
             {activeTab === 'logbuch' && <LogbuchView state={state} setState={setState} />}
             {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} orientationPermission={orientationPermission} requestOrientationPermission={requestOrientationPermission} />}
-            {activeTab === 'profil' && <ProfilView state={state} setState={setState} demoSeed={demoSeed} />}
+            {activeTab === 'profil' && <ProfilView state={state} setState={setState} />}
           </motion.div>
         </AnimatePresence>
         <div 
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.7-dev
+          CamperGuard Pro v0.1.8-dev
         </div>
 
         {showChangelog && (
@@ -457,7 +457,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.7-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.8-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 22.05.2026</p>
                  </div>
                  <button 

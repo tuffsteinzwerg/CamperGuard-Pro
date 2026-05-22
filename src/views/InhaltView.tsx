@@ -1,11 +1,17 @@
 import { useState, useMemo } from 'react';
+import type { AppState } from '../types';
 import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
 
 // --- TAB: INHALT ---
 
-export function InhaltView({ state, setState }: any) {
+interface InhaltViewProps {
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
+}
+
+export function InhaltView({ state, setState }: InhaltViewProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Küche");
   const [isAddingItem, setIsAddingItem] = useState(false);

@@ -143,40 +143,10 @@ body {
   box-shadow: var(--cg-shadow-card);
 }
 
-.cg-card {
-  background: var(--cg-bg-card);
-  border: 1px solid var(--cg-border);
-  border-radius: var(--cg-radius-card);
-  box-shadow: var(--cg-shadow-card);
-}
-
-.cg-instrument-frame {
-  border-radius: var(--cg-radius-instrument);
-  background: var(--cg-bg-instrument);
-  border: 1px solid #1a1a1c;
-  box-shadow: var(--cg-shadow-instrument);
-}
-
-.cg-instrument-inner {
-  border-radius: var(--cg-radius-instrument);
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
-}
-
 .cg-dark-field {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-}
-
-.cg-soft-button {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 999px;
-  transition: all 0.2s ease;
-}
-.cg-soft-button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .icon-circle {
@@ -195,20 +165,6 @@ body {
   height: 18px;
 }
 
-.input-standard {
-  width: 100%;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  color: white;
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  outline: none;
-}
-.input-standard:focus {
-  border-color: var(--accent);
-}
-
 .btn-primary {
   background: var(--accent);
   color: black;
@@ -221,35 +177,10 @@ body {
   border: 1px solid var(--accent-dark);
 }
 
-.btn-secondary {
-  background: transparent;
-  color: white;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}
-
 .divider {
   border: none;
   border-top: 1px solid var(--border);
   margin: 12px 0;
-}
-
-.progress-bar-track {
-  width: 100%;
-  height: 8px;
-  background: #444444;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease;
 }
 
 @media print {
@@ -257,24 +188,6 @@ body {
     display: none !important;
   }
 }
-
-.high-density-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-@media (min-width: 1024px) {
-  .high-density-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr 320px;
-    gap: 16px;
-  }
-}
-
-
-
-
 
 .brand-title {
   font-weight: 900;
@@ -448,20 +361,6 @@ option {
   border-radius: 50%;
 }
 
-/* ==========================================================================
-   LEGACY DESIGN CLASSES
-   Achtung: Diese Klassen werden sukzessive durch das neue 
-   Master Instrument System ersetzt.
-   ========================================================================== */
-.card-instrument {
-  background: linear-gradient(145deg, #0c0f12 0%, #07090b 100%);
-  border-radius: var(--cg-radius-panel);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 10px rgba(0,0,0,0.6);
-  border: none;
-  overflow: hidden;
-  position: relative;
-}
-
 .typo-engraved {
   font-size: 13px;
   font-weight: 700;
@@ -498,12 +397,6 @@ option {
   text-shadow: 0 0 8px rgba(255,122,0,0.6), 0 0 16px rgba(255,122,0,0.3);
 }
 
-.cg-inset-panel {
-  background: linear-gradient(180deg, #0b0f14 0%, #070a0d 100%);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 8px 20px rgba(0,0,0,0.6), 0 8px 20px rgba(0,0,0,0.6);
-  border-radius: var(--cg-radius-panel);
-}
-
 .cg-technical-label {
   font-size: 8px;
   color: #666;
@@ -532,29 +425,6 @@ option {
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(255,180,0,0.25);
 }
 
-/* =========================
-   CAMPERGUARD DESIGN SYSTEM
-   (DO NOT MODIFY)
-========================= */
-
-.cg-panel {
-  background: #0f1114;
-  border-radius: 16px;
-  box-shadow:
-    inset 0 2px 6px rgba(255,255,255,0.03),
-    inset 0 -6px 16px rgba(0,0,0,0.6),
-    0 8px 24px rgba(0,0,0,0.4);
-  position: relative;
-}
-
-.cg-inset {
-  background: #111418;
-  border-radius: 12px;
-  box-shadow:
-    inset 0 1px 3px rgba(255,255,255,0.03),
-    inset 0 -3px 8px rgba(0,0,0,0.6);
-}
-
 .cg-alert {
   border-left: 3px solid;
   border-radius: 10px;
@@ -562,51 +432,6 @@ option {
   box-shadow:
     inset 0 1px 2px rgba(255,255,255,0.02),
     inset 0 -3px 8px rgba(0,0,0,0.6);
-}
-
-.cg-alert-red { border-color: #ff4d4d; }
-.cg-alert-yellow { border-color: #ffcc00; }
-.cg-alert-green { border-color: #22c55e; }
-
-.cg-instrument {
-  position: relative;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cg-instrument-inset {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow:
-    inset 0 8px 20px rgba(0,0,0,0.8),
-    inset 0 -4px 10px rgba(255,255,255,0.05);
-}
-
-.cg-instrument-ring {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  box-shadow:
-    0 4px 10px rgba(0,0,0,0.8),
-    inset 0 2px 6px rgba(255,255,255,0.06);
-}
-
-.cg-instrument-inner {
-  position: absolute;
-  inset: 18%;
-  border-radius: 50%;
-  box-shadow:
-    inset 0 6px 14px rgba(0,0,0,0.9),
-    inset 0 -2px 6px rgba(255,255,255,0.04);
-}
-
-.cg-instrument-center {
-  position: relative;
-  z-index: 30;
-  text-align: center;
 }
 
 /* ==========================================================================
@@ -883,106 +708,3 @@ option {
   opacity: 1;
 }
 
-/* ==================================================
-   CamperGuard Typography System
-   ================================================== */
-
-.cg-type-page-title {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 900;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-}
-
-.cg-type-section-title {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-secondary);
-}
-
-.cg-type-card-title {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 750;
-  line-height: 1.25;
-  color: white;
-}
-
-.cg-type-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-tertiary);
-}
-
-.cg-type-meta {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.35;
-  color: var(--text-secondary);
-}
-
-.cg-type-body {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.4;
-  color: white;
-}
-
-.cg-type-value {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.15;
-  color: white;
-  font-variant-numeric: tabular-nums;
-}
-
-.cg-type-value-large {
-  font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.cg-type-value-hero {
-  font-family: var(--font-sans);
-  font-size: 48px;
-  font-weight: 900;
-  line-height: 1;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
-.cg-type-tab {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-tertiary);
-}
-
-.cg-type-button {
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}

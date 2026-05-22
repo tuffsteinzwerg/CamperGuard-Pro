@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react';
+import type { AppState } from '../types';
 import { ShieldPlus, Phone, Edit2, Trash2, MapPin, AlertTriangle, Plus, Check, Pill, Scale, CheckCircle, ChevronRight, Droplet, Fuel, Settings, ShieldCheck, Flame, ChevronDown, User, HeartPulse } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber, formatWeight, normalizeGearName } from '../lib/formatters';
 
-export function StatusView({ state, setState, orientation, showSos, setShowSos, sosTab, setSosTab }: any) {
+interface StatusViewProps {
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
+  orientation: { pitch: number; roll: number; heading: number };
+  showSos: boolean;
+  setShowSos: (v: boolean) => void;
+  sosTab: 'hilfe' | 'id' | 'inhalt';
+  setSosTab: (t: 'hilfe' | 'id' | 'inhalt') => void;
+}
+
+export function StatusView({ state, setState, orientation, showSos, setShowSos, sosTab, setSosTab }: StatusViewProps) {
   const [editingPharmacyId, setEditingPharmacyId] = useState<string | null>(null);
   const [editingGearId, setEditingGearId] = useState<string | null>(null);
   const [deletingGearItem, setDeletingGearItem] = useState<any>(null);

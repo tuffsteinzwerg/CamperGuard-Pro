@@ -1,7 +1,8 @@
 import React from 'react';
+import type { AppState } from '../types';
 import { PrintHeader } from './PrintHeader';
 
-export function InhaltPrintView({ state }: { state: any }) {
+export function InhaltPrintView({ state }: { state: AppState }) {
     const fixedCategories = ["Küche", "Wohnen", "Bad", "Garage", "Technik"];
     const otherCategories = Object.keys(state.subcategories || {}).filter(c => !fixedCategories.includes(c));
     const allCategories = [...fixedCategories, ...otherCategories];

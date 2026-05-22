@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import type { AppState } from '../types';
 import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
@@ -43,7 +44,15 @@ const ResizeMapComponent = () => {
   return null;
 };
 
-export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: any) {
+interface ReiseViewProps {
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
+  orientation: { pitch: number; roll: number; heading: number };
+  orientationPermission: 'granted' | 'denied' | 'prompt' | 'unknown';
+  requestOrientationPermission: () => Promise<void>;
+}
+
+export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: ReiseViewProps) {
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
   const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');
@@ -799,7 +808,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                                  </div>
                               </div>
                             </>
-                          ) : ( <div className="cg-master-inset rounded-xl p-4 text-center"> <div className="cg-master-label !mb-1">Höhenkorrektur nicht verfügbar</div> <div className="cg-type-meta cg-master-muted">Bitte Spurbreite und Achsabstand im Profil eintragen.</div> </div> )}
+                          ) : ( <div className="cg-master-inset rounded-xl p-4 text-center"> <div className="cg-master-label !mb-1">Höhenkorrektur nicht verfügbar</div> <div className="typo-body-dim cg-master-muted">Bitte Spurbreite und Achsabstand im Profil eintragen.</div> </div> )}
                         </>
                       );
                     })()}

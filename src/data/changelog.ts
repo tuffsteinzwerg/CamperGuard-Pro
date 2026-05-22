@@ -6,6 +6,27 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.1.8-dev",
+    "date": "22.05.2026",
+    "entries": [
+      "555. CSS-Cleanup: 19 unbenutzte CSS-Klassen entfernt (cg-card, cg-instrument-*, cg-panel, cg-inset, cg-soft-button, input-standard, btn-secondary, progress-bar-*, high-density-grid, card-instrument). ~240 Zeilen gespart.",
+      "554. CSS-Cleanup: Verwaiste Kommentar-Header ('LEGACY DESIGN CLASSES', 'CAMPERGUARD DESIGN SYSTEM') bereinigt.",
+      "553. Typo-Konsolidierung: cg-type-* CSS-Definitionen aus index.css gelöscht. typo-* ist einziges Typografie-System.",
+      "552. Typo-Konsolidierung: Alle cg-type-* Klassennamen in 8 Dateien (Logbuch-Komponenten, LogbuchView, ReiseView) durch Brand-Guide-konforme typo-* Klassen ersetzt.",
+      "551. TypeScript: Props-Interfaces für alle 14 Views und Komponenten (StatusView, InhaltView, ProfilView, ReiseView, LogbuchView, useLogbuch, 8 Logbuch-Sub-Komponenten, InhaltPrintView). AppState, Archive, FuelEntry, TripEntry, BusinessTripEntry, SpotEntry typisiert.",
+      "550. Exchange-Rate-API: AbortController mit 5s Timeout + console.warn statt leerem Catch-Block.",
+      "549. demoSeed: Toter Code entfernt (Funktion in App.tsx, Prop-Übergabe, auskommentierter Button in ProfilView).",
+      "548. Logbuch-Refactoring Phase B: State und Logik in useLogbuch.ts Hook extrahiert. LogbuchView.tsx ist reiner Layout-Wrapper (~270 Zeilen).",
+      "547. Logbuch-Refactoring Phase A: LogbuchAddModal.tsx — Hinzufügen/Bearbeiten-Formulare (Tank, Reise, POI) + Fahrtenbuch-Bestätigungs-Modal.",
+      "546. Logbuch-Refactoring Phase A: LogbuchSpotList.tsx — POI-Liste mit GPX-Export, Edit, Löschen.",
+      "545. Logbuch-Refactoring Phase A: LogbuchTripList.tsx — Reisetagebuch + Fahrtenbuch § mit Sub-Tab-Umschalter.",
+      "544. Logbuch-Refactoring Phase A: LogbuchTankList.tsx — Tank-Einträge-Karten mit Edit-Button.",
+      "543. Logbuch-Refactoring Phase A: LogbuchArchiveCreate.tsx — Archiv-Erstellen-UI (Dropdown, 5 Modi, Archiv-Liste).",
+      "542. Logbuch-Refactoring Phase A: LogbuchArchiveDetail.tsx — Archiv-Detail-Modal mit Tabs, Summary, Lösch-Schutz.",
+      "541.5. Logbuch-Refactoring Phase A: LogbuchPrintViews.tsx — 4 Print-Layouts (Tank, Reise, Fahrtenbuch §, POIs) extrahiert."
+    ]
+  },
+  {
     "version": "v0.1.7-dev",
     "date": "22.05.2026",
     "entries": [

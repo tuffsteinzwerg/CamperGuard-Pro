@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { AppState } from '../types';
 import { Search, Droplet, Fuel } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -27,7 +28,12 @@ const faqData = [
   {q: "Was schreibe ich in das Zweck-Feld?", a: "Hier ist Platz für Notizen zur Tour, wie z.B. 'Schönster Stellplatz' oder 'Werkstattbesuch'."}
 ];
 
-export function ProfilView({ state, setState, demoSeed }: any) {
+interface ProfilViewProps {
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
+}
+
+export function ProfilView({ state, setState }: ProfilViewProps) {
   const [activeTireProfile, setActiveTireProfile] = useState<TireProfile>('Straße');
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [faqSearch, setFaqSearch] = useState("");
@@ -373,13 +379,6 @@ export function ProfilView({ state, setState, demoSeed }: any) {
              })()}
           </div>
       </div>
-
-      {/* 
-      <div className="flex flex-col gap-3 pt-6">
-        <button onClick={demoSeed} className="cg-master-button w-full">Demo Reset</button>
-        <button onClick={() => { if(confirm("LÖSCHEN?")) { initDB().then(db=>db.clear('store')); window.location.reload(); } }} className="cg-master-button-danger w-full">Full Wipe</button>
-      </div>
-      */}
 
       <AnimatePresence>
           {showFaqModal && (

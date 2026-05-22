@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, FileDown, Printer, MapPin, Archive, Edit2, CheckCircle, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import React from 'react';
+import type { AppState } from '../types';
+import { Plus, Printer } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
-import { calculateAverageFuelConsumptionFromFuelLog, calculateFuelLogStats } from '../lib/fuelCalculator';
-import { PrintHeader } from '../print/PrintHeader';
-import type { Currency, FuelType, FuelEntry, SpotEntry } from '../types';
-
-const CURRENCIES: Currency[] = ['EUR', 'CHF', 'TRY', 'DKK', 'SEK', 'NOK', 'PLN', 'GBP'];
-const FUEL_TYPES: FuelType[] = ['Diesel', 'Benzin', 'Super E10', 'Super E5'];
+import { LogbuchPrintViews } from './logbuch/LogbuchPrintViews';
+import { LogbuchArchiveDetail } from './logbuch/LogbuchArchiveDetail';
+import { LogbuchArchiveCreate } from './logbuch/LogbuchArchiveCreate';
+import { LogbuchTankList } from './logbuch/LogbuchTankList';
+import { LogbuchTripList } from './logbuch/LogbuchTripList';
+import { LogbuchSpotList } from './logbuch/LogbuchSpotList';
+import { LogbuchAddModal } from './logbuch/LogbuchAddModal';
+import { useLogbuch } from './logbuch/useLogbuch';
 
 const SPOT_COLORS: Record<string, string> = {
   'Stellplatz': '#3B82F6',
@@ -20,713 +23,19 @@ const SPOT_COLORS: Record<string, string> = {
   'Sonstiges': '#9CA3AF',
 };
 
-const SPOT_CATEGORIES = ['Stellplatz', 'Freistehen', 'Campingplatz', 'Entsorgung', 'Versorgung', 'Einkauf', 'Aussicht', 'Sonstiges'];
-
-export function LogbuchView({ state, setState }: any) {
-  const [logType, setLogType] = useState<'tank' | 'fahrt' | 'spots' | 'archiv'>('tank');
-  const [tripLogMode, setTripLogMode] = useState<'flex' | 'strict'>('flex');
-  const [isAdding, setIsAdding] = useState(false);
-
-  const currentYear = new Date().getFullYear();
-  const currentFuelLog = useMemo(() => {
-      const filtered = state.fuelLog.filter((f:any) => new Date(f.date).getFullYear() === currentYear);
-      return filtered.sort((a:any, b:any) => {
-          const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-          if (dateDiff === 0) return b.km - a.km;
-          return dateDiff;
-      });
-  }, [state.fuelLog, currentYear]);
-  const currentTripLog = useMemo(() => state.tripLog.filter((t:any) => new Date(t.date).getFullYear() === currentYear), [state.tripLog, currentYear]);
-  const currentBusinessTripLog = useMemo(() => (state.businessTripLog || []).filter((t:any) => new Date(t.date).getFullYear() === currentYear).sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()), [state.businessTripLog, currentYear]);
-  
-  const totalLiters = currentFuelLog.reduce((acc:number, f:any) => acc + f.liters, 0);
-  const totalEur = currentFuelLog.reduce((acc:number, f:any) => acc + (f.liters * f.price / (f.exchangeRateToEur || 1)), 0);
-  const totalKm = currentTripLog.reduce((acc:number, t:any) => acc + (t.toKm - t.fromKm), 0);
-
-  const result = calculateAverageFuelConsumptionFromFuelLog(currentFuelLog);
-
-  const [tankForm, setTankForm] = useState({ date: new Date().toISOString().split('T')[0], km: '', liters: '', price: '', total: '' });
-  const [tripForm, setTripForm] = useState({ date: new Date().toISOString().split('T')[0], fromKm: '', toKm: '', destination: '', purpose: '', category: '', note: '' });
-  const [businessTripForm, setBusinessTripForm] = useState({ date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: '' });
-  const [spotForm, setSpotForm] = useState({ date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz' });
-  const [spotGpsError, setSpotGpsError] = useState(false);
-  const [editingTripId, setEditingTripId] = useState<string | null>(null);
-  const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
-  const [spotCategoryOpen, setSpotCategoryOpen] = useState(false);
-  const [tripGpsCoords, setTripGpsCoords] = useState<{lat: number, lng: number} | null>(null);
-  const [tripGpsStatus, setTripGpsStatus] = useState<'offline'|'loading'|'active'>('offline');
-  
-  const [focusedTankField, setFocusedTankField] = useState<string | null>(null);
-  
-  const [displayedTripsCount, setDisplayedTripsCount] = useState(5);
-  const [displayedBusinessTripsCount, setDisplayedBusinessTripsCount] = useState(10);
-
-  const [selectedArchive, setSelectedArchive] = useState<any | null>(null);
-  const [archiveViewTab, setArchiveViewTab] = useState<'tank' | 'trip' | 'business' | 'spots'>('tank');
-
-  const [fuelArchiveMode, setFuelArchiveMode] = useState<'all' | 'range'>('all');
-
-  const [fuelArchiveRange, setFuelArchiveRange] = useState({
-      from: '',
-      to: ''
-  });
-
-  const [tripArchiveMode, setTripArchiveMode] = useState<'all' | 'range'>('all');
-
-  const [tripArchiveRange, setTripArchiveRange] = useState({
-      from: '',
-      to: ''
-  });
-  const [isConfirmingBusinessTrip, setIsConfirmingBusinessTrip] = useState(false);
-  const [archiveSelection, setArchiveSelection] = useState('tanken');
-
-  const [businessArchiveMode, setBusinessArchiveMode] = useState<'all' | 'range'>('all');
-  const [businessArchiveRange, setBusinessArchiveRange] = useState({ from: '', to: '' });
-
-  const [spotsArchiveMode, setSpotsArchiveMode] = useState<'all' | 'range'>('all');
-  const [spotsArchiveRange, setSpotsArchiveRange] = useState({ from: '', to: '' });
-
-  const [tripArchiveName, setTripArchiveName] = useState('');
-  const [tripArchiveFrom, setTripArchiveFrom] = useState('');
-  const [tripArchiveTo, setTripArchiveTo] = useState('');
-
-  const getLastKnownKm = (): number => {
-    let highestKm = 0;
-    (state.fuelLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.km) || 0));
-    (state.tripLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
-    (state.businessTripLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
-    return highestKm;
-  };
-
-  const formDateMs = new Date(tankForm.date || new Date().toISOString().split('T')[0]).getTime();
-  let minKm = 0;
-  let maxKm = Infinity;
-  
-  useEffect(() => {
-    if (isAdding && logType === 'spots') {
-      getPosition().then(p => {
-          setSpotForm(s => ({ ...s, lat: p.lat.toString(), lng: p.lng.toString() }));
-          setSpotGpsError(false);
-      }).catch(() => {
-          setSpotGpsError(true);
-      });
-    }
-  }, [isAdding, logType]);
-
-  useEffect(() => {
-    if (!(isAdding && logType === 'fahrt' && tripLogMode === 'flex' && !editingTripId && state.sos?.gpsEnabled !== false)) {
-      setTripGpsCoords(null);
-      setTripGpsStatus('offline');
-      return;
-    }
-
-    setTripGpsStatus('loading');
-
-    navigator.geolocation.getCurrentPosition(
-      p => {
-        setTripGpsCoords({ lat: p.coords.latitude, lng: p.coords.longitude });
-        setTripGpsStatus('active');
-      },
-      () => {
-        setTripGpsCoords(null);
-        setTripGpsStatus('offline');
-      },
-      { enableHighAccuracy: true }
-    );
-  }, [isAdding, logType, tripLogMode, editingTripId, state.sos?.gpsEnabled]);
-
-  state.fuelLog.forEach((f: any) => {
-      const fTime = new Date(f.date).getTime();
-      if (fTime < formDateMs) {
-          if (f.km > minKm) minKm = f.km;
-      } else if (fTime > formDateMs) {
-          if (f.km < maxKm) maxKm = f.km;
-      }
-  });
-
-  const currentKm = parseFloat(tankForm.km);
-  const isKmValid = tankForm.km === '' || isNaN(currentKm) || (currentKm >= minKm && currentKm <= maxKm);
-
-  const parsedLiters = parseFloat(tankForm.liters);
-  const isLitersValid = tankForm.liters === '' || (!isNaN(parsedLiters) && parsedLiters > 0 && parsedLiters <= 9999);
-
-  const parsedPrice = parseFloat(tankForm.price);
-  const isPriceValid = tankForm.price === '' || (!isNaN(parsedPrice) && parsedPrice > 0 && parsedPrice <= 999);
-
-  const parsedTripKm = parseFloat(tripForm.fromKm);
-  const isTripValid = tripForm.fromKm !== '' && !isNaN(parsedTripKm) && parsedTripKm >= getLastKnownKm();
-  const isBusinessTripValid = businessTripForm.fromKm !== '' && businessTripForm.toKm !== '' && parseFloat(businessTripForm.toKm) >= parseFloat(businessTripForm.fromKm) && parseFloat(businessTripForm.fromKm) >= 0 && parseFloat(businessTripForm.toKm) <= 999999 && parseFloat(businessTripForm.fromKm) <= 999999;
-  const isBusinessTripPurposeValid = businessTripForm.purpose.length <= 50;
-  const isBusinessTripDriverValid = businessTripForm.driver.trim() !== '';
-  const isBusinessTripCategoryValid = businessTripForm.category.trim() !== '';
-  const isBusinessTripToday = businessTripForm.date === new Date().toISOString().split('T')[0];
-
-  const handleTankChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    let filteredValue = value;
-    if (name === 'liters' || name === 'price' || name === 'total' || name === 'km') {
-        filteredValue = filteredValue.replace(/-/g, '');
-    }
-
-    if (name === 'liters') {
-        const parts = filteredValue.split('.');
-        if (parts[0].length > 4) {
-            parts[0] = parts[0].slice(0, 4);
-            filteredValue = parts.join('.');
-        }
-    } else if (name === 'price') {
-        const parts = filteredValue.split('.');
-        if (parts[0].length > 3) {
-            parts[0] = parts[0].slice(0, 3);
-            filteredValue = parts.join('.');
-        }
-    }
-
-    let newForm = { ...tankForm, [name]: filteredValue };
-    const l = parseFloat(newForm.liters);
-    const p = parseFloat(newForm.price);
-    const t = parseFloat(newForm.total);
-
-    if (name === 'liters') {
-      if (!isNaN(l) && !isNaN(p)) newForm.total = (l * p).toFixed(2);
-    } else if (name === 'price') {
-      if (!isNaN(l) && !isNaN(p)) newForm.total = (l * p).toFixed(2);
-    } else if (name === 'total') {
-      if (!isNaN(t) && !isNaN(l) && l > 0) newForm.price = (t / l).toFixed(3);
-    }
-    setTankForm(newForm);
-  };
-
-  const downloadGPX = () => {
-    let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="CamperGuard Pro">\n';
-    state.spots.forEach((s: any) => {
-      gpx += `  <wpt lat="${s.lat}" lon="${s.lng}">\n`;
-      gpx += `    <name>${s.category ? `[${s.category}] ` : ''}${s.name}</name>\n`;
-      if (s.note || s.category) {
-          gpx += `    <desc>${s.category ? `Kategorie: ${s.category}\n` : ''}${s.note || ''}</desc>\n`;
-      }
-      gpx += `  </wpt>\n`;
-    });
-    gpx += '</gpx>';
-    const blob = new Blob([gpx], { type: 'application/gpx+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Tour_${new Date().toISOString().split('T')[0]}_Spots.gpx`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const createFuelArchive = () => {
-      let archiveFuelLog = [...state.fuelLog];
-
-      if (fuelArchiveMode === 'range') {
-          if (!fuelArchiveRange.from || !fuelArchiveRange.to) {
-              alert('Bitte Von- und Bis-Datum auswählen.');
-              return;
-          }
-
-          archiveFuelLog = state.fuelLog.filter((f:any) => {
-              return (
-                  f.date >= fuelArchiveRange.from &&
-                  f.date <= fuelArchiveRange.to
-              );
-          });
-
-          if (archiveFuelLog.length === 0) {
-              alert('Keine Tankungen im gewählten Zeitraum gefunden.');
-              return;
-          }
-      }
-
-      if (archiveFuelLog.length === 0) {
-          alert('Keine Tankungen zum Archivieren vorhanden.');
-          return;
-      }
-
-      const totalLiters = archiveFuelLog.reduce((sum:number, fuel:any) => {
-          return sum + Number(fuel.liters || 0);
-      }, 0);
-
-      const totalEur = archiveFuelLog.reduce((sum:number, fuel:any) => {
-          return sum + ((Number(fuel.price || 0) * Number(fuel.liters || 0)) / Number(fuel.exchangeRateToEur || 1));
-      }, 0);
-
-      const sortedByKm = [...archiveFuelLog]
-          .filter((f:any) => !isNaN(Number(f.km)))
-          .sort((a:any, b:any) => Number(a.km) - Number(b.km));
-
-      const totalKm =
-          sortedByKm.length >= 2
-              ? Number(sortedByKm[sortedByKm.length - 1].km) - Number(sortedByKm[0].km)
-              : 0;
-
-      const archiveDateFrom =
-          fuelArchiveMode === 'range'
-              ? fuelArchiveRange.from
-              : archiveFuelLog
-                    .map((f:any) => f.date)
-                    .sort()[0];
-
-      const archiveDateTo =
-          fuelArchiveMode === 'range'
-              ? fuelArchiveRange.to
-              : archiveFuelLog
-                    .map((f:any) => f.date)
-                    .sort()
-                    .slice(-1)[0];
-
-      const archive = {
-          id: `archive-fuel-${Date.now()}`,
-          type: 'fuel',
-          name: `Tankprotokoll ${new Date().toLocaleDateString('de-DE')}`,
-          dateFrom: archiveDateFrom,
-          dateTo: archiveDateTo,
-          createdAt: new Date().toISOString(),
-          fuelLog: archiveFuelLog,
-          tripLog: [],
-          businessTripLog: [],
-          spots: [],
-          summary: {
-              totalKm,
-              totalLiters,
-              totalEur,
-              fuelConsumption:
-                  totalKm > 0 && totalLiters > 0
-                      ? totalLiters / totalKm * 100
-                      : null,
-          },
-      };
-
-      if (!confirm(`Tankprotokoll archivieren?\n\n${archiveFuelLog.length} Tankungen werden archiviert und aus dem aktiven Tankprotokoll entfernt.`)) {
-          return;
-      }
-
-      const archivedIds = new Set(archiveFuelLog.map((f:any) => f.id));
-
-      setState({
-          ...state,
-          archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => !archivedIds.has(f.id))
-      });
-
-      setFuelArchiveMode('all');
-
-      setFuelArchiveRange({
-          from: '',
-          to: ''
-      });
-  };
-
-  const createTripLogArchive = () => {
-      let archiveTripLog = [...currentTripLog];
-
-      if (tripArchiveMode === 'range') {
-          if (!tripArchiveRange.from || !tripArchiveRange.to) {
-              alert('Bitte Von- und Bis-Datum auswählen.');
-              return;
-          }
-
-          archiveTripLog = state.tripLog.filter((t:any) => {
-              return (
-                  t.date >= tripArchiveRange.from &&
-                  t.date <= tripArchiveRange.to
-              );
-          });
-
-          if (archiveTripLog.length === 0) {
-              alert('Keine Reisen im gewählten Zeitraum gefunden.');
-              return;
-          }
-      }
-
-      if (archiveTripLog.length === 0) {
-          alert('Keine Reisen zum Archivieren vorhanden.');
-          return;
-      }
-
-      const totalKm = archiveTripLog.reduce((sum:number, trip:any) => {
-          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
-          return sum + (isNaN(diff) ? 0 : diff);
-      }, 0);
-
-      const archiveDateFrom =
-          tripArchiveMode === 'range'
-              ? tripArchiveRange.from
-              : archiveTripLog
-                    .map((t:any) => t.date)
-                    .sort()[0];
-
-      const archiveDateTo =
-          tripArchiveMode === 'range'
-              ? tripArchiveRange.to
-              : archiveTripLog
-                    .map((t:any) => t.date)
-                    .sort()
-                    .slice(-1)[0];
-
-      const archive = {
-          id: `archive-triplog-${Date.now()}`,
-          type: 'triplog',
-          name: `Reisetagebuch ${new Date().toLocaleDateString('de-DE')}`,
-          dateFrom: archiveDateFrom,
-          dateTo: archiveDateTo,
-          createdAt: new Date().toISOString(),
-          fuelLog: [],
-          tripLog: archiveTripLog,
-          businessTripLog: [],
-          spots: [],
-          summary: {
-              totalKm,
-              totalLiters: 0,
-              totalEur: 0,
-              fuelConsumption: null,
-          },
-      };
-
-      if (!confirm(`Reisetagebuch archivieren?\n\n${archiveTripLog.length} Einträge werden archiviert und aus dem aktiven Reisetagebuch entfernt.`)) {
-          return;
-      }
-
-      const archivedIds = new Set(archiveTripLog.map((t:any) => t.id));
-
-      setState({
-          ...state,
-          archives: [...state.archives, archive],
-          tripLog: state.tripLog.filter((t:any) => !archivedIds.has(t.id))
-      });
-
-      setTripArchiveMode('all');
-
-      setTripArchiveRange({
-          from: '',
-          to: ''
-      });
-  };
-
-  const createBusinessTripArchive = () => {
-      let archiveBusinessLog = [...currentBusinessTripLog];
-
-      if (businessArchiveMode === 'range') {
-          if (!businessArchiveRange.from || !businessArchiveRange.to) {
-              alert('Bitte Von- und Bis-Datum auswählen.');
-              return;
-          }
-
-          archiveBusinessLog = (state.businessTripLog || []).filter((t:any) => {
-              return (
-                  t.date >= businessArchiveRange.from &&
-                  t.date <= businessArchiveRange.to
-              );
-          });
-
-          if (archiveBusinessLog.length === 0) {
-              alert('Keine Fahrtenbuch-Einträge im gewählten Zeitraum gefunden.');
-              return;
-          }
-      }
-
-      if (archiveBusinessLog.length === 0) {
-          alert('Keine Fahrtenbuch-Einträge zum Archivieren vorhanden.');
-          return;
-      }
-
-      const totalKm = archiveBusinessLog.reduce((sum:number, trip:any) => {
-          const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
-          return sum + (isNaN(diff) ? 0 : diff);
-      }, 0);
-
-      const archiveDateFrom =
-          businessArchiveMode === 'range'
-              ? businessArchiveRange.from
-              : archiveBusinessLog
-                    .map((t:any) => t.date)
-                    .sort()[0];
-
-      const archiveDateTo =
-          businessArchiveMode === 'range'
-              ? businessArchiveRange.to
-              : archiveBusinessLog
-                    .map((t:any) => t.date)
-                    .sort()
-                    .slice(-1)[0];
-
-      const archive = {
-          id: `archive-business-${Date.now()}`,
-          type: 'business',
-          name: `Fahrtenbuch § ${new Date().toLocaleDateString('de-DE')}`,
-          dateFrom: archiveDateFrom,
-          dateTo: archiveDateTo,
-          createdAt: new Date().toISOString(),
-          fuelLog: [],
-          tripLog: [],
-          businessTripLog: archiveBusinessLog,
-          spots: [],
-          summary: {
-              totalKm,
-              totalLiters: 0,
-              totalEur: 0,
-              fuelConsumption: null,
-          },
-      };
-
-      if (!confirm(`Fahrtenbuch § archivieren?\n\n${archiveBusinessLog.length} Einträge werden archiviert und aus dem aktiven Fahrtenbuch entfernt.`)) {
-          return;
-      }
-
-      const archivedIds = new Set(archiveBusinessLog.map((t:any) => t.id));
-
-      setState({
-          ...state,
-          archives: [...state.archives, archive],
-          businessTripLog: (state.businessTripLog || []).filter((t:any) => !archivedIds.has(t.id))
-      });
-
-      setBusinessArchiveMode('all');
-      setBusinessArchiveRange({ from: '', to: '' });
-  };
-
-  const createSpotsArchive = () => {
-      let archiveSpots = [...(state.spots || [])];
-
-      if (spotsArchiveMode === 'range') {
-          if (!spotsArchiveRange.from || !spotsArchiveRange.to) {
-              alert('Bitte Von- und Bis-Datum auswählen.');
-              return;
-          }
-
-          archiveSpots = (state.spots || []).filter((s:any) => {
-              return (
-                  s.date >= spotsArchiveRange.from &&
-                  s.date <= spotsArchiveRange.to
-              );
-          });
-
-          if (archiveSpots.length === 0) {
-              alert('Keine POIs im gewählten Zeitraum gefunden.');
-              return;
-          }
-      }
-
-      if (archiveSpots.length === 0) {
-          alert('Keine POIs zum Archivieren vorhanden.');
-          return;
-      }
-
-      const archiveDateFrom =
-          spotsArchiveMode === 'range'
-              ? spotsArchiveRange.from
-              : archiveSpots
-                    .map((s:any) => s.date)
-                    .sort()[0];
-
-      const archiveDateTo =
-          spotsArchiveMode === 'range'
-              ? spotsArchiveRange.to
-              : archiveSpots
-                    .map((s:any) => s.date)
-                    .sort()
-                    .slice(-1)[0];
-
-      const archive = {
-          id: `archive-spots-${Date.now()}`,
-          type: 'spots',
-          name: `POIs ${new Date().toLocaleDateString('de-DE')}`,
-          dateFrom: archiveDateFrom,
-          dateTo: archiveDateTo,
-          createdAt: new Date().toISOString(),
-          fuelLog: [],
-          tripLog: [],
-          businessTripLog: [],
-          spots: archiveSpots,
-          summary: {
-              totalKm: 0,
-              totalLiters: 0,
-              totalEur: 0,
-              fuelConsumption: null,
-          },
-      };
-
-      if (!confirm(`POIs archivieren?\n\n${archiveSpots.length} Einträge werden archiviert und aus der aktiven POI-Liste entfernt.`)) {
-          return;
-      }
-
-      const archivedIds = new Set(archiveSpots.map((s:any) => s.id));
-
-      setState({
-          ...state,
-          archives: [...state.archives, archive],
-          spots: (state.spots || []).filter((s:any) => !archivedIds.has(s.id))
-      });
-
-      setSpotsArchiveMode('all');
-      setSpotsArchiveRange({ from: '', to: '' });
-  };
-
-  const createTripArchive = () => {
-      if (!tripArchiveName.trim()) {
-          alert('Bitte einen Namen für das Reise-Archiv eingeben.');
-          return;
-      }
-      if (!tripArchiveFrom || !tripArchiveTo) {
-          alert('Bitte Von- und Bis-Datum auswählen.');
-          return;
-      }
-      if (tripArchiveFrom > tripArchiveTo) {
-          alert('Das Von-Datum muss vor dem Bis-Datum liegen.');
-          return;
-      }
-
-      const inRange = (date: string) => date >= tripArchiveFrom && date <= tripArchiveTo;
-
-      const archiveFuel = state.fuelLog.filter((f:any) => inRange(f.date));
-      const archiveTrips = state.tripLog.filter((t:any) => inRange(t.date));
-      const archiveBusiness = (state.businessTripLog || []).filter((t:any) => inRange(t.date));
-      const archiveSpots = (state.spots || []).filter((s:any) => inRange(s.date));
-
-      const totalEntries = archiveFuel.length + archiveTrips.length + archiveBusiness.length + archiveSpots.length;
-
-      if (totalEntries === 0) {
-          alert('Keine Einträge im gewählten Zeitraum gefunden.');
-          return;
-      }
-
-      const totalLiters = archiveFuel.reduce((sum:number, f:any) => sum + Number(f.liters || 0), 0);
-      const totalEur = archiveFuel.reduce((sum:number, f:any) => sum + ((Number(f.price || 0) * Number(f.liters || 0)) / Number(f.exchangeRateToEur || 1)), 0);
-
-      const allKmSources = [
-          ...archiveFuel.filter((f:any) => !isNaN(Number(f.km))).map((f:any) => Number(f.km)),
-          ...archiveTrips.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
-          ...archiveBusiness.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
-      ].filter((km) => !isNaN(km) && km > 0);
-
-      const totalKm = allKmSources.length >= 2
-          ? Math.max(...allKmSources) - Math.min(...allKmSources)
-          : 0;
-
-      const archive = {
-          id: `archive-trip-${Date.now()}`,
-          type: 'trip',
-          name: tripArchiveName.trim(),
-          dateFrom: tripArchiveFrom,
-          dateTo: tripArchiveTo,
-          createdAt: new Date().toISOString(),
-          fuelLog: archiveFuel,
-          tripLog: archiveTrips,
-          businessTripLog: archiveBusiness,
-          spots: archiveSpots,
-          summary: {
-              totalKm,
-              totalLiters,
-              totalEur,
-              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
-          },
-      };
-
-      const details = [
-          archiveFuel.length > 0 ? `${archiveFuel.length} Tankungen` : null,
-          archiveTrips.length > 0 ? `${archiveTrips.length} Fahrten` : null,
-          archiveBusiness.length > 0 ? `${archiveBusiness.length} Fahrtenbuch-Einträge` : null,
-          archiveSpots.length > 0 ? `${archiveSpots.length} POIs` : null,
-      ].filter(Boolean).join(', ');
-
-      if (!confirm(`Reise "${tripArchiveName.trim()}" archivieren?\n\n${details}\n\nDiese Einträge werden archiviert und aus den aktiven Listen entfernt.`)) {
-          return;
-      }
-
-      const fuelIds = new Set(archiveFuel.map((f:any) => f.id));
-      const tripIds = new Set(archiveTrips.map((t:any) => t.id));
-      const businessIds = new Set(archiveBusiness.map((t:any) => t.id));
-      const spotIds = new Set(archiveSpots.map((s:any) => s.id));
-
-      setState({
-          ...state,
-          archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => !fuelIds.has(f.id)),
-          tripLog: state.tripLog.filter((t:any) => !tripIds.has(t.id)),
-          businessTripLog: (state.businessTripLog || []).filter((t:any) => !businessIds.has(t.id)),
-          spots: (state.spots || []).filter((s:any) => !spotIds.has(s.id)),
-      });
-
-      setTripArchiveName('');
-      setTripArchiveFrom('');
-      setTripArchiveTo('');
-  };
-
-  const deleteArchive = (archive: any) => {
-      const isYearArchive = archive.type === 'year' || archive.type === 'triplog' || archive.type === 'business';
-
-      const warningText = isYearArchive
-          ? 'Dieses Archiv enthält möglicherweise steuerrelevante Fahrtenbuchdaten mit gesetzlicher Aufbewahrungspflicht von bis zu 10 Jahren.'
-          : 'Dieses Reise-Archiv wird dauerhaft gelöscht.';
-
-      const firstConfirm = confirm(
-          `${warningText}\n\nMöchtest du das Archiv "${archive.name}" wirklich löschen?`
-      );
-
-      if (!firstConfirm) return;
-
-      const secondConfirm = confirm(
-          `LETZTE WARNUNG:\n\nDas Archiv "${archive.name}" wird unwiderruflich entfernt.\n\nFortfahren?`
-      );
-
-      if (!secondConfirm) return;
-
-      setState({
-          ...state,
-          archives: state.archives.filter((a:any) => a.id !== archive.id)
-      });
-
-      if (selectedArchive?.id === archive.id) {
-          setSelectedArchive(null);
-      }
-  };
-
-  const getPosition = () => {
-    return new Promise<{lat: number, lng: number}>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-            p => resolve({lat: p.coords.latitude, lng: p.coords.longitude}),
-            e => reject(e)
-        );
-    });
-  };
-
-  const fuelStats = calculateFuelLogStats(state.fuelLog);
-
-  const printFuelLog = selectedArchive ? selectedArchive.fuelLog : currentFuelLog;
-  const printTripLog = selectedArchive ? selectedArchive.tripLog : currentTripLog;
-  const printBusinessTripLog = selectedArchive ? selectedArchive.businessTripLog : currentBusinessTripLog;
-  const printSpots = selectedArchive ? selectedArchive.spots : state.spots;
-
-  const printTitle = selectedArchive
-      ? (
-          archiveViewTab === 'tank'
-              ? 'Archiv · Tankprotokoll'
-              : archiveViewTab === 'trip'
-              ? 'Archiv · Reisetagebuch'
-              : archiveViewTab === 'business'
-              ? 'Archiv · Fahrtenbuch §'
-              : 'Archiv · Standorte / POI'
-      )
-      : (
-          logType === 'tank'
-              ? 'Tankprotokoll'
-              : logType === 'fahrt'
-              ? (tripLogMode === 'strict' ? 'Fahrtenbuch §' : 'Reisetagebuch')
-              : logType === 'spots'
-              ? 'Standorte / POI'
-              : 'Archiv'
-      );
-
-  const printDateRange = selectedArchive
-      ? `${new Date(selectedArchive.dateFrom).toLocaleDateString('de-DE')} – ${new Date(selectedArchive.dateTo).toLocaleDateString('de-DE')}`
-      : `01.01.${currentYear} – 31.12.${currentYear}`;
+interface LogbuchViewProps {
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
+}
+
+export function LogbuchView({ state, setState }: LogbuchViewProps) {
+  const lb = useLogbuch(state, setState);
 
   return (
     <>
       <style>{`
         @media print {
-            @page { size: A4 ${logType === 'tank' || (logType === 'fahrt' && tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: ${logType === 'tank' ? '15mm' : '10mm 15mm'}; }
+            @page { size: A4 ${lb.logType === 'tank' || (lb.logType === 'fahrt' && lb.tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: ${lb.logType === 'tank' ? '15mm' : '10mm 15mm'}; }
             body { background: white !important; }
             .logbuch-normal { display: none !important; }
             .logbuch-print-wrapper { display: block !important; width: 100%; color: black !important; }
@@ -738,56 +47,23 @@ export function LogbuchView({ state, setState }: any) {
             .tank-print-table td { border-bottom: 1px solid #eaeaea; padding: 4px 2px; color: #333 !important; vertical-align: middle; }
             .fahrtenbuch-table { table-layout: fixed; width: 100%; }
             .fahrtenbuch-table th, .fahrtenbuch-table td { overflow-wrap: break-word; word-wrap: break-word; hyphens: auto; }
-            .reise-print-column-grid {
-                display: grid;
-                grid-template-columns: 12% 22% 12% 12% 12% 30%;
-            }
-            .reise-print-row {
-                display: grid;
-                grid-template-columns: 12% 22% 12% 12% 12% 30%;
-            }
-            .reise-print-summary-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .poi-print-column-grid {
-                display: grid;
-                grid-template-columns: 12% 22% 14% 18% 34%;
-            }
-            .poi-print-row {
-                display: grid;
-                grid-template-columns: 12% 22% 14% 18% 34%;
-            }
-            .poi-print-summary-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .fb-print-hdr1 {
-                display: grid;
-                grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%;
-            }
-            .fb-print-hdr2 {
-                display: grid;
-                grid-template-columns: 30% 25% 25% 20%;
-            }
-            .fb-row1 {
-                display: grid;
-                grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%;
-            }
-            .fb-row2 {
-                display: grid;
-                grid-template-columns: 30% 25% 25% 20%;
-            }
+            .reise-print-column-grid { display: grid; grid-template-columns: 12% 22% 12% 12% 12% 30%; }
+            .reise-print-row { display: grid; grid-template-columns: 12% 22% 12% 12% 12% 30%; }
+            .reise-print-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+            .poi-print-column-grid { display: grid; grid-template-columns: 12% 22% 14% 18% 34%; }
+            .poi-print-row { display: grid; grid-template-columns: 12% 22% 14% 18% 34%; }
+            .poi-print-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+            .fb-print-hdr1 { display: grid; grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%; }
+            .fb-print-hdr2 { display: grid; grid-template-columns: 30% 25% 25% 20%; }
+            .fb-row1 { display: grid; grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%; }
+            .fb-row2 { display: grid; grid-template-columns: 30% 25% 25% 20%; }
             .fb-row1 + .fb-row2 { border-top: 0.15pt dashed #e0e0e0; }
-            .fb-summary-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-            }
+            .fb-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
       <div className="flex justify-between items-center mb-4 px-2 no-print">
-          <h1 className="cg-type-page-title">Logbuch {currentYear}</h1>
+          <h1 className="typo-section-title">Logbuch {lb.currentYear}</h1>
           <button
               onClick={() => setState({...state, sos: {...state.sos, gpsEnabled: state.sos?.gpsEnabled === false ? true : false}})}
               className="flex items-center gap-1.5"
@@ -800,582 +76,122 @@ export function LogbuchView({ state, setState }: any) {
 
       <div className="cg-master-inset p-3 flex justify-between items-center sticky top-[-10px] z-20">
           <div className="text-center">
-              <div className="cg-type-label">Jahres-KM</div>
-              <div className="cg-type-value-large">{formatNumber(totalKm, 0)}</div>
+              <div className="typo-label">Jahres-KM</div>
+              <div className="typo-value-large">{formatNumber(lb.totalKm, 0)}</div>
           </div>
           <div className="text-center">
-              <div className="cg-type-label">Gesamtkosten</div>
-              <div className="cg-type-value-large text-[var(--status-danger)]">{formatNumber(totalEur, 2)} €</div>
+              <div className="typo-label">Gesamtkosten</div>
+              <div className="typo-value-large text-[var(--status-danger)]">{formatNumber(lb.totalEur, 2)} €</div>
           </div>
           <div className="text-center">
-              <div className="cg-type-label">Verbrauch</div>
-              <div className="cg-type-value-large">{formatNumber(result?.consumption || 0, 1)} L</div>
+              <div className="typo-label">Verbrauch</div>
+              <div className="typo-value-large">{formatNumber(lb.result?.consumption || 0, 1)} L</div>
           </div>
       </div>
 
       <div className="cg-master-inset cg-master-tabs p-1 overflow-x-auto hide-scrollbar">
       {['tank', 'fahrt', 'spots', 'archiv'].map(t => (
-        <button key={t} onClick={() => setLogType(t as any)} className={`cg-master-tab cg-type-tab ${logType === t ? 'cg-master-tab-active' : ''}`}>{t === 'tank' ? 'Tanken' : t === 'spots' ? "POIs" : t === 'fahrt' ? 'Fahrten' : t}</button>
+        <button key={t} onClick={() => lb.setLogType(t as any)} className={`cg-master-tab typo-label ${lb.logType === t ? 'cg-master-tab-active' : ''}`}>{t === 'tank' ? 'Tanken' : t === 'spots' ? "POIs" : t === 'fahrt' ? 'Fahrten' : t}</button>
       ))}
-  </div>
+      </div>
 
-      {logType === 'tank' && (
-          <div className="space-y-3">
-            {currentFuelLog.map((entry:any) => {
-                const totalLocal = entry.price * entry.liters;
-                const totalEur = totalLocal / (entry.exchangeRateToEur || 1);
-                return (
-                    <div key={entry.id} className="cg-master-card-small !p-3 flex justify-between items-center border-l-2 !border-l-[var(--accent)] !mb-0 gap-3">
-                        <div className="flex-1 grid grid-cols-2 gap-y-1 items-center">
-                            <div className="text-left flex items-center">
-                                <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
-                            </div>
-                            <div className="text-right flex items-center justify-end">
-                                <span className="cg-type-meta text-[var(--accent)]">{formatNumber(entry.liters, 1)} <span className="cg-type-label ml-0.5">L</span></span>
-                            </div>
-                            <div className="text-left flex items-center">
-                                <span className="cg-type-value">{formatNumber(entry.km, 0)} <span className="cg-type-label ml-0.5">KM</span></span>
-                            </div>
-                            <div className="text-right flex items-center justify-end">
-                                <span className="cg-type-value">{formatNumber(totalLocal, 2)} {entry.currency === 'EUR' ? '€' : entry.currency}</span>
-                            </div>
-                            <div className="text-left flex items-center">
-                                <span className="cg-type-meta">{entry.fuelType}</span>
-                            </div>
-                            <div className="text-right flex items-center justify-end">
-                                <span className="cg-type-meta">
-                                    {formatNumber(entry.price, 2)} {entry.currency === 'EUR' ? '€' : entry.currency}/L 
-                                    {entry.currency !== 'EUR' && <span className="ml-1 text-[var(--text-tertiary)]">({formatNumber(totalEur, 2)} €)</span>}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <button 
-                                onClick={() => {
-                                    const totalLocal = entry.price * entry.liters;
-                                    setTankForm({
-                                        date: entry.date,
-                                        km: entry.km.toString(),
-                                        liters: entry.liters.toString(),
-                                        price: entry.price.toString(),
-                                        total: totalLocal.toString()
-                                    });
-                                    setTimeout(() => {
-                                        const fuelTypeEl = document.querySelector('select[name="fuelType"]') as HTMLSelectElement;
-                                        if (fuelTypeEl) fuelTypeEl.value = entry.fuelType;
-                                        const currencyEl = document.querySelector('select[name="currency"]') as HTMLSelectElement;
-                                        if (currencyEl && entry.currency) currencyEl.value = entry.currency;
-                                        const vollgetanktEl = document.querySelector('select[name="vollgetankt"]') as HTMLSelectElement;
-                                        if (vollgetanktEl) vollgetanktEl.value = entry.vollgetankt === false ? 'false' : 'true';
-                                    }, 10);
-                                    setEditingTripId(entry.id);
-                                    setIsAdding(true);
-                                }} 
-                                className="cg-master-button !p-2 !rounded flex-shrink-0 -mr-2"
-                            >
-                                <Edit2 size={16}/>
-                            </button>
-                        </div>
-                    </div>
-                );
-            })}
-            {currentFuelLog.length === 0 && (
-                <div className="cg-master-card-small !p-6 !mb-0 text-center">
-                    <div className="cg-type-value-large mb-2 opacity-30">⛽</div>
-                    <div className="cg-type-card-title mb-1">Noch keine Tankungen</div>
-                    <div className="cg-type-meta cg-master-muted">Tippe auf + um deine erste Tankung zu erfassen. CamperGuard Pro berechnet daraus deinen Verbrauch.</div>
-                </div>
-            )}
-          </div>
+      {lb.logType === 'tank' && (
+        <LogbuchTankList
+          currentFuelLog={lb.currentFuelLog}
+          setTankForm={lb.setTankForm}
+          setEditingTripId={lb.setEditingTripId}
+          setIsAdding={lb.setIsAdding}
+        />
       )}
 
-      {logType === 'fahrt' && (
-          <div className="space-y-4">
-              <div className="cg-master-inset cg-master-tabs p-1">
-      <button onClick={() => setTripLogMode('flex')} className={`cg-master-tab cg-type-tab ${tripLogMode === 'flex' ? 'cg-master-tab-active' : ''}`}>REISETAGEBUCH</button>
-      <button onClick={() => setTripLogMode('strict')} className={`cg-master-tab cg-type-tab ${tripLogMode === 'strict' ? 'cg-master-tab-active' : ''}`}>FAHRTENBUCH §</button>
-  </div>
-
-              {tripLogMode === 'flex' && (
-                  <div className="space-y-3">
-                      {currentTripLog.slice(0, displayedTripsCount).map((entry:any) => (
-                          <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0 overflow-hidden" style={{ maxHeight: '90px' }}>
-                            <div className="flex justify-between items-start gap-2">
-                                <div className="flex flex-col gap-0 items-start w-2/3">
-                                    <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')}</span>
-                                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                                        <h4 className="cg-type-card-title">{entry.destination}</h4>
-                                    </div>
-                                    {entry.purpose && <p className="cg-type-meta mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.purpose}</p>}
-                                    {entry.note && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-1 text-ellipsis overflow-hidden">{entry.note}</p>}
-                                    {entry.lat && entry.lng && (
-                                        <a 
-                                            href={`https://www.google.com/maps?q=${entry.lat},${entry.lng}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1 mt-0.5 no-underline"
-                                            style={{ textDecoration: 'none' }}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <MapPin size={10} className="text-[var(--accent)] shrink-0"/>
-                                            <span className="cg-type-meta text-[var(--accent)]">{entry.lat.toFixed(4)}, {entry.lng.toFixed(4)}</span>
-                                        </a>
-                                    )}
-                                </div>
-                                <div className="flex flex-col items-end gap-2 w-1/3">
-                                    <div className="cg-type-value text-[var(--accent)]">
-                                        +{(entry.toKm != null && entry.fromKm != null && !isNaN(entry.toKm) && !isNaN(entry.fromKm)) ? Number(entry.toKm - entry.fromKm).toLocaleString('de-DE') : (entry.toKm - entry.fromKm)} <span className="cg-type-label ml-0.5">KM</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 mt-1">
-                                        <button onClick={() => {
-                                            setEditingTripId(entry.id);
-                                            setTripForm({
-                                                date: entry.date,
-                                                fromKm: entry.fromKm.toString(),
-                                                toKm: entry.toKm.toString(),
-                                                destination: entry.destination,
-                                                purpose: entry.purpose || '',
-                                                category: '',
-                                                note: entry.note || ''
-                                            });
-                                            setIsAdding(true);
-                                        }} className="cg-master-button !p-1 !rounded flex-shrink-0"><Edit2 size={14}/></button>
-                                        <button onClick={() => {
-                                            if(confirm('Möchtest du diesen Fahrten-Eintrag wirklich löschen?')) {
-                                                setState({...state, tripLog: state.tripLog.filter((t:any) => t.id !== entry.id)});
-                                            }
-                                        }} className="cg-master-button-danger !p-1 !rounded flex-shrink-0 -mr-2"><Trash2 size={14}/></button>
-                                    </div>
-                                </div>
-                            </div>
-                          </div>
-                      ))}
-                      {currentTripLog.length === 0 && <div className="text-center cg-type-meta mt-8">Keine Einträge</div>}
-                      {currentTripLog.length > displayedTripsCount && (
-                          <button onClick={() => setDisplayedTripsCount(c => c + 5)} className="cg-master-button w-full py-2 flex flex-row items-center justify-center gap-2">
-                              Mehr anzeigen
-                          </button>
-                      )}
-                  </div>
-              )}
-
-              {tripLogMode === 'strict' && (
-                  <div className="space-y-3">
-                      {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry:any) => {
-                          const isLocked = (Date.now() - parseInt(entry.id)) > 24 * 60 * 60 * 1000;
-                          return (
-                              <div key={entry.id} className={`cg-master-card-small !p-3 space-y-3 border-l-2 !mb-0 ${isLocked ? 'opacity-70' : ''}`}>
-                                <div className="flex justify-between items-start">
-                                    <div className="flex flex-col gap-1 items-start w-2/3">
-                                        <span className="cg-type-meta">{new Date(entry.date).toLocaleDateString('de-DE')} {isLocked && <span className="ml-1 text-[8px] px-1 uppercase tracking-wider border">Gesperrt</span>}</span>
-                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                            <h4 className="cg-type-card-title">{entry.city ? `${entry.zip} ${entry.city}` : 'Unbekanntes Ziel'}</h4>
-                                            <span className="cg-type-label border px-1">{entry.category || 'Dienstlich'}</span>
-                                        </div>
-                                        <p className="cg-type-meta mt-1">{entry.street} {entry.houseNumber}</p>
-                                        <p className="cg-type-meta mt-1 break-words line-clamp-1">Fahrer: {entry.driver}</p>
-                                        <p className="cg-type-meta mt-1 break-words line-clamp-2">Zweck: {entry.purpose || '-'}</p>
-                                        {entry.businessPartner && <p className="cg-type-meta italic mt-0.5 break-words line-clamp-2">Partner: {entry.businessPartner}</p>}
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2 w-1/3">
-                                        <div className="cg-type-value whitespace-nowrap">
-                                            +{(entry.toKm != null && entry.fromKm != null && !isNaN(entry.toKm) && !isNaN(entry.fromKm)) ? Number(entry.toKm - entry.fromKm).toLocaleString('de-DE') : (entry.toKm - entry.fromKm)} <span className="cg-type-label ml-0.5">KM</span>
-                                        </div>
-                                        {!isLocked && (
-                                            <div className="flex items-center gap-1 mt-1">
-                                                <button onClick={() => {
-                                                    setEditingTripId(entry.id);
-                                                    setBusinessTripForm({
-                                                        date: entry.date,
-                                                        departureTime: entry.departureTime || '',
-                                                        arrivalTime: entry.arrivalTime || '',
-                                                        fromKm: entry.fromKm.toString(),
-                                                        toKm: entry.toKm.toString(),
-                                                        category: entry.category,
-                                                        driver: entry.driver || '',
-                                                        street: entry.street || '',
-                                                        houseNumber: entry.houseNumber || '',
-                                                        zip: entry.zip || '',
-                                                        city: entry.city || '',
-                                                        purpose: entry.purpose || '',
-                                                        businessPartner: entry.businessPartner || '',
-                                                        note: entry.note || ''
-                                                    });
-                                                    setIsAdding(true);
-                                                }} className="cg-master-button !p-1 !rounded flex-shrink-0"><Edit2 size={14}/></button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="cg-type-meta mt-2 pt-2 border-t border-[var(--border)] flex justify-between">
-                                    <span>Start <span className="cg-type-value text-sm ml-1">{(entry.fromKm != null && !isNaN(entry.fromKm)) ? Number(entry.fromKm).toLocaleString('de-DE') : entry.fromKm}</span></span>
-                                    <span>Ziel <span className="cg-type-value text-sm ml-1">{(entry.toKm != null && !isNaN(entry.toKm)) ? Number(entry.toKm).toLocaleString('de-DE') : entry.toKm}</span></span>
-                                </div>
-                              </div>
-                          );
-                      })}
-                      {currentBusinessTripLog.length === 0 && <div className="text-center cg-type-meta mt-8">Keine Fahrtenbucheinträge</div>}
-                      <div className="cg-master-card-small !p-3 !mb-0 mt-4 border border-[var(--border)] bg-transparent">
-                          <p className="cg-type-meta cg-master-muted leading-relaxed text-center">
-                              Dieses digitale Fahrtenbuch dient als Dokumentationshilfe. Eine steuerliche Anerkennung durch das Finanzamt kann nicht garantiert werden.
-                          </p>
-                      </div>
-                      {currentBusinessTripLog.length > displayedBusinessTripsCount && (
-                          <button onClick={() => setDisplayedBusinessTripsCount(c => c + 10)} className="cg-master-button w-full py-2 flex flex-row items-center justify-center gap-2">
-                              Mehr anzeigen
-                          </button>
-                      )}
-                  </div>
-              )}
-          </div>
+      {lb.logType === 'fahrt' && (
+        <LogbuchTripList
+          state={state}
+          setState={setState}
+          tripLogMode={lb.tripLogMode}
+          setTripLogMode={lb.setTripLogMode}
+          currentTripLog={lb.currentTripLog}
+          currentBusinessTripLog={lb.currentBusinessTripLog}
+          displayedTripsCount={lb.displayedTripsCount}
+          setDisplayedTripsCount={lb.setDisplayedTripsCount}
+          displayedBusinessTripsCount={lb.displayedBusinessTripsCount}
+          setDisplayedBusinessTripsCount={lb.setDisplayedBusinessTripsCount}
+          setTripForm={lb.setTripForm}
+          setBusinessTripForm={lb.setBusinessTripForm}
+          setEditingTripId={lb.setEditingTripId}
+          setIsAdding={lb.setIsAdding}
+        />
       )}
 
-      {logType === 'spots' && (
-          <div className="space-y-3">
-              <button onClick={downloadGPX} className="cg-master-button w-full py-2 mb-4 flex flex-row items-center justify-center gap-2"><FileDown size={14}/> GPX Export</button>
-              {state.spots.map((spot:any) => (
-                  <div key={spot.id} className="cg-master-card-small !p-3 relative border-l-2 !mb-0">
-                      <div className="flex flex-col">
-                         <div className="flex justify-between items-start">
-                             <span className="cg-type-meta">{new Date(spot.date).toLocaleDateString('de-DE')}</span>
-                             <div className="flex items-center gap-2">
-                                <button onClick={() => { setSpotForm({ date: spot.date, name: spot.name, lat: spot.lat.toString(), lng: spot.lng.toString(), note: spot.note || '', category: spot.category || 'Stellplatz' }); setEditingSpotId(spot.id); setSpotGpsError(false); setIsAdding(true); }} className="cg-master-button !p-1 !rounded flex-shrink-0"><Edit2 size={12}/></button>
-                                <button onClick={() => { if(confirm('Möchtest du diesen POI-Eintrag wirklich löschen?')) { setState({...state, spots: state.spots.filter((s:any) => s.id !== spot.id)}); } }} className="cg-master-button-danger !p-1 !rounded flex-shrink-0"><Trash2 size={12}/></button>
-                             </div>
-                         </div>
-                         <div className="flex flex-wrap items-center gap-2 mt-1">
-                            <h4 className="cg-type-card-title">{spot.name}</h4>
-                            {spot.category && <span className="cg-type-label flex items-center gap-1.5"><span className="inline-block w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: SPOT_COLORS[spot.category] || '#9CA3AF' }} />{spot.category}</span>}
-                         </div>
-                         {spot.note && <p className="cg-type-meta mt-1 break-words line-clamp-2">{spot.note}</p>}
-                         <a href={`geo:${spot.lat},${spot.lng}`} className="cg-master-button !py-1 !px-2 mt-2 inline-flex items-center gap-1 w-max"><MapPin size={12}/> {spot.lat.toFixed(4)} / {spot.lng.toFixed(4)}</a>
-                      </div>
-                  </div>
-              ))}
-              {state.spots.length === 0 && (
-                  <div className="cg-master-card-small !p-6 !mb-0 text-center">
-                      <div className="cg-type-value-large mb-2 opacity-30">📍</div>
-                      <div className="cg-type-card-title mb-1">Noch keine POIs</div>
-                      <div className="cg-type-meta cg-master-muted">Speichere deine Lieblings-Stellplätze, Entsorgungsstationen oder Aussichtspunkte. Tippe auf + um einen POI hinzuzufügen.</div>
-                  </div>
-              )}
-          </div>
+      {lb.logType === 'spots' && (
+        <LogbuchSpotList
+          state={state}
+          setState={setState}
+          spots={state.spots}
+          SPOT_COLORS={SPOT_COLORS}
+          downloadGPX={lb.downloadGPX}
+          setSpotForm={lb.setSpotForm}
+          setEditingSpotId={lb.setEditingSpotId}
+          setSpotGpsError={lb.setSpotGpsError}
+          setIsAdding={lb.setIsAdding}
+        />
       )}
 
-      {logType === 'archiv' && (
-          <div className="space-y-4">
-              <div className="cg-master-card-small !p-4 !mb-2">
-                  <h3 className="cg-type-value flex items-center gap-2 mb-3"><Archive size={14}/> Archiv erstellen</h3>
-                  <div className="space-y-3">
-                      <div className="flex gap-2 items-center">
-                          <select 
-                              className="cg-master-input flex-1 !py-2" 
-                              value={archiveSelection} 
-                              onChange={(e) => setArchiveSelection(e.target.value)}
-                          >
-                              <option value="reise">Reise archivieren</option>
-                              <option value="tanken">Tankprotokoll</option>
-                              <option value="reisetagebuch">Reisetagebuch</option>
-                              <option value="fahrtenbuch">Fahrtenbuch §</option>
-                              <option value="pois">POIs</option>
-                          </select>
-                      </div>
-
-                      {archiveSelection === 'reise' && (
-                          <div className="space-y-3">
-                              <input
-                                  type="text"
-                                  placeholder="Name der Reise (z.B. Norwegen 2025)"
-                                  value={tripArchiveName}
-                                  onChange={(e) => setTripArchiveName(e.target.value)}
-                                  className="cg-master-input w-full"
-                                  maxLength={60}
-                              />
-                              <div className="grid grid-cols-2 gap-2">
-                                  <div>
-                                      <label className="cg-type-label block mb-1">Von</label>
-                                      <input
-                                          type="date"
-                                          value={tripArchiveFrom}
-                                          onChange={(e) => setTripArchiveFrom(e.target.value)}
-                                          className="cg-master-input w-full"
-                                      />
-                                  </div>
-                                  <div>
-                                      <label className="cg-type-label block mb-1">Bis</label>
-                                      <input
-                                          type="date"
-                                          value={tripArchiveTo}
-                                          onChange={(e) => setTripArchiveTo(e.target.value)}
-                                          className="cg-master-input w-full"
-                                      />
-                                  </div>
-                              </div>
-                              <div className="cg-master-card-small !p-3 !mb-0">
-                                  <div className="cg-type-meta leading-relaxed">
-                                      Alle Tankungen, Fahrten, Fahrtenbuch-Einträge und POIs im gewählten Zeitraum werden zusammengefasst und aus den aktiven Listen entfernt.
-                                  </div>
-                              </div>
-                              <button
-                                  className="cg-master-button !py-2 px-4 w-full"
-                                  onClick={createTripArchive}
-                              >
-                                  Reise archivieren
-                              </button>
-                          </div>
-                      )}
-
-                      {archiveSelection === 'tanken' && (
-                          <div className="space-y-3">
-                              <select
-                                  className="cg-master-input !py-2 w-full"
-                                  value={fuelArchiveMode}
-                                  onChange={(e) => setFuelArchiveMode(e.target.value as 'all' | 'range')}
-                              >
-                                  <option value="all">Alle Tankungen archivieren</option>
-                                  <option value="range">Tankungen nach Zeitraum archivieren</option>
-                              </select>
-
-                              {fuelArchiveMode === 'range' && (
-                                  <div className="grid grid-cols-2 gap-2">
-                                      <input
-                                          type="date"
-                                          value={fuelArchiveRange.from}
-                                          onChange={(e) => setFuelArchiveRange({
-                                              ...fuelArchiveRange,
-                                              from: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-
-                                      <input
-                                          type="date"
-                                          value={fuelArchiveRange.to}
-                                          onChange={(e) => setFuelArchiveRange({
-                                              ...fuelArchiveRange,
-                                              to: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                  </div>
-                              )}
-
-                              <button 
-                                  className="cg-master-button !py-2 px-4 w-full"
-                                  onClick={createFuelArchive}
-                              >
-                                  Tankprotokoll archivieren
-                              </button>
-                          </div>
-                      )}
-
-                      {archiveSelection === 'reisetagebuch' && (
-                          <div className="space-y-3">
-                              <select
-                                  className="cg-master-input !py-2 w-full"
-                                  value={tripArchiveMode}
-                                  onChange={(e) => setTripArchiveMode(e.target.value as 'all' | 'range')}
-                              >
-                                  <option value="all">Alle Reisen archivieren</option>
-                                  <option value="range">Reisen nach Zeitraum archivieren</option>
-                              </select>
-
-                              {tripArchiveMode === 'range' && (
-                                  <div className="grid grid-cols-2 gap-2">
-                                      <input
-                                          type="date"
-                                          value={tripArchiveRange.from}
-                                          onChange={(e) => setTripArchiveRange({
-                                              ...tripArchiveRange,
-                                              from: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-
-                                      <input
-                                          type="date"
-                                          value={tripArchiveRange.to}
-                                          onChange={(e) => setTripArchiveRange({
-                                              ...tripArchiveRange,
-                                              to: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                  </div>
-                              )}
-
-                              <button 
-                                  className="cg-master-button !py-2 px-4 w-full"
-                                  onClick={createTripLogArchive}
-                              >
-                                  Reisetagebuch archivieren
-                              </button>
-                          </div>
-                      )}
-
-                      {archiveSelection === 'fahrtenbuch' && (
-                          <div className="space-y-3">
-                              <select
-                                  className="cg-master-input !py-2 w-full"
-                                  value={businessArchiveMode}
-                                  onChange={(e) => setBusinessArchiveMode(e.target.value as 'all' | 'range')}
-                              >
-                                  <option value="all">Alle Einträge archivieren</option>
-                                  <option value="range">Einträge nach Zeitraum archivieren</option>
-                              </select>
-
-                              {businessArchiveMode === 'range' && (
-                                  <div className="grid grid-cols-2 gap-2">
-                                      <input
-                                          type="date"
-                                          value={businessArchiveRange.from}
-                                          onChange={(e) => setBusinessArchiveRange({
-                                              ...businessArchiveRange,
-                                              from: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                      <input
-                                          type="date"
-                                          value={businessArchiveRange.to}
-                                          onChange={(e) => setBusinessArchiveRange({
-                                              ...businessArchiveRange,
-                                              to: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                  </div>
-                              )}
-
-                              <button 
-                                  className="cg-master-button !py-2 px-4 w-full"
-                                  onClick={createBusinessTripArchive}
-                              >
-                                  Fahrtenbuch § archivieren
-                              </button>
-                          </div>
-                      )}
-
-                      {archiveSelection === 'pois' && (
-                          <div className="space-y-3">
-                              <select
-                                  className="cg-master-input !py-2 w-full"
-                                  value={spotsArchiveMode}
-                                  onChange={(e) => setSpotsArchiveMode(e.target.value as 'all' | 'range')}
-                              >
-                                  <option value="all">Alle POIs archivieren</option>
-                                  <option value="range">POIs nach Zeitraum archivieren</option>
-                              </select>
-
-                              {spotsArchiveMode === 'range' && (
-                                  <div className="grid grid-cols-2 gap-2">
-                                      <input
-                                          type="date"
-                                          value={spotsArchiveRange.from}
-                                          onChange={(e) => setSpotsArchiveRange({
-                                              ...spotsArchiveRange,
-                                              from: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                      <input
-                                          type="date"
-                                          value={spotsArchiveRange.to}
-                                          onChange={(e) => setSpotsArchiveRange({
-                                              ...spotsArchiveRange,
-                                              to: e.target.value
-                                          })}
-                                          className="cg-master-input"
-                                      />
-                                  </div>
-                              )}
-
-                              <button 
-                                  className="cg-master-button !py-2 px-4 w-full"
-                                  onClick={createSpotsArchive}
-                              >
-                                  POIs archivieren
-                              </button>
-                          </div>
-                      )}
-                  </div>
-              </div>
-              
-              {state.archives.map((a:any) => (
-                  <button
-                      key={a.id || a.year}
-                      onClick={() => {
-                          setSelectedArchive(a);
-                          if (a.type === 'triplog') {
-                              setArchiveViewTab('trip');
-                          } else if (a.type === 'business') {
-                              setArchiveViewTab('business');
-                          } else if (a.type === 'spots') {
-                              setArchiveViewTab('spots');
-                          } else {
-                              setArchiveViewTab('tank');
-                          }
-                      }}
-                      className="cg-master-card-small !p-4 !mb-0 w-full text-left"
-                  >
-                      <div className="flex items-start justify-between gap-3 pb-2 mb-2 border-b border-[var(--border)]">
-                          <div className="flex flex-col gap-1">
-                              <h3 className="cg-type-value-large flex items-center gap-2">
-                                  <Archive size={14}/>
-                                  {a.name || a.year}
-                              </h3>
-
-                              <div className="flex flex-wrap items-center gap-2">
-                                  <span className="cg-type-meta uppercase tracking-wide">
-                                      {a.type === 'year' ? 'Jahresabschluss' : a.type === 'fuel' ? 'Tankprotokoll' : a.type === 'triplog' ? 'Reisetagebuch' : a.type === 'business' ? 'Fahrtenbuch §' : a.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv'}
-                                  </span>
-
-                                  <span className="cg-type-meta">
-                                      {new Date(a.dateFrom).toLocaleDateString('de-DE')}
-                                      {' — '}
-                                      {new Date(a.dateTo).toLocaleDateString('de-DE')}
-                                  </span>
-                              </div>
-                          </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 text-center mt-3">
-                          <div>
-                              <div className="cg-type-label text-[var(--text-muted)]">Distanz</div>
-                              <div className="cg-type-value">{formatNumber(a.summary?.totalKm ?? a.totalKm, 0)} <span className="cg-type-label ml-0.5">KM</span></div>
-                          </div>
-                          <div>
-                              <div className="cg-type-label text-[var(--text-muted)]">Liter</div>
-                              <div className="cg-type-value">{formatNumber(a.summary?.totalLiters ?? a.totalLiters, 1)} <span className="cg-type-label ml-0.5">L</span></div>
-                          </div>
-                          <div>
-                              <div className="cg-type-label text-[var(--text-muted)]">Kosten</div>
-                              <div className="cg-type-value text-[var(--accent)]">{formatNumber(a.summary?.totalEur ?? a.totalEur, 2)} <span className="cg-type-label ml-0.5">€</span></div>
-                          </div>
-                      </div>
-                  </button>
-              ))}
-              {state.archives.length === 0 && <div className="text-center cg-type-meta py-8">Keine Archive</div>}
-          </div>
+      {lb.logType === 'archiv' && (
+        <LogbuchArchiveCreate
+          state={state}
+          archiveSelection={lb.archiveSelection}
+          setArchiveSelection={lb.setArchiveSelection}
+          tripArchiveName={lb.tripArchiveName}
+          setTripArchiveName={lb.setTripArchiveName}
+          tripArchiveFrom={lb.tripArchiveFrom}
+          setTripArchiveFrom={lb.setTripArchiveFrom}
+          tripArchiveTo={lb.tripArchiveTo}
+          setTripArchiveTo={lb.setTripArchiveTo}
+          createTripArchive={lb.createTripArchive}
+          fuelArchiveMode={lb.fuelArchiveMode}
+          setFuelArchiveMode={lb.setFuelArchiveMode}
+          fuelArchiveRange={lb.fuelArchiveRange}
+          setFuelArchiveRange={lb.setFuelArchiveRange}
+          createFuelArchive={lb.createFuelArchive}
+          tripArchiveMode={lb.tripArchiveMode}
+          setTripArchiveMode={lb.setTripArchiveMode}
+          tripArchiveRange={lb.tripArchiveRange}
+          setTripArchiveRange={lb.setTripArchiveRange}
+          createTripLogArchive={lb.createTripLogArchive}
+          businessArchiveMode={lb.businessArchiveMode}
+          setBusinessArchiveMode={lb.setBusinessArchiveMode}
+          businessArchiveRange={lb.businessArchiveRange}
+          setBusinessArchiveRange={lb.setBusinessArchiveRange}
+          createBusinessTripArchive={lb.createBusinessTripArchive}
+          spotsArchiveMode={lb.spotsArchiveMode}
+          setSpotsArchiveMode={lb.setSpotsArchiveMode}
+          spotsArchiveRange={lb.spotsArchiveRange}
+          setSpotsArchiveRange={lb.setSpotsArchiveRange}
+          createSpotsArchive={lb.createSpotsArchive}
+          setSelectedArchive={lb.setSelectedArchive}
+          setArchiveViewTab={lb.setArchiveViewTab}
+        />
       )}
 
-      {(logType === 'tank' || logType === 'fahrt' || logType === 'spots') && (
+      {(lb.logType === 'tank' || lb.logType === 'fahrt' || lb.logType === 'spots') && (
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md h-9 z-40 pointer-events-none flex items-center justify-center">
               <div className="pointer-events-auto absolute right-4 bottom-0">
                   <button 
                     onClick={() => { 
-                        const highestKm = getLastKnownKm();
-                        if (logType === 'tank') {
-                            setTankForm(f => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
-                        } else if (logType === 'fahrt') {
-                            setTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
-                            setBusinessTripForm(f => ({...f, date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
-                        } else if (logType === 'spots') {
-                            setSpotForm(f => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
-                            setSpotGpsError(false);
+                        const highestKm = lb.getLastKnownKm();
+                        if (lb.logType === 'tank') {
+                            lb.setTankForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
+                        } else if (lb.logType === 'fahrt') {
+                            lb.setTripForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
+                            lb.setBusinessTripForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
+                        } else if (lb.logType === 'spots') {
+                            lb.setSpotForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
+                            lb.setSpotGpsError(false);
                         }
-                        setEditingTripId(null);
-                        setEditingSpotId(null);
-                        setIsAdding(true); 
+                        lb.setEditingTripId(null);
+                        lb.setEditingSpotId(null);
+                        lb.setIsAdding(true); 
                     }} 
                     className="cg-master-button h-9 px-5 rounded-full flex flex-row items-center justify-center shadow-2xl border border-[var(--accent-dark)]"
                   >
@@ -1386,893 +202,84 @@ export function LogbuchView({ state, setState }: any) {
       )}
 
       <AnimatePresence>
-        {selectedArchive && (
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-50 bg-black/95 flex items-start justify-center p-4 overflow-y-auto"
-            >
-                <div className="w-full max-w-4xl my-8 space-y-4">
-                    <div className="cg-master-card">
-                        <div className="flex justify-between items-start gap-4">
-                            <div className="space-y-2">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span className="cg-type-meta uppercase tracking-wide">
-                                        {selectedArchive.type === 'year' ? 'Jahresabschluss' : selectedArchive.type === 'fuel' ? 'Tankprotokoll' : selectedArchive.type === 'triplog' ? 'Reisetagebuch' : selectedArchive.type === 'business' ? 'Fahrtenbuch §' : selectedArchive.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv'}
-                                    </span>
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.3)] text-[11px] font-bold text-green-400 uppercase tracking-wide">
-                                        <CheckCircle size={11} />
-                                        Archiviert
-                                    </span>
-                                </div>
-
-                                <h2 className="cg-type-page-title !text-left">
-                                    {selectedArchive.name}
-                                </h2>
-
-                                <div className="cg-type-meta">
-                                    {new Date(selectedArchive.dateFrom).toLocaleDateString('de-DE')}
-                                    {' — '}
-                                    {new Date(selectedArchive.dateTo).toLocaleDateString('de-DE')}
-                                </div>
-                                {selectedArchive.createdAt && (
-                                    <div className="cg-type-meta text-[var(--text-muted)]">
-                                        Archiviert am {new Date(selectedArchive.createdAt).toLocaleDateString('de-DE')}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => deleteArchive(selectedArchive)}
-                                    className="cg-master-button-danger !p-2"
-                                >
-                                    Löschen
-                                </button>
-
-                                <button
-                                    onClick={() => window.print()}
-                                    className="cg-master-button !p-2"
-                                >
-                                    Drucken
-                                </button>
-
-                                <button
-                                    onClick={() => setSelectedArchive(null)}
-                                    className="cg-master-button !p-2"
-                                >
-                                    Schließen
-                                </button>
-                            </div>
-                        </div>
-
-                        {(selectedArchive.type === 'year' || selectedArchive.type === 'triplog' || selectedArchive.type === 'business') && (
-                            <div className="cg-master-card-small !mb-0 !p-3 border border-[var(--status-warning)] bg-[rgba(255,165,0,0.08)]">
-                                <div className="cg-type-meta leading-relaxed">
-                                    Dieses Jahresarchiv kann steuerrelevante Fahrtenbuchdaten enthalten.
-                                    Gesetzliche Aufbewahrungsfristen können bis zu 10 Jahre betragen.
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-                            <div className="cg-master-card-small !mb-0 !p-3">
-                                <div className="cg-type-label">KM</div>
-                                <div className="cg-type-value-large">
-                                    {formatNumber(selectedArchive.summary?.totalKm || 0, 0)}
-                                </div>
-                            </div>
-
-                            <div className="cg-master-card-small !mb-0 !p-3">
-                                <div className="cg-type-label">Liter</div>
-                                <div className="cg-type-value-large">
-                                    {formatNumber(selectedArchive.summary?.totalLiters || 0, 1)}
-                                </div>
-                            </div>
-
-                            <div className="cg-master-card-small !mb-0 !p-3">
-                                <div className="cg-type-label">Kosten</div>
-                                <div className="cg-type-value-large text-[var(--accent)]">
-                                    {formatNumber(selectedArchive.summary?.totalEur || 0, 2)} €
-                                </div>
-                            </div>
-
-                            <div className="cg-master-card-small !mb-0 !p-3">
-                                <div className="cg-type-label">Verbrauch</div>
-                                <div className="cg-type-value-large">
-                                    {selectedArchive.summary?.fuelConsumption != null
-                                        ? `${formatNumber(selectedArchive.summary.fuelConsumption, 1)} L`
-                                        : '—'}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="cg-master-inset cg-master-tabs p-1 overflow-x-auto hide-scrollbar">
-                        <button
-                            onClick={() => setArchiveViewTab('tank')}
-                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'tank' ? 'cg-master-tab-active' : ''}`}
-                        >
-                            Tanken
-                        </button>
-
-                        <button
-                            onClick={() => setArchiveViewTab('trip')}
-                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'trip' ? 'cg-master-tab-active' : ''}`}
-                        >
-                            Reisen
-                        </button>
-
-                        <button
-                            onClick={() => setArchiveViewTab('business')}
-                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'business' ? 'cg-master-tab-active' : ''}`}
-                        >
-                            Fahrtenbuch §
-                        </button>
-
-                        <button
-                            onClick={() => setArchiveViewTab('spots')}
-                            className={`cg-master-tab cg-type-tab ${archiveViewTab === 'spots' ? 'cg-master-tab-active' : ''}`}
-                        >
-                            POIs
-                        </button>
-                    </div>
-
-                    {archiveViewTab === 'tank' && (
-                        <div className="space-y-3">
-                            {selectedArchive.fuelLog.map((entry:any) => (
-                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
-                                    <div className="flex justify-between items-start gap-3">
-                                        <div className="space-y-1">
-                                            <div className="cg-type-meta">
-                                                {new Date(entry.date).toLocaleDateString('de-DE')}
-                                            </div>
-
-                                            <div className="cg-type-card-title">
-                                                {entry.km?.toLocaleString('de-DE')} KM
-                                            </div>
-
-                                            <div className="cg-type-meta">
-                                                {formatNumber(entry.liters, 1)} L · {formatNumber(entry.price, 3)} {entry.currency || '€'}
-                                            </div>
-                                        </div>
-
-                                        <div className="cg-type-value text-[var(--accent)]">
-                                            {formatNumber((entry.liters * entry.price) / (entry.exchangeRateToEur || 1), 2)} €
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {selectedArchive.fuelLog.length === 0 && (
-                                <div className="cg-type-meta text-center py-8">
-                                    Keine archivierten Tankeinträge
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {archiveViewTab === 'trip' && (
-                        <div className="space-y-3">
-                            {selectedArchive.tripLog.map((entry:any) => (
-                                <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0">
-                                    <div className="flex justify-between items-start gap-3">
-                                        <div className="space-y-1">
-                                            <div className="cg-type-meta">
-                                                {new Date(entry.date).toLocaleDateString('de-DE')}
-                                            </div>
-
-                                            <div className="cg-type-card-title">
-                                                {entry.destination}
-                                            </div>
-
-                                            {entry.purpose && (
-                                                <div className="cg-type-meta">
-                                                    {entry.purpose}
-                                                </div>
-                                            )}
-
-                                            {entry.note && (
-                                                <div className="cg-type-meta italic">
-                                                    {entry.note}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="cg-type-value text-[var(--accent)]">
-                                            +{formatNumber((entry.toKm || 0) - (entry.fromKm || 0), 0)} KM
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {selectedArchive.tripLog.length === 0 && (
-                                <div className="cg-type-meta text-center py-8">
-                                    Keine archivierten Reisen
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {archiveViewTab === 'business' && (
-                        <div className="space-y-3">
-                            {selectedArchive.businessTripLog.map((entry:any) => (
-                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-start gap-3">
-                                            <div>
-                                                <div className="cg-type-meta">
-                                                    {new Date(entry.date).toLocaleDateString('de-DE')}
-                                                </div>
-
-                                                <div className="cg-type-card-title">
-                                                    {entry.city ? `${entry.zip} ${entry.city}` : 'Fahrtenbuch'}
-                                                </div>
-                                            </div>
-
-                                            <div className="cg-type-value text-[var(--accent)]">
-                                                +{formatNumber((entry.toKm || 0) - (entry.fromKm || 0), 0)} KM
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2">
-                                            <span className="cg-type-meta">
-                                                {entry.departureTime || '—'} → {entry.arrivalTime || '—'}
-                                            </span>
-
-                                            <span className="cg-type-meta">
-                                                {entry.category}
-                                            </span>
-                                        </div>
-
-                                        {entry.purpose && (
-                                            <div className="cg-type-meta">
-                                                {entry.purpose}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-
-                            {selectedArchive.businessTripLog.length === 0 && (
-                                <div className="cg-type-meta text-center py-8">
-                                    Keine archivierten Fahrtenbuch-Einträge
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {archiveViewTab === 'spots' && (
-                        <div className="space-y-3">
-                            {selectedArchive.spots.map((entry:any) => (
-                                <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
-                                    <div className="space-y-1">
-                                        <div className="cg-type-meta">
-                                            {new Date(entry.date).toLocaleDateString('de-DE')}
-                                        </div>
-
-                                        <div className="cg-type-card-title">
-                                            {entry.name}
-                                        </div>
-
-                                        <div className="cg-type-meta">
-                                            {entry.category}
-                                        </div>
-
-                                        <div className="cg-type-meta text-[var(--accent)]">
-                                            {Number(entry.lat).toFixed(4)}, {Number(entry.lng).toFixed(4)}
-                                        </div>
-
-                                        {entry.note && (
-                                            <div className="cg-type-meta italic">
-                                                {entry.note}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-
-                            {selectedArchive.spots.length === 0 && (
-                                <div className="cg-type-meta text-center py-8">
-                                    Keine archivierten POIs
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </motion.div>
-        )}
-
-        {isAdding && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 overflow-y-auto">
-                <div className="cg-master-card-small w-full max-w-sm my-8">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="typo-section-title">{logType === 'tank' ? 'Tankbeleg' : logType === 'fahrt' ? (tripLogMode === 'strict' ? 'Fahrtenbuch' : 'Reise-Notiz') : "POI Log"}</h2>
-                        {logType === 'tank' && editingTripId && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if(confirm('Möchtest du diesen Tankbeleg wirklich löschen?')) {
-                                        setState({...state, fuelLog: state.fuelLog.filter((f:any) => f.id !== editingTripId)});
-                                        setEditingTripId(null);
-                                        setIsAdding(false);
-                                    }
-                                }}
-                                className="cg-master-button-danger !p-1.5 !rounded flex-shrink-0"
-                            >
-                                <Trash2 size={16}/>
-                            </button>
-                        )}
-                    </div>
-                    <form onSubmit={(e:any) => {
-                        e.preventDefault();
-                        const fd = new FormData(e.target);
-                        if(logType === 'tank') {
-                            const parsedLiters = parseFloat(tankForm.liters);
-                            const parsedPrice = parseFloat(tankForm.price);
-                            if (isNaN(parsedLiters) || parsedLiters <= 0) {
-                                window.alert("Bitte einen gültigen Wert für Liter eingeben (größer als 0).");
-                                return;
-                            }
-                            if (isNaN(parsedPrice) || parsedPrice <= 0) {
-                                window.alert("Bitte einen gültigen Wert für Preis eingeben (größer als 0).");
-                                return;
-                            }
-                            if (state.profile?.dieselCapacity && state.profile.dieselCapacity > 0) {
-                                if (parsedLiters > state.profile.dieselCapacity) {
-                                    window.alert("Die getankte Menge darf nicht größer sein als die Kraftstofftank-Kapazität im Profil.");
-                                    return;
-                                }
-                            }
-                            const cur = fd.get('currency') as Currency;
-                            const rate = state.exchangeRates[cur] || 1;
-                            const isVollgetankt = fd.get('vollgetankt') !== 'false';
-                            const entry: FuelEntry = { id: Date.now().toString(), date: tankForm.date, km: parseFloat(tankForm.km), liters: parseFloat(tankForm.liters), price: parseFloat(tankForm.price), currency: cur, exchangeRateToEur: rate, fuelType: fd.get('fuelType') as FuelType, vollgetankt: isVollgetankt };
-                            setState({...state, fuelLog: [entry, ...state.fuelLog]});
-                            setIsAdding(false);
-                        } else if(logType === 'fahrt') {
-                            if (tripLogMode === 'strict') {
-                                setIsConfirmingBusinessTrip(true);
-                            } else {
-                                const parsedToKm = parseFloat(tripForm.fromKm);
-                                const entry: any = { 
-                                    id: editingTripId || Date.now().toString(), 
-                                    date: tripForm.date, 
-                                    fromKm: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
-                                    toKm: isNaN(parsedToKm) ? 0 : parsedToKm, 
-                                    purpose: tripForm.purpose, 
-                                    destination: tripForm.destination, 
-                                    note: tripForm.note,
-                                    lat: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lat ?? undefined) : (tripGpsCoords?.lat || undefined),
-                                    lng: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lng ?? undefined) : (tripGpsCoords?.lng || undefined)
-                                };
-                                if (editingTripId) {
-                                    setState({...state, tripLog: state.tripLog.map((t:any) => t.id === editingTripId ? entry : t)});
-                                } else {
-                                    setState({...state, tripLog: [entry, ...state.tripLog]});
-                                }
-                                setEditingTripId(null);
-                                setIsAdding(false);
-                            }
-                        } else if(logType === 'spots') {
-                            const entry: SpotEntry = { id: editingSpotId || Date.now().toString(), name: spotForm.name, date: spotForm.date, lat: parseFloat(spotForm.lat), lng: parseFloat(spotForm.lng), note: spotForm.note, category: spotForm.category };
-                            if (editingSpotId) {
-                                setState({...state, spots: state.spots.map((s:any) => s.id === editingSpotId ? entry : s)});
-                            } else {
-                                setState({...state, spots: [entry, ...state.spots]});
-                            }
-                            setEditingSpotId(null);
-                            setIsAdding(false);
-                        }
-                    }}>
-                        <div className="space-y-3">
-                            <input name="date" required type="date" value={logType === 'fahrt' ? (tripLogMode === 'strict' ? businessTripForm.date : tripForm.date) : (logType === 'spots' ? spotForm.date : tankForm.date)} onChange={(e) => {
-                                if (logType === 'fahrt') {
-                                    if (tripLogMode === 'strict') setBusinessTripForm({...businessTripForm, date: e.target.value});
-                                    else setTripForm({...tripForm, date: e.target.value});
-                                } else if (logType === 'spots') {
-                                    setSpotForm({...spotForm, date: e.target.value});
-                                } else handleTankChange({ target: { name: 'date', value: e.target.value } } as any);
-                            }} className="cg-master-input w-full" />
-                            {logType === 'fahrt' && tripLogMode === 'strict' && !isBusinessTripToday && (
-                                <span className="typo-tiny block mt-1 cg-master-muted">Fahrtenbuch-Einträge müssen am selben Tag erfasst werden.</span>
-                            )}
-                            
-                            {logType === 'tank' ? (
-                                <>
-                                    <input name="km" required type={focusedTankField === 'km' ? "number" : "text"} min="0" placeholder="KM-Stand" value={focusedTankField === 'km' ? tankForm.km : (tankForm.km !== '' && !isNaN(parseFloat(tankForm.km)) ? parseFloat(tankForm.km).toLocaleString('de-DE', { maximumFractionDigits: 0 }) : tankForm.km)} onChange={handleTankChange} onFocus={() => setFocusedTankField('km')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className={`cg-master-input w-full`} />
-                                    {!isKmValid && tankForm.km !== '' && (
-                                        <span className="typo-tiny block mt-1 cg-master-muted">
-                                            {maxKm === Infinity 
-                                                ? `Kilometerstand muss mindestens ${formatNumber(minKm, 0)} km betragen.` 
-                                                : minKm === 0 
-                                                    ? `Kilometerstand darf höchstens ${formatNumber(maxKm, 0)} km betragen.`
-                                                    : `Kilometerstand muss zwischen ${formatNumber(minKm, 0)} und ${formatNumber(maxKm, 0)} km liegen.`}
-                                        </span>
-                                    )}
-                                    {isKmValid && tankForm.km !== '' && parseFloat(tankForm.km) < getLastKnownKm() && (
-                                        <span className="typo-tiny block mt-1" style={{ color: 'var(--status-warn)' }}>Warnung: Kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>
-                                    )}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="w-full">
-                                            <input name="liters" required type={focusedTankField === 'liters' ? "number" : "text"} min="0.01" step="0.01" max="9999" placeholder="Liter" value={focusedTankField === 'liters' ? tankForm.liters : (tankForm.liters !== '' && !isNaN(parseFloat(tankForm.liters)) ? parseFloat(tankForm.liters).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tankForm.liters)} onChange={handleTankChange} onFocus={() => setFocusedTankField('liters')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className={`cg-master-input w-full`} />
-                                            {!isLitersValid && tankForm.liters !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Liter muss &gt; 0 und &lt;= 9999 sein.</span>}
-                                            {isLitersValid && tankForm.liters !== '' && parseFloat(tankForm.liters) > 250 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Literangabe wirkt ungewöhnlich hoch.</span>}
-                                        </div>
-                                        <select name="fuelType" className="cg-master-select w-full">
-                                            {FUEL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="w-full">
-                                            <input name="price" required type={focusedTankField === 'price' ? "number" : "text"} min="0.01" step="0.001" max="999" placeholder="Preis/Liter" value={focusedTankField === 'price' ? tankForm.price : (tankForm.price !== '' && !isNaN(parseFloat(tankForm.price)) ? parseFloat(tankForm.price).toLocaleString('de-DE', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : tankForm.price)} onChange={handleTankChange} onFocus={() => setFocusedTankField('price')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className={`cg-master-input w-full`} />
-                                            {!isPriceValid && tankForm.price !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Preis muss &gt; 0 und &lt;= 999 sein.</span>}
-                                            {isPriceValid && tankForm.price !== '' && parseFloat(tankForm.price) > 5 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Preis/Liter wirkt ungewöhnlich hoch.</span>}
-                                        </div>
-                                        <div className="w-full">
-                                            <input name="total" type={focusedTankField === 'total' ? "number" : "text"} min="0" step="0.01" placeholder="Gesamtbetrag" value={focusedTankField === 'total' ? tankForm.total : (tankForm.total !== '' && !isNaN(parseFloat(tankForm.total)) ? parseFloat(tankForm.total).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : tankForm.total)} onChange={handleTankChange} onFocus={() => setFocusedTankField('total')} onBlur={() => setFocusedTankField(null)} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }} className="cg-master-input w-full" />
-                                            {tankForm.total !== '' && !isNaN(parseFloat(tankForm.total)) && parseFloat(tankForm.total) > 500 && <span className="typo-tiny block mt-1 text-[var(--accent)] opacity-80">Gesamtbetrag wirkt ungewöhnlich hoch.</span>}
-                                        </div>
-                                    </div>
-                                    <select name="currency" className="cg-master-select w-full mt-2">
-                                        {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                    <div className="mt-4">
-                                        <label className="typo-label mb-2 block">Vollgetankt</label>
-                                        <select name="vollgetankt" className="cg-master-select w-full" defaultValue="true">
-                                            <option value="true">Ja</option>
-                                            <option value="false">Nein</option>
-                                        </select>
-                                    </div>
-                                </>
-                            ) : logType === 'fahrt' ? (
-                                tripLogMode === 'strict' ? (
-                                    <>
-                                        <select name="category" value={businessTripForm.category} onChange={e => setBusinessTripForm({...businessTripForm, category: e.target.value})} className="cg-master-input w-full">
-                                            <option value="Dienstlich">Dienstlich</option>
-                                            <option value="Wohnung – Arbeitsstätte">Wohnung – Arbeitsstätte</option>
-                                            <option value="Privat">Privat</option>
-                                        </select>
-                                        <input name="driver" required placeholder="Fahrer" value={businessTripForm.driver} onChange={e => setBusinessTripForm({...businessTripForm, driver: e.target.value})} className={`cg-master-input w-full`} />
-                                        {!isBusinessTripDriverValid && businessTripForm.driver === '' && <span className="typo-tiny block mt-1 cg-master-muted">Fahrer ist ein Pflichtfeld.</span>}
-                                        <div className="flex gap-2">
-                                            <input name="departureTime" type={businessTripForm.departureTime ? 'time' : 'text'} placeholder="Abfahrt (Uhrzeit)" value={businessTripForm.departureTime} onFocus={e => { e.target.type = 'time'; }} onBlur={e => { if (!e.target.value) e.target.type = 'text'; }} onChange={e => setBusinessTripForm({...businessTripForm, departureTime: e.target.value})} className="cg-master-input w-1/2" />
-                                            <input name="arrivalTime" type={businessTripForm.arrivalTime ? 'time' : 'text'} placeholder="Ankunft (Uhrzeit)" value={businessTripForm.arrivalTime} onFocus={e => { e.target.type = 'time'; }} onBlur={e => { if (!e.target.value) e.target.type = 'text'; }} onChange={e => setBusinessTripForm({...businessTripForm, arrivalTime: e.target.value})} className="cg-master-input w-1/2" />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Start KM" value={businessTripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setBusinessTripForm({...businessTripForm, fromKm: digitsOnly}); }} className={`cg-master-input w-1/2`} />
-                                            <input name="toKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Ziel KM" value={businessTripForm.toKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setBusinessTripForm({...businessTripForm, toKm: digitsOnly}); }} className={`cg-master-input w-1/2`} />
-                                        </div>
-                                        {businessTripForm.fromKm === '' && <span className="typo-tiny block mt-1 cg-master-muted">Start KM ist ein Pflichtfeld.</span>}
-                                        {businessTripForm.toKm === '' && <span className="typo-tiny block mt-1 cg-master-muted">Ziel KM ist ein Pflichtfeld.</span>}
-                                        {businessTripForm.fromKm !== '' && parseFloat(businessTripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Start-KM kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
-                                        {!isBusinessTripValid && businessTripForm.toKm !== '' && <span className="typo-tiny block mt-1 cg-master-muted">Ziel KM muss größer als Start KM sein.</span>}
-                                        <div className="flex gap-2">
-                                            <input name="street" required placeholder="Straße" value={businessTripForm.street} onChange={e => setBusinessTripForm({...businessTripForm, street: e.target.value})} className="cg-master-input w-3/4" />
-                                            <input name="houseNumber" required placeholder="Nr." value={businessTripForm.houseNumber} onChange={e => setBusinessTripForm({...businessTripForm, houseNumber: e.target.value})} className="cg-master-input w-1/4" />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <input name="zip" required placeholder="PLZ" value={businessTripForm.zip} onChange={e => setBusinessTripForm({...businessTripForm, zip: e.target.value})} className="cg-master-input w-1/3" />
-                                            <input name="city" required placeholder="Ort" value={businessTripForm.city} onChange={e => setBusinessTripForm({...businessTripForm, city: e.target.value})} className="cg-master-input w-2/3" />
-                                        </div>
-                                        <input name="purpose" maxLength={50} placeholder="Zweck (optional)" value={businessTripForm.purpose} onChange={e => setBusinessTripForm({...businessTripForm, purpose: e.target.value})} className={`cg-master-input w-full`} />
-                                        {businessTripForm.category === 'Dienstlich' && (
-                                            <input name="businessPartner" placeholder="Geschäftspartner (optional)" value={businessTripForm.businessPartner} onChange={e => setBusinessTripForm({...businessTripForm, businessPartner: e.target.value})} className="cg-master-input w-full" />
-                                        )}
-                                        <textarea name="note" placeholder="Notiz / Routenhinweis (optional)" value={businessTripForm.note} onChange={e => setBusinessTripForm({...businessTripForm, note: e.target.value})} className="cg-master-input w-full h-16" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <input name="fromKm" required type="number" inputMode="numeric" pattern="[0-9]*" placeholder="Aktueller Tacho-Stand" value={tripForm.fromKm} onChange={e => { const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 6); setTripForm({...tripForm, fromKm: digitsOnly}); }} className="cg-master-input w-full" />
-                                        {tripForm.fromKm !== '' && parseFloat(tripForm.fromKm) < getLastKnownKm() && <span className="typo-tiny block mt-1 cg-master-muted">Warnung: Tacho-Stand kleiner als letzter KM-Stand ({formatNumber(getLastKnownKm(), 0)}).</span>}
-                                        <input name="destination" required placeholder="Zielort" value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})} className="cg-master-input w-full" />
-                                        <textarea name="note" placeholder="Notizen" value={tripForm.note} onChange={e => setTripForm({...tripForm, note: e.target.value})} className="cg-master-input w-full h-20" />
-                                        {tripGpsCoords && tripGpsStatus === 'active' && !editingTripId && (
-                                            <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)]">
-                                                <MapPin size={14} className="text-[var(--accent)] shrink-0"/>
-                                                <span className="cg-type-meta text-[var(--accent)]">GPS: {tripGpsCoords.lat.toFixed(5)}, {tripGpsCoords.lng.toFixed(5)}</span>
-                                                <span className="cg-type-meta cg-master-muted ml-auto">wird gespeichert</span>
-                                            </div>
-                                        )}
-                                        {editingTripId && (() => {
-                                            const existingEntry = state.tripLog.find((t:any) => t.id === editingTripId);
-                                            if (existingEntry?.lat && existingEntry?.lng) {
-                                                return (
-                                                    <a href={`https://www.google.com/maps?q=${existingEntry.lat},${existingEntry.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)] no-underline" style={{ textDecoration: 'none' }}>
-                                                        <MapPin size={14} className="text-[var(--accent)] shrink-0"/>
-                                                        <span className="cg-type-meta text-[var(--accent)]">GPS: {existingEntry.lat.toFixed(5)}, {existingEntry.lng.toFixed(5)}</span>
-                                                    </a>
-                                                );
-                                            }
-                                            return null;
-                                        })()}
-                                    </>
-                                )
-                            ) : (
-                                <>
-                                    <input name="name" required placeholder="POI Name" value={spotForm.name} onChange={e => setSpotForm({...spotForm, name: e.target.value})} className="cg-master-input w-full" />
-                                    <div className="relative w-full">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSpotCategoryOpen(!spotCategoryOpen)}
-                                            className="cg-master-input w-full flex items-center gap-2 text-left"
-                                        >
-                                            <span className="w-[10px] h-[10px] rounded-full flex-shrink-0 border border-white/30" style={{ background: SPOT_COLORS[spotForm.category] || '#9CA3AF' }} />
-                                            <span className="flex-1">{spotForm.category}</span>
-                                            <ChevronDown size={14} className={`text-[var(--text-muted)] transition-transform ${spotCategoryOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-                                        {spotCategoryOpen && (
-                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] shadow-xl overflow-y-auto max-h-[240px]">
-                                                {SPOT_CATEGORIES.map((cat) => (
-                                                    <button
-                                                        key={cat}
-                                                        type="button"
-                                                        onClick={() => { setSpotForm({...spotForm, category: cat}); setSpotCategoryOpen(false); }}
-                                                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors ${spotForm.category === cat ? 'bg-white/10' : 'hover:bg-white/5'}`}
-                                                    >
-                                                        <span className="w-[8px] h-[8px] rounded-full flex-shrink-0" style={{ background: SPOT_COLORS[cat] }} />
-                                                        <span className={spotForm.category === cat ? 'text-white font-bold' : 'text-[var(--text-secondary)]'}>{cat}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                    {spotGpsError && <span className="typo-tiny block mt-1 cg-master-muted">GPS nicht verfügbar</span>}
-                                    <div className="flex gap-2 items-center">
-                                        <button type="button" onClick={async () => {
-                                            try { 
-                                                const p = await getPosition(); 
-                                                setSpotForm(s => ({...s, lat: p.lat.toString(), lng: p.lng.toString()})); 
-                                                setSpotGpsError(false);
-                                            } catch(err){ 
-                                                setSpotGpsError(true);
-                                            }
-                                        }} className="cg-master-inset cg-master-control w-12 flex items-center justify-center rounded"><MapPin size={18}/></button>
-                                        <input name="lat" required type="number" step="any" placeholder="Lat" value={spotForm.lat} onChange={e => setSpotForm({...spotForm, lat: e.target.value})} className="cg-master-input w-1/2" />
-                                        <input name="lng" required type="number" step="any" placeholder="Lng" value={spotForm.lng} onChange={e => setSpotForm({...spotForm, lng: e.target.value})} className="cg-master-input w-1/2" />
-                                    </div>
-                                    <textarea name="note" placeholder="Notiz" value={spotForm.note} onChange={e => setSpotForm({...spotForm, note: e.target.value})} className="cg-master-input w-full h-24" />
-                                </>
-                            )}
-                        </div>
-                        <div className="flex gap-3 mt-6"><button type="button" onClick={() => { setIsAdding(false); setEditingTripId(null); setEditingSpotId(null); setIsConfirmingBusinessTrip(false); }} className="cg-master-button flex-1 !p-3">Abbrechen</button><button type="submit" disabled={(logType === 'tank' && (!isKmValid || !isLitersValid || !isPriceValid)) || (logType === 'fahrt' && tripLogMode === 'flex' && !isTripValid) || (logType === 'fahrt' && tripLogMode === 'strict' && (!isBusinessTripValid || !isBusinessTripPurposeValid || !isBusinessTripDriverValid || !isBusinessTripCategoryValid || !isBusinessTripToday))} className="cg-master-button flex-1 py-3 disabled:opacity-50">Speichern</button></div>
-                    </form>
-                </div>
-            </motion.div>
-        )}
+        <LogbuchArchiveDetail
+          selectedArchive={lb.selectedArchive}
+          setSelectedArchive={lb.setSelectedArchive}
+          archiveViewTab={lb.archiveViewTab}
+          setArchiveViewTab={lb.setArchiveViewTab}
+          deleteArchive={lb.deleteArchive}
+        />
       </AnimatePresence>
+
       <AnimatePresence>
-        {isConfirmingBusinessTrip && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4">
-                <div className="cg-master-card-small w-full max-w-sm" style={{ borderColor: 'var(--accent)' }}>
-                    <h2 className="typo-section-title mb-2">Verbindlich Speichern?</h2>
-                    <p className="typo-body mb-6">
-                        Bitte prüfe alle Angaben sorgfältig.<br/><br/>Fahrtenbuch-Einträge sind nur am selben Tag änderbar und danach gesperrt.<br/><br/>Möchtest du diesen Eintrag verbindlich speichern?
-                    </p>
-                    <div className="flex flex-col gap-3">
-                        <button onClick={() => {
-                            const entry: any = { 
-                                id: editingTripId || Date.now().toString(), 
-                                date: businessTripForm.date, 
-                                fromKm: parseFloat(businessTripForm.fromKm), 
-                                toKm: parseFloat(businessTripForm.toKm), 
-                                category: businessTripForm.category,
-                                driver: businessTripForm.driver,
-                                street: businessTripForm.street,
-                                houseNumber: businessTripForm.houseNumber,
-                                zip: businessTripForm.zip,
-                                city: businessTripForm.city,
-                                purpose: businessTripForm.purpose,
-                                businessPartner: businessTripForm.businessPartner,
-                                note: businessTripForm.note
-                            };
-                            const currentBusinessTrips = state.businessTripLog || [];
-                            if (editingTripId) {
-                                setState({...state, businessTripLog: currentBusinessTrips.map((t:any) => t.id === editingTripId ? entry : t)});
-                            } else {
-                                setState({...state, businessTripLog: [entry, ...currentBusinessTrips]});
-                            }
-                            setEditingTripId(null);
-                            setIsConfirmingBusinessTrip(false);
-                            setIsAdding(false);
-                        }} className="cg-master-button w-full py-3">Verbindlich speichern</button>
-                        <button onClick={() => setIsConfirmingBusinessTrip(false)} className="cg-master-button w-full py-3">Zurück zur Prüfung</button>
-                    </div>
-                </div>
-            </motion.div>
-        )}
+        <LogbuchAddModal
+          isAdding={lb.isAdding}
+          setIsAdding={lb.setIsAdding}
+          isConfirmingBusinessTrip={lb.isConfirmingBusinessTrip}
+          setIsConfirmingBusinessTrip={lb.setIsConfirmingBusinessTrip}
+          logType={lb.logType}
+          tripLogMode={lb.tripLogMode}
+          tankForm={lb.tankForm}
+          setTankForm={lb.setTankForm}
+          handleTankChange={lb.handleTankChange}
+          focusedTankField={lb.focusedTankField}
+          setFocusedTankField={lb.setFocusedTankField}
+          isKmValid={lb.isKmValid}
+          isLitersValid={lb.isLitersValid}
+          isPriceValid={lb.isPriceValid}
+          minKm={lb.minKm}
+          maxKm={lb.maxKm}
+          tripForm={lb.tripForm}
+          setTripForm={lb.setTripForm}
+          businessTripForm={lb.businessTripForm}
+          setBusinessTripForm={lb.setBusinessTripForm}
+          isTripValid={lb.isTripValid}
+          isBusinessTripValid={lb.isBusinessTripValid}
+          isBusinessTripPurposeValid={lb.isBusinessTripPurposeValid}
+          isBusinessTripDriverValid={lb.isBusinessTripDriverValid}
+          isBusinessTripCategoryValid={lb.isBusinessTripCategoryValid}
+          isBusinessTripToday={lb.isBusinessTripToday}
+          tripGpsCoords={lb.tripGpsCoords}
+          tripGpsStatus={lb.tripGpsStatus}
+          spotForm={lb.spotForm}
+          setSpotForm={lb.setSpotForm}
+          spotCategoryOpen={lb.spotCategoryOpen}
+          setSpotCategoryOpen={lb.setSpotCategoryOpen}
+          spotGpsError={lb.spotGpsError}
+          setSpotGpsError={lb.setSpotGpsError}
+          getPosition={lb.getPosition}
+          editingTripId={lb.editingTripId}
+          setEditingTripId={lb.setEditingTripId}
+          editingSpotId={lb.editingSpotId}
+          setEditingSpotId={lb.setEditingSpotId}
+          getLastKnownKm={lb.getLastKnownKm}
+          state={state}
+          setState={setState}
+        />
       </AnimatePresence>
       </div>
 
-      <div className="hidden print-only logbuch-print-wrapper bg-white">
-          <PrintHeader 
-              title={printTitle}
-              vehicleName={state.profile?.vehicleName} 
-              plate={state.profile?.plate}
-              dateRange={printDateRange}
-              createdDate={new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-          />
-
-          {((!selectedArchive && logType === 'tank') || (selectedArchive && archiveViewTab === 'tank')) && (
-             printFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             (() => {
-                 const sortedDates = [...printFuelLog].sort((a:any,b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                 const dateRangeStr = sortedDates.length > 0 ? `${new Date(sortedDates[0].date).toLocaleDateString('de-DE')} - ${new Date(sortedDates[sortedDates.length - 1].date).toLocaleDateString('de-DE')}` : `Jahr ${currentYear}`;
-
-                 return (
-                     <div className="tank-print-layout">
-                         <style>{`
-                             @media print {
-                                 .tank-print-meta-grid {
-                                     display: grid;
-                                     grid-template-columns: 1.3fr 0.8fr 1fr 1fr 1fr;
-                                     gap: 5mm;
-                                     margin: 2mm 0 2mm 0;
-                                     padding-bottom: 2mm;
-                                     border-bottom: 0.4pt solid #cfcfcf;
-                                 }
-                                 .tank-print-column-grid {
-                                     display: grid;
-                                     grid-template-columns: 13% 19% 18% 14% 16% 20%;
-                                 }
-                                 .tank-print-row {
-                                     display: grid;
-                                     grid-template-columns: 13% 19% 18% 14% 16% 20%;
-                                 }
-                                 .tank-print-bottom-summary {
-                                     display: grid;
-                                     grid-template-columns: repeat(4, 1fr);
-                                 }
-                             }
-                         `}</style>
-
-                         <div className="tank-print-meta-grid">
-                             <div>
-                                 <div className="tank-print-meta-label cg-print-meta-label">Zeitraum</div>
-                                 <div className="tank-print-meta-value cg-print-meta-value">{dateRangeStr}</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-meta-label cg-print-meta-label">Tankungen</div>
-                                 <div className="tank-print-meta-value cg-print-meta-value">{currentFuelLog.length}</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-meta-label cg-print-meta-label">Gesamtliter</div>
-                                 <div className="tank-print-meta-value cg-print-meta-value">{formatNumber(totalLiters, 1)} L</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-meta-label cg-print-meta-label">Gesamtkosten</div>
-                                 <div className="tank-print-meta-value cg-print-meta-value">{formatNumber(totalEur, 2)} €</div>
-                             </div>
-                             <div>
-                                 <div className="tank-print-meta-label cg-print-meta-label">Durchschnitt</div>
-                                 <div className="tank-print-meta-value cg-print-meta-value">{result?.consumption != null ? `${formatNumber(result.consumption, 1)} L/100km` : '—'}</div>
-                             </div>
-                         </div>
-                         
-                         <div className="tank-print-column-grid cg-print-col-header">
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>📅</span> Datum</div>
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🔧</span> Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt', marginLeft: '16px'}}>(seit letzter Tankung)</span></div>
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>⛽</span> Kraftstoff</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>💧</span> Liter</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🏷️</span> Preis / L</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🧾</span> Gesamtpreis</div>
-                         </div>
-
-                         <div className="tank-print-row-list">
-                             {printFuelLog.map((f:any, idx:number) => {
-                                 const totalBetrag = (f.liters * f.price) / (f.exchangeRateToEur || 1);
-                                 const sortedByKm = [...printFuelLog].filter((e:any) => e.km != null && !isNaN(e.km)).sort((a:any, b:any) => a.km - b.km);
-                                 const isFirstTankung = sortedByKm.length > 0 && f.id === sortedByKm[0].id;
-                                 const prevEntry = sortedByKm.find((e:any, i:number) => i < sortedByKm.length - 1 && sortedByKm[i + 1].id === f.id);
-                                 const kmDelta = (prevEntry && f.km != null && !isNaN(f.km)) ? f.km - prevEntry.km : null;
-                                 const hasKm = f.km != null && !isNaN(f.km);
-                                 let kmDeltaStr = '(—)';
-                                 if (isFirstTankung) kmDeltaStr = '(Erste Tankung)';
-                                 else if (kmDelta != null && kmDelta > 0) kmDeltaStr = `(${formatNumber(kmDelta, 0)} km)`;
-
-                                 return (
-                                     <div key={f.id} className="tank-print-row cg-print-row">
-                                         <div className="cg-print-cell-date">{new Date(f.date).toLocaleDateString('de-DE')}</div>
-                                         <div className="cg-print-cell-name">
-                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span className="cg-print-km-delta">{kmDeltaStr}</span></> : <span style={{color: '#888'}}>-</span>}
-                                         </div>
-                                         <div className="cg-print-cell-muted">{f.fuelType}</div>
-                                         <div className="cg-print-cell-num">{formatNumber(f.liters, 2)} l</div>
-                                         <div className="cg-print-cell-num">{formatNumber(f.price, 3)} €</div>
-                                         <div className="cg-print-cell-orange">{formatNumber(totalBetrag, 2)} €</div>
-                                     </div>
-                                 );
-                             })}
-                         </div>
-
-                         <div className="tank-print-bottom-wrapper cg-print-summary-wrapper">
-                             <div className="cg-print-summary-title">Übersicht Zeitraum</div>
-                             <div className="tank-print-bottom-summary cg-print-summary-grid">
-                                 <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>🚐</span> Gefahrene Kilometer</div>
-                                     <div className="cg-print-summary-value">{formatNumber(totalKm, 0)} km</div>
-                                 </div>
-                                 <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💧</span> Getankte Liter</div>
-                                     <div className="cg-print-summary-value">{formatNumber(totalLiters, 1)} l</div>
-                                 </div>
-                                 <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💶</span> Gesamtkosten</div>
-                                     <div className="cg-print-summary-value">{formatNumber(totalEur, 2)} €</div>
-                                 </div>
-                                 <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>⛽</span> Durchschnitt</div>
-                                     <div className="cg-print-summary-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
-                                     {totalLiters > 0 && totalEur > 0 && <div className="cg-print-summary-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
-                 );
-             })()
-          )}
-
-          {((!selectedArchive && logType === 'fahrt' && tripLogMode === 'flex') || (selectedArchive && archiveViewTab === 'trip')) && (
-             printTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <div>
-                 <div className="reise-print-column-grid cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Zielort</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Start km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Ziel km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Strecke</div>
-                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
-                 </div>
-                 <div>
-                     {printTripLog.map((t:any) => {
-                         const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
-                         return (
-                             <div key={t.id} className="reise-print-row cg-print-row">
-                                 <div className="cg-print-cell-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
-                                 <div className="cg-print-cell-name">{t.destination}</div>
-                                 <div className="cg-print-cell-num">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
-                                 <div className="cg-print-cell-num">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
-                                 <div className="cg-print-cell-bold">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
-                                 <div className="cg-print-cell-note">{t.purpose || t.note || ''}</div>
-                             </div>
-                         );
-                     })}
-                 </div>
-                 <div className="cg-print-summary-wrapper">
-                     <div className="cg-print-summary-title">Übersicht Zeitraum</div>
-                     <div className="reise-print-summary-grid cg-print-summary-grid">
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🗺️</span> Fahrten</div>
-                             <div className="cg-print-summary-value">{currentTripLog.length}</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
-                             <div className="cg-print-summary-value">{Number(totalKm).toLocaleString('de-DE')} km</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Ø pro Fahrt</div>
-                             <div className="cg-print-summary-value">{currentTripLog.length > 0 ? Number(Math.round(totalKm / currentTripLog.length)).toLocaleString('de-DE') : '0'} km</div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-          )}
-
-          {((!selectedArchive && logType === 'fahrt' && tripLogMode === 'strict') || (selectedArchive && archiveViewTab === 'business')) && (
-             printBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <div>
-                 <div className="fb-print-hdr1 cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> Ab</div>
-                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> An</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>👤</span> Fahrer</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏷️</span> Kategorie</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Start km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Ziel km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📏</span> Strecke</div>
-                 </div>
-                 <div className="fb-print-hdr2 cg-print-col-header-sub">
-                     <div style={{textAlign: 'left', paddingLeft: '1mm'}}>📍 Reiseziel (Straße Nr, PLZ Ort)</div>
-                     <div style={{textAlign: 'left'}}>📝 Reisezweck</div>
-                     <div style={{textAlign: 'left'}}>🤝 Geschäftspartner</div>
-                     <div style={{textAlign: 'left'}}>📌 Notiz / Route</div>
-                 </div>
-                 <div>
-                     {printBusinessTripLog.map((t:any) => {
-                         const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
-                         const addrParts = [t.street, t.houseNumber].filter(Boolean).join(' ');
-                         const plzOrt = [t.zip, t.city].filter(Boolean).join(' ');
-                         const fullAddr = [addrParts, plzOrt].filter(Boolean).join(', ');
-                         const catClass = t.category === 'Dienstlich' ? 'cg-print-cat-dienstlich' : t.category === 'Privat' ? 'cg-print-cat-privat' : 'cg-print-cat-arbeitsweg';
-                         return (
-                             <div key={t.id}>
-                                 <div className="fb-row1 cg-print-row">
-                                     <div className="cg-print-cell-date">{new Date(t.date).toLocaleDateString('de-DE')}</div>
-                                     <div className="cg-print-cell-time">{t.departureTime || '—'}</div>
-                                     <div className="cg-print-cell-time">{t.arrivalTime || '—'}</div>
-                                     <div className="cg-print-cell-muted">{t.driver}</div>
-                                     <div className={`fb-cat ${catClass}`}>{t.category}</div>
-                                     <div className="cg-print-cell-num">{(t.fromKm != null && !isNaN(t.fromKm)) ? Number(t.fromKm).toLocaleString('de-DE') : '-'}</div>
-                                     <div className="cg-print-cell-num">{(t.toKm != null && !isNaN(t.toKm)) ? Number(t.toKm).toLocaleString('de-DE') : '-'}</div>
-                                     <div className="cg-print-cell-bold">{strecke != null ? `${Number(strecke).toLocaleString('de-DE')} km` : '-'}</div>
-                                 </div>
-                                 <div className="fb-row2 cg-print-row-sub">
-                                     <div className="cg-print-cell-muted">{fullAddr || '—'}</div>
-                                     <div className="cg-print-cell-name">{t.purpose || '—'}</div>
-                                     <div className="cg-print-cell-muted">{t.businessPartner || '—'}</div>
-                                     <div className="cg-print-cell-note">{t.note || ''}</div>
-                                 </div>
-                             </div>
-                         );
-                     })}
-                 </div>
-                 <div className="cg-print-summary-wrapper">
-                     <div className="cg-print-summary-title">Übersicht Zeitraum</div>
-                     <div className="fb-summary-grid cg-print-summary-grid">
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📋</span> Fahrten</div>
-                             <div className="cg-print-summary-value">{currentBusinessTripLog.length}</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>💼</span> Dienstlich</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category === 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏠</span> Privat / Arbeitsweg</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category !== 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-          )}
-
-          {((!selectedArchive && logType === 'spots') || (selectedArchive && archiveViewTab === 'spots')) && (
-             printSpots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
-             <div>
-                 <div className="poi-print-column-grid cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Name</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorie</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Koordinaten</div>
-                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
-                 </div>
-                 <div>
-                     {printSpots.map((s:any) => (
-                         <div key={s.id} className="poi-print-row cg-print-row">
-                             <div className="cg-print-cell-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
-                             <div className="cg-print-cell-name">{s.name}</div>
-                             <div className="cg-print-cell-muted">{s.category || 'Stellplatz'}</div>
-                             <div className="cg-print-cell-coords">{(s.lat != null && s.lng != null) ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : ''}</div>
-                             <div className="cg-print-cell-note">{s.note}</div>
-                         </div>
-                     ))}
-                 </div>
-                 <div className="cg-print-summary-wrapper">
-                     <div className="cg-print-summary-title">Übersicht</div>
-                     <div className="poi-print-summary-grid cg-print-summary-grid">
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Gespeicherte Orte</div>
-                             <div className="cg-print-summary-value">{state.spots.length}</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorien</div>
-                             <div className="cg-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
-                         </div>
-                         <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Mit Koordinaten</div>
-                             <div className="cg-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
-                         </div>
-                     </div>
-                 </div>
-             </div>
-          )}
-
-      </div>
+      <LogbuchPrintViews
+        logType={lb.logType}
+        tripLogMode={lb.tripLogMode}
+        selectedArchive={lb.selectedArchive}
+        archiveViewTab={lb.archiveViewTab}
+        printFuelLog={lb.printFuelLog}
+        printTripLog={lb.printTripLog}
+        printBusinessTripLog={lb.printBusinessTripLog}
+        printSpots={lb.printSpots}
+        printTitle={lb.printTitle}
+        printDateRange={lb.printDateRange}
+        currentFuelLog={lb.currentFuelLog}
+        currentTripLog={lb.currentTripLog}
+        currentBusinessTripLog={lb.currentBusinessTripLog}
+        totalLiters={lb.totalLiters}
+        totalEur={lb.totalEur}
+        totalKm={lb.totalKm}
+        result={lb.result}
+        currentYear={lb.currentYear}
+        state={state}
+      />
     </>
   );
 }
