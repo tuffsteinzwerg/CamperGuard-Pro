@@ -6,6 +6,30 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.1.7-dev",
+    "date": "22.05.2026",
+    "entries": [
+      "541. POI-Farben: Custom-Dropdown mit farbigen Punkten je Kategorie (Brand-Guide-konform), Farbpunkte in POI-Liste.",
+      "540. POI-Dropdown: Scroll-Fix — max-h mit overflow-y-auto, alle 8 Kategorien erreichbar.",
+      "539. Disclaimer: Medizin-Hinweis im Safety Hub ('ersetzt keine ärztliche Beratung') und Fahrtenbuch-Disclaimer ('keine Garantie für steuerliche Anerkennung').",
+      "538. Empty States: Hilfreiche Leertexte für leere Tank-Liste, POI-Liste und Inventar-Lagerorte.",
+      "537. Onboarding: Erklärtext ergänzt — 'Dein privates Kontrollcockpit' + 'Kein Stellplatzfinder. Keine Cloud.'",
+      "536. POI-Karte: Alle gespeicherten POIs als farbige Marker auf der Leaflet-Karte im Reise-Tab, mit Popup (Name, Kategorie, Notiz).",
+      "535. GPS-Indikator: Position feingetunt — Instrument mittig zwischen Zahl und Ring, Logbuch mittig zwischen Überschrift und Druckerbutton.",
+      "534. GPS-Indikator: Schriftgrößen angepasst — Instrument 10px, Safety Hub 12px, Logbuch 12px, Punkt 7px, Opacity 80%.",
+      "533. GPS-Indikator: Einheitlicher antippbarer GPS-Status auf Status (Rundinstrument), Logbuch (Header) und Safety Hub. Grün=aktiv, Orange=aus.",
+      "532. GPS-Toggle im Safety Hub durch minimalen Indikator ersetzt (gleicher Stil wie Instrument).",
+      "531. PWA: Service Worker Registrierung in main.tsx.",
+      "530. PWA: Service Worker (sw.js) mit Network-first-Strategie und Offline-Fallback.",
+      "529. PWA: manifest.json + Meta-Tags in index.html (apple-mobile-web-app, theme-color, Icons 192/512px).",
+      "528. PWA: App-Icons generiert (icon-192x192.png, icon-512x512.png) aus CGP_AppIcon_512.svg.",
+      "527. Archiv: Visuelles 'Archiviert'-Badge (grüner CheckCircle-Pill) + Erstellungsdatum im Detail-Modal.",
+      "526. Archiv: UI — 'Reise archivieren' als erste Option im Dropdown mit Namensfeld, Von/Bis-Datum und Erklärungstext.",
+      "525. Archiv: createTripArchive-Funktion — kombiniertes Reise-Archiv (Typ 'trip') sammelt Tank, Fahrten, Fahrtenbuch und POIs aus gewähltem Zeitraum.",
+      "524. Archiv: State-Variablen für Reise-Archiv (tripArchiveName, tripArchiveFrom, tripArchiveTo)."
+    ]
+  },
+  {
     "version": "v0.1.6-dev",
     "date": "11.05.2026",
     "entries": [

@@ -239,8 +239,15 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
               </div>
 
               {/* Center Weight Display */}
-              <div className="absolute z-30 flex flex-col items-center justify-center pointer-events-none">
-                  <div className="relative flex items-baseline justify-center" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}>
+              <div className="absolute z-30 flex flex-col items-center justify-center">
+                  <button
+                      onClick={() => updateSos('gpsEnabled', state.sos.gpsEnabled === false ? true : false)}
+                      className="flex items-center gap-1.5 mb-4 -mt-8 pointer-events-auto"
+                  >
+                      <div className={`w-[7px] h-[7px] rounded-full ${state.sos.gpsEnabled !== false ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--accent)] shadow-[0_0_6px_rgba(255,102,0,0.4)]'}`} />
+                      <span className={`text-[10px] font-bold tracking-[0.15em] uppercase ${state.sos.gpsEnabled !== false ? 'text-[#00ff9c]/80' : 'text-[var(--accent)]/80'}`} style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>GPS</span>
+                  </button>
+                  <div className="relative flex items-baseline justify-center pointer-events-none" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}>
                       <span className={`instrument-value text-5xl tracking-normal ${
                           (totalWeight / (state.profile.maxWeight || 3500)) > 1 ? 'instrument-value-danger' :
                           (totalWeight / (state.profile.maxWeight || 3500)) > 0.9 ? 'instrument-value-warning' :
@@ -502,15 +509,13 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
                                 >
                                     <MapPin size={14} className="text-[var(--accent)]"/> DEINE POSITION
                                 </h3>
-                                 <div className="flex items-center gap-2">
-                                     <span className="cg-master-label !mb-0">GPS</span>
-                                     <button 
-                                         onClick={() => updateSos('gpsEnabled', state.sos.gpsEnabled === false ? true : false)}
-                                         className={`cg-master-inset w-7 h-7 rounded flex items-center justify-center border border-transparent transition-colors ${state.sos.gpsEnabled !== false ? 'cg-master-control-active' : ''}`}
-                                     >
-                                         {state.sos.gpsEnabled !== false && <Check size={16} />}
-                                     </button>
-                                 </div>
+                                 <button
+                                     onClick={() => updateSos('gpsEnabled', state.sos.gpsEnabled === false ? true : false)}
+                                     className="flex items-center gap-1.5"
+                                 >
+                                     <div className={`w-[7px] h-[7px] rounded-full ${state.sos.gpsEnabled !== false ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--accent)] shadow-[0_0_6px_rgba(255,102,0,0.4)]'}`} />
+                                     <span className={`text-[12px] font-bold tracking-[0.1em] uppercase ${state.sos.gpsEnabled !== false ? 'text-[#00ff9c]/80' : 'text-[var(--accent)]/80'}`}>GPS</span>
+                                 </button>
                              </div>
                              <div className={`cg-master-inset flex flex-col justify-center relative z-10 ${gpsStatus === 'active' ? 'min-h-[80px] p-3' : 'min-h-[60px] p-3 items-center'}`}>
                                  {gpsStatus === 'loading' && <span className="cg-master-value text-[var(--accent)] animate-pulse !text-[12px]">Signal wird ermittelt...</span>}
@@ -802,6 +807,11 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       </div>
     </div>
 
+    <div className="cg-master-card-small !p-3 !mb-0 mt-4 border border-[var(--border)] bg-transparent">
+        <p className="cg-type-meta cg-master-muted leading-relaxed text-center">
+            Die hier hinterlegten Daten dienen als Gedächtnisstütze für den Notfall. Diese App ersetzt keine ärztliche Beratung, Diagnose oder Behandlung.
+        </p>
+    </div>
 
   </div>
 )}

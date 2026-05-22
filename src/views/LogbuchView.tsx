@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, FileDown, Printer, MapPin, Archive, Edit2, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, FileDown, Printer, MapPin, Archive, Edit2, CheckCircle, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import { calculateAverageFuelConsumptionFromFuelLog, calculateFuelLogStats } from '../lib/fuelCalculator';
@@ -8,6 +8,19 @@ import type { Currency, FuelType, FuelEntry, SpotEntry } from '../types';
 
 const CURRENCIES: Currency[] = ['EUR', 'CHF', 'TRY', 'DKK', 'SEK', 'NOK', 'PLN', 'GBP'];
 const FUEL_TYPES: FuelType[] = ['Diesel', 'Benzin', 'Super E10', 'Super E5'];
+
+const SPOT_COLORS: Record<string, string> = {
+  'Stellplatz': '#3B82F6',
+  'Freistehen': '#22C55E',
+  'Campingplatz': '#FBBF24',
+  'Entsorgung': '#EF4444',
+  'Versorgung': '#EC4899',
+  'Einkauf': '#06B6D4',
+  'Aussicht': '#A855F7',
+  'Sonstiges': '#9CA3AF',
+};
+
+const SPOT_CATEGORIES = ['Stellplatz', 'Freistehen', 'Campingplatz', 'Entsorgung', 'Versorgung', 'Einkauf', 'Aussicht', 'Sonstiges'];
 
 export function LogbuchView({ state, setState }: any) {
   const [logType, setLogType] = useState<'tank' | 'fahrt' | 'spots' | 'archiv'>('tank');
@@ -39,6 +52,7 @@ export function LogbuchView({ state, setState }: any) {
   const [spotGpsError, setSpotGpsError] = useState(false);
   const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [editingSpotId, setEditingSpotId] = useState<string | null>(null);
+  const [spotCategoryOpen, setSpotCategoryOpen] = useState(false);
   const [tripGpsCoords, setTripGpsCoords] = useState<{lat: number, lng: number} | null>(null);
   const [tripGpsStatus, setTripGpsStatus] = useState<'offline'|'loading'|'active'>('offline');
   
@@ -772,8 +786,15 @@ export function LogbuchView({ state, setState }: any) {
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
-      <div className="flex justify-between items-end mb-4 px-2 no-print">
+      <div className="flex justify-between items-center mb-4 px-2 no-print">
           <h1 className="cg-type-page-title">Logbuch {currentYear}</h1>
+          <button
+              onClick={() => setState({...state, sos: {...state.sos, gpsEnabled: state.sos?.gpsEnabled === false ? true : false}})}
+              className="flex items-center gap-1.5"
+          >
+              <div className={`w-[7px] h-[7px] rounded-full ${state.sos?.gpsEnabled !== false ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--accent)] shadow-[0_0_6px_rgba(255,102,0,0.4)]'}`} />
+              <span className={`text-[12px] font-bold tracking-[0.1em] uppercase ${state.sos?.gpsEnabled !== false ? 'text-[#00ff9c]/80' : 'text-[var(--accent)]/80'}`}>GPS</span>
+          </button>
           <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
       </div>
 
@@ -858,6 +879,13 @@ export function LogbuchView({ state, setState }: any) {
                     </div>
                 );
             })}
+            {currentFuelLog.length === 0 && (
+                <div className="cg-master-card-small !p-6 !mb-0 text-center">
+                    <div className="cg-type-value-large mb-2 opacity-30">⛽</div>
+                    <div className="cg-type-card-title mb-1">Noch keine Tankungen</div>
+                    <div className="cg-type-meta cg-master-muted">Tippe auf + um deine erste Tankung zu erfassen. CamperGuard Pro berechnet daraus deinen Verbrauch.</div>
+                </div>
+            )}
           </div>
       )}
 
@@ -987,6 +1015,11 @@ export function LogbuchView({ state, setState }: any) {
                           );
                       })}
                       {currentBusinessTripLog.length === 0 && <div className="text-center cg-type-meta mt-8">Keine Fahrtenbucheinträge</div>}
+                      <div className="cg-master-card-small !p-3 !mb-0 mt-4 border border-[var(--border)] bg-transparent">
+                          <p className="cg-type-meta cg-master-muted leading-relaxed text-center">
+                              Dieses digitale Fahrtenbuch dient als Dokumentationshilfe. Eine steuerliche Anerkennung durch das Finanzamt kann nicht garantiert werden.
+                          </p>
+                      </div>
                       {currentBusinessTripLog.length > displayedBusinessTripsCount && (
                           <button onClick={() => setDisplayedBusinessTripsCount(c => c + 10)} className="cg-master-button w-full py-2 flex flex-row items-center justify-center gap-2">
                               Mehr anzeigen
@@ -1012,13 +1045,20 @@ export function LogbuchView({ state, setState }: any) {
                          </div>
                          <div className="flex flex-wrap items-center gap-2 mt-1">
                             <h4 className="cg-type-card-title">{spot.name}</h4>
-                            {spot.category && <span className="cg-type-label">{spot.category}</span>}
+                            {spot.category && <span className="cg-type-label flex items-center gap-1.5"><span className="inline-block w-[7px] h-[7px] rounded-full flex-shrink-0" style={{ background: SPOT_COLORS[spot.category] || '#9CA3AF' }} />{spot.category}</span>}
                          </div>
                          {spot.note && <p className="cg-type-meta mt-1 break-words line-clamp-2">{spot.note}</p>}
                          <a href={`geo:${spot.lat},${spot.lng}`} className="cg-master-button !py-1 !px-2 mt-2 inline-flex items-center gap-1 w-max"><MapPin size={12}/> {spot.lat.toFixed(4)} / {spot.lng.toFixed(4)}</a>
                       </div>
                   </div>
               ))}
+              {state.spots.length === 0 && (
+                  <div className="cg-master-card-small !p-6 !mb-0 text-center">
+                      <div className="cg-type-value-large mb-2 opacity-30">📍</div>
+                      <div className="cg-type-card-title mb-1">Noch keine POIs</div>
+                      <div className="cg-type-meta cg-master-muted">Speichere deine Lieblings-Stellplätze, Entsorgungsstationen oder Aussichtspunkte. Tippe auf + um einen POI hinzuzufügen.</div>
+                  </div>
+              )}
           </div>
       )}
 
@@ -1852,16 +1892,32 @@ export function LogbuchView({ state, setState }: any) {
                             ) : (
                                 <>
                                     <input name="name" required placeholder="POI Name" value={spotForm.name} onChange={e => setSpotForm({...spotForm, name: e.target.value})} className="cg-master-input w-full" />
-                                    <select name="category" value={spotForm.category} onChange={e => setSpotForm({...spotForm, category: e.target.value})} className="cg-master-input w-full">
-                                        <option value="Stellplatz">Stellplatz</option>
-                                        <option value="Freistehen">Freistehen</option>
-                                        <option value="Campingplatz">Campingplatz</option>
-                                        <option value="Entsorgung">Entsorgung</option>
-                                        <option value="Versorgung">Versorgung</option>
-                                        <option value="Einkauf">Einkauf</option>
-                                        <option value="Aussicht">Aussicht</option>
-                                        <option value="Sonstiges">Sonstiges</option>
-                                    </select>
+                                    <div className="relative w-full">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSpotCategoryOpen(!spotCategoryOpen)}
+                                            className="cg-master-input w-full flex items-center gap-2 text-left"
+                                        >
+                                            <span className="w-[10px] h-[10px] rounded-full flex-shrink-0 border border-white/30" style={{ background: SPOT_COLORS[spotForm.category] || '#9CA3AF' }} />
+                                            <span className="flex-1">{spotForm.category}</span>
+                                            <ChevronDown size={14} className={`text-[var(--text-muted)] transition-transform ${spotCategoryOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {spotCategoryOpen && (
+                                            <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] shadow-xl overflow-y-auto max-h-[240px]">
+                                                {SPOT_CATEGORIES.map((cat) => (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => { setSpotForm({...spotForm, category: cat}); setSpotCategoryOpen(false); }}
+                                                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors ${spotForm.category === cat ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                    >
+                                                        <span className="w-[8px] h-[8px] rounded-full flex-shrink-0" style={{ background: SPOT_COLORS[cat] }} />
+                                                        <span className={spotForm.category === cat ? 'text-white font-bold' : 'text-[var(--text-secondary)]'}>{cat}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                     {spotGpsError && <span className="typo-tiny block mt-1 cg-master-muted">GPS nicht verfügbar</span>}
                                     <div className="flex gap-2 items-center">
                                         <button type="button" onClick={async () => {

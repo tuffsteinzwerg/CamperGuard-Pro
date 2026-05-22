@@ -1,8 +1,27 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
+
+const SPOT_COLORS: Record<string, string> = {
+  'Stellplatz': '#3B82F6',
+  'Freistehen': '#22C55E',
+  'Campingplatz': '#FBBF24',
+  'Entsorgung': '#EF4444',
+  'Versorgung': '#EC4899',
+  'Einkauf': '#06B6D4',
+  'Aussicht': '#A855F7',
+  'Sonstiges': '#9CA3AF',
+};
+
+const createSpotIcon = (color: string) => L.divIcon({
+  className: '',
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+  popupAnchor: [0, -10],
+  html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 6px ${color}80;"></div>`,
+});
 
 let globalLeafletMap: L.Map | null = null;
 
@@ -815,6 +834,21 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
               <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
               <MapHandlerComponent destination={destination} setDestination={setDestination} />
               <ResizeMapComponent />
+              {(state.spots || []).map((spot: any) => (
+                <Marker
+                  key={spot.id}
+                  position={[spot.lat, spot.lng]}
+                  icon={createSpotIcon(SPOT_COLORS[spot.category || 'Sonstiges'] || '#94a3b8')}
+                >
+                  <Popup>
+                    <div style={{ color: '#1a1c1e', fontSize: '12px', lineHeight: '1.4' }}>
+                      <strong>{spot.name}</strong>
+                      {spot.category && <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>{spot.category}</div>}
+                      {spot.note && <div style={{ fontSize: '10px', color: '#888', marginTop: '4px' }}>{spot.note}</div>}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
             </MapContainer>
         </div>
       </div>

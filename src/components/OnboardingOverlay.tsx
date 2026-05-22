@@ -51,6 +51,14 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
         {/* Trennlinie */}
         <div className="w-10 h-[2px] bg-[var(--accent)] rounded-full mb-4" />
 
+        {/* Was ist die App */}
+        <p className="typo-body-dim text-center mb-3 px-2 leading-relaxed">
+          Dein privates Kontrollcockpit fürs Wohnmobil — Inventar, Gewicht, Sicherheit und Logbuch an einem Ort.
+        </p>
+        <p className="typo-tiny text-center mb-5 px-4 opacity-50 leading-relaxed">
+          Kein Stellplatzfinder. Keine Cloud. Alle Daten bleiben auf deinem Gerät.
+        </p>
+
         {/* Beschreibung */}
         <p className="typo-body-dim text-center mb-6 px-2 leading-relaxed">
           Bitte hinterlege die folgenden Angaben, damit CamperGuard Pro dir alle Funktionen zur Verfügung stellen kann.

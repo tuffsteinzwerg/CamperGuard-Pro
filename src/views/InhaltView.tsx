@@ -534,7 +534,7 @@ export function InhaltView({ state, setState }: any) {
                     <h2 className="typo-section-title mb-4">Lagerorte in „{activeCategory}“ sortieren</h2>
                     <div className="overflow-y-auto flex-1 space-y-2 mb-4 pr-1">
                         {(!state.subcategories[activeCategory] || state.subcategories[activeCategory].length === 0) ? (
-                            <p className="typo-body">Keine Lagerorte vorhanden.</p>
+                            <p className="typo-body">Keine Lagerorte vorhanden. Tippe auf „+ Lagerort" um einen Staubereich anzulegen.</p>
                         ) : (
                             state.subcategories[activeCategory].map((sub: string, index: number, arr: string[]) => (
                                 <div key={sub} className="cg-master-card-small !p-3 flex justify-between items-center bg-[var(--bg-card)]">
