@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, FileDown, Printer, MapPin, Archive, Edit2 } from 'lucide-react';
+import { Plus, Trash2, FileDown, Printer, MapPin, Archive, Edit2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import { calculateAverageFuelConsumptionFromFuelLog, calculateFuelLogStats } from '../lib/fuelCalculator';
@@ -71,6 +71,10 @@ export function LogbuchView({ state, setState }: any) {
 
   const [spotsArchiveMode, setSpotsArchiveMode] = useState<'all' | 'range'>('all');
   const [spotsArchiveRange, setSpotsArchiveRange] = useState({ from: '', to: '' });
+
+  const [tripArchiveName, setTripArchiveName] = useState('');
+  const [tripArchiveFrom, setTripArchiveFrom] = useState('');
+  const [tripArchiveTo, setTripArchiveTo] = useState('');
 
   const getLastKnownKm = (): number => {
     let highestKm = 0;
@@ -545,6 +549,96 @@ export function LogbuchView({ state, setState }: any) {
       setSpotsArchiveRange({ from: '', to: '' });
   };
 
+  const createTripArchive = () => {
+      if (!tripArchiveName.trim()) {
+          alert('Bitte einen Namen für das Reise-Archiv eingeben.');
+          return;
+      }
+      if (!tripArchiveFrom || !tripArchiveTo) {
+          alert('Bitte Von- und Bis-Datum auswählen.');
+          return;
+      }
+      if (tripArchiveFrom > tripArchiveTo) {
+          alert('Das Von-Datum muss vor dem Bis-Datum liegen.');
+          return;
+      }
+
+      const inRange = (date: string) => date >= tripArchiveFrom && date <= tripArchiveTo;
+
+      const archiveFuel = state.fuelLog.filter((f:any) => inRange(f.date));
+      const archiveTrips = state.tripLog.filter((t:any) => inRange(t.date));
+      const archiveBusiness = (state.businessTripLog || []).filter((t:any) => inRange(t.date));
+      const archiveSpots = (state.spots || []).filter((s:any) => inRange(s.date));
+
+      const totalEntries = archiveFuel.length + archiveTrips.length + archiveBusiness.length + archiveSpots.length;
+
+      if (totalEntries === 0) {
+          alert('Keine Einträge im gewählten Zeitraum gefunden.');
+          return;
+      }
+
+      const totalLiters = archiveFuel.reduce((sum:number, f:any) => sum + Number(f.liters || 0), 0);
+      const totalEur = archiveFuel.reduce((sum:number, f:any) => sum + ((Number(f.price || 0) * Number(f.liters || 0)) / Number(f.exchangeRateToEur || 1)), 0);
+
+      const allKmSources = [
+          ...archiveFuel.filter((f:any) => !isNaN(Number(f.km))).map((f:any) => Number(f.km)),
+          ...archiveTrips.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
+          ...archiveBusiness.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
+      ].filter((km) => !isNaN(km) && km > 0);
+
+      const totalKm = allKmSources.length >= 2
+          ? Math.max(...allKmSources) - Math.min(...allKmSources)
+          : 0;
+
+      const archive = {
+          id: `archive-trip-${Date.now()}`,
+          type: 'trip',
+          name: tripArchiveName.trim(),
+          dateFrom: tripArchiveFrom,
+          dateTo: tripArchiveTo,
+          createdAt: new Date().toISOString(),
+          fuelLog: archiveFuel,
+          tripLog: archiveTrips,
+          businessTripLog: archiveBusiness,
+          spots: archiveSpots,
+          summary: {
+              totalKm,
+              totalLiters,
+              totalEur,
+              fuelConsumption: totalKm > 0 && totalLiters > 0 ? totalLiters / totalKm * 100 : null,
+          },
+      };
+
+      const details = [
+          archiveFuel.length > 0 ? `${archiveFuel.length} Tankungen` : null,
+          archiveTrips.length > 0 ? `${archiveTrips.length} Fahrten` : null,
+          archiveBusiness.length > 0 ? `${archiveBusiness.length} Fahrtenbuch-Einträge` : null,
+          archiveSpots.length > 0 ? `${archiveSpots.length} POIs` : null,
+      ].filter(Boolean).join(', ');
+
+      if (!confirm(`Reise "${tripArchiveName.trim()}" archivieren?\n\n${details}\n\nDiese Einträge werden archiviert und aus den aktiven Listen entfernt.`)) {
+          return;
+      }
+
+      const fuelIds = new Set(archiveFuel.map((f:any) => f.id));
+      const tripIds = new Set(archiveTrips.map((t:any) => t.id));
+      const businessIds = new Set(archiveBusiness.map((t:any) => t.id));
+      const spotIds = new Set(archiveSpots.map((s:any) => s.id));
+
+      setState({
+          ...state,
+          archives: [...state.archives, archive],
+          fuelLog: state.fuelLog.filter((f:any) => !fuelIds.has(f.id)),
+          tripLog: state.tripLog.filter((t:any) => !tripIds.has(t.id)),
+          businessTripLog: (state.businessTripLog || []).filter((t:any) => !businessIds.has(t.id)),
+          spots: (state.spots || []).filter((s:any) => !spotIds.has(s.id)),
+      });
+
+      setTripArchiveName('');
+      setTripArchiveFrom('');
+      setTripArchiveTo('');
+  };
+
   const deleteArchive = (archive: any) => {
       const isYearArchive = archive.type === 'year' || archive.type === 'triplog' || archive.type === 'business';
 
@@ -939,12 +1033,57 @@ export function LogbuchView({ state, setState }: any) {
                               value={archiveSelection} 
                               onChange={(e) => setArchiveSelection(e.target.value)}
                           >
+                              <option value="reise">Reise archivieren</option>
                               <option value="tanken">Tankprotokoll</option>
                               <option value="reisetagebuch">Reisetagebuch</option>
                               <option value="fahrtenbuch">Fahrtenbuch §</option>
                               <option value="pois">POIs</option>
                           </select>
                       </div>
+
+                      {archiveSelection === 'reise' && (
+                          <div className="space-y-3">
+                              <input
+                                  type="text"
+                                  placeholder="Name der Reise (z.B. Norwegen 2025)"
+                                  value={tripArchiveName}
+                                  onChange={(e) => setTripArchiveName(e.target.value)}
+                                  className="cg-master-input w-full"
+                                  maxLength={60}
+                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                      <label className="cg-type-label block mb-1">Von</label>
+                                      <input
+                                          type="date"
+                                          value={tripArchiveFrom}
+                                          onChange={(e) => setTripArchiveFrom(e.target.value)}
+                                          className="cg-master-input w-full"
+                                      />
+                                  </div>
+                                  <div>
+                                      <label className="cg-type-label block mb-1">Bis</label>
+                                      <input
+                                          type="date"
+                                          value={tripArchiveTo}
+                                          onChange={(e) => setTripArchiveTo(e.target.value)}
+                                          className="cg-master-input w-full"
+                                      />
+                                  </div>
+                              </div>
+                              <div className="cg-master-card-small !p-3 !mb-0">
+                                  <div className="cg-type-meta leading-relaxed">
+                                      Alle Tankungen, Fahrten, Fahrtenbuch-Einträge und POIs im gewählten Zeitraum werden zusammengefasst und aus den aktiven Listen entfernt.
+                                  </div>
+                              </div>
+                              <button
+                                  className="cg-master-button !py-2 px-4 w-full"
+                                  onClick={createTripArchive}
+                              >
+                                  Reise archivieren
+                              </button>
+                          </div>
+                      )}
 
                       {archiveSelection === 'tanken' && (
                           <div className="space-y-3">
@@ -1222,6 +1361,10 @@ export function LogbuchView({ state, setState }: any) {
                                     <span className="cg-type-meta uppercase tracking-wide">
                                         {selectedArchive.type === 'year' ? 'Jahresabschluss' : selectedArchive.type === 'fuel' ? 'Tankprotokoll' : selectedArchive.type === 'triplog' ? 'Reisetagebuch' : selectedArchive.type === 'business' ? 'Fahrtenbuch §' : selectedArchive.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv'}
                                     </span>
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.3)] text-[11px] font-bold text-green-400 uppercase tracking-wide">
+                                        <CheckCircle size={11} />
+                                        Archiviert
+                                    </span>
                                 </div>
 
                                 <h2 className="cg-type-page-title !text-left">
@@ -1233,6 +1376,11 @@ export function LogbuchView({ state, setState }: any) {
                                     {' — '}
                                     {new Date(selectedArchive.dateTo).toLocaleDateString('de-DE')}
                                 </div>
+                                {selectedArchive.createdAt && (
+                                    <div className="cg-type-meta text-[var(--text-muted)]">
+                                        Archiviert am {new Date(selectedArchive.createdAt).toLocaleDateString('de-DE')}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2">
