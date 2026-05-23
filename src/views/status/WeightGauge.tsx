@@ -5,8 +5,8 @@ import { Scale, CheckCircle, AlertTriangle } from 'lucide-react';
 interface WeightGaugeProps {
   totalWeight: number;
   remainingWeight: number;
-  state: any;
-  setState: any;
+  state: AppState;
+  setState: React.Dispatch<React.SetStateAction<AppState>>;
   waterWeightImpact: number;
   wasteWaterWeight: number;
   dieselWeight: number;

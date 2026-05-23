@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppState } from '../types';
+import type { AppState, InventoryItem, EmergencyGear, PharmacyItem } from '../../types';
 import { PrintHeader } from './PrintHeader';
 
 export function InhaltPrintView({ state }: { state: AppState }) {
@@ -14,7 +14,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
         return str;
     };
 
-    const gearFilter = state.sos?.gear?.filter((g: any) => g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true) || [];
+    const gearFilter = state.sos?.gear?.filter((g: EmergencyGear) => g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true) || [];
     const pharmacyFilter = state.sos?.pharmacy || [];
 
     const getWeightInKg = (weight: any, unit: any) => {
@@ -30,20 +30,20 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
     allCategories.forEach(category => {
         const subcats = Array.from(new Set(state.subcategories[category] || []));
-        const itemsInCategory = state.inventory.filter((item: any) => item.category === category);
-        subcats.forEach((sub: any) => {
-            const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
-            itemsInSubcat.forEach((item: any) => {
+        const itemsInCategory = state.inventory.filter((item: InventoryItem) => item.category === category);
+        subcats.forEach((sub: string) => {
+            const itemsInSubcat = itemsInCategory.filter((item: InventoryItem) => item.subcategory === sub);
+            itemsInSubcat.forEach((item: InventoryItem) => {
                 totalWeightKg += getWeightInKg(item.weight, item.weightUnit) * (item.quantity || 1);
             });
         });
     });
 
-    gearFilter.forEach((g: any) => {
+    gearFilter.forEach((g: EmergencyGear) => {
         totalWeightKg += getWeightInKg(g.weight, g.weightUnit);
     });
 
-    pharmacyFilter.forEach((p: any) => {
+    pharmacyFilter.forEach((p: PharmacyItem) => {
         totalWeightKg += getWeightInKg(p.weight, p.weightUnit);
     });
 
@@ -60,7 +60,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
     };
 
     const printableGearMap: Record<string, any> = {};
-    gearFilter.forEach((g: any) => {
+    gearFilter.forEach((g: EmergencyGear) => {
         const normName = normalizePrintGearName(g.name);
         if (!printableGearMap[normName]) {
             printableGearMap[normName] = {
@@ -99,7 +99,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
     const printableGear = Object.values(printableGearMap);
 
     const groupedGear: Record<string, any[]> = {};
-    printableGear.forEach((g: any) => {
+    printableGear.forEach((g: EmergencyGear) => {
         let locs: string[] = g.locations && Array.isArray(g.locations) ? [...g.locations] : [];
         if (locs.length === 0) {
             locs = ['Ohne Lagerort'];
@@ -134,7 +134,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
         });
     });
 
-    const groupedPharmacy = pharmacyFilter.reduce((acc: Record<string, any[]>, p: any) => {
+    const groupedPharmacy = pharmacyFilter.reduce((acc: Record<string, any[]>, p: PharmacyItem) => {
         const loc = (p.location && p.location.trim()) ? p.location.trim() : 'Ohne Lagerort';
         if (!acc[loc]) acc[loc] = [];
         acc[loc].push(p);
@@ -155,7 +155,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
             {allCategories.map(category => {
                 const subcats = Array.from(new Set(state.subcategories[category] || []));
-                const itemsInCategory = state.inventory.filter((item: any) => item.category === category);
+                const itemsInCategory = state.inventory.filter((item: InventoryItem) => item.category === category);
                 
                 if (itemsInCategory.length === 0) return null;
 
@@ -170,14 +170,14 @@ export function InhaltPrintView({ state }: { state: AppState }) {
                             <div className="cg-print-align-right">Gewicht</div>
                         </div>
 
-                        {subcats.map((sub: any) => {
-                            const itemsInSubcat = itemsInCategory.filter((item: any) => item.subcategory === sub);
+                        {subcats.map((sub: string) => {
+                            const itemsInSubcat = itemsInCategory.filter((item: InventoryItem) => item.subcategory === sub);
                             if (itemsInSubcat.length === 0) return null;
 
                             return (
                                 <div key={sub}>
                                     <div className="cg-print-location-title">📍 {sub}</div>
-                                    {itemsInSubcat.map((item: any) => (
+                                    {itemsInSubcat.map((item: InventoryItem) => (
                                         <div className="inv-row cg-print-row" key={item.id}>
                                             <div className="cg-print-cell-check">□</div>
                                             <div className="cg-print-cell-name">{item.name}</div>
@@ -210,7 +210,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
                     {Object.keys(groupedGear).map(loc => (
                         <div key={loc}>
                             <div className="cg-print-location-title">📍 {loc}</div>
-                            {groupedGear[loc].map((g: any, _idx: number) => (
+                            {groupedGear[loc].map((g: EmergencyGear, _idx: number) => (
                                 <div className="inv-row cg-print-row" key={`${g.id}-${_idx}`}>
                                     <div className="cg-print-cell-check">□</div>
                                     <div className="cg-print-cell-name">{g.name}</div>
@@ -243,7 +243,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
                     {Object.keys(groupedPharmacy).map(loc => (
                         <div key={loc}>
                             <div className="cg-print-location-title">📍 {loc}</div>
-                            {groupedPharmacy[loc].map((p: any) => (
+                            {groupedPharmacy[loc].map((p: PharmacyItem) => (
                                 <div className="inv-med-row cg-print-row" key={p.id}>
                                     <div className="cg-print-cell-check">□</div>
                                     <div className="cg-print-cell-name">{p.name}</div>

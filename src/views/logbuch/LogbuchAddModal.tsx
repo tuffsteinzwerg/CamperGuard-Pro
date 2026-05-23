@@ -2,7 +2,7 @@ import React from 'react';
 import { Trash2, MapPin, ChevronDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNumber } from '../../lib/formatters';
-import type { Currency, FuelType, FuelEntry, SpotEntry, AppState } from '../../types';
+import type { Currency, FuelType, FuelEntry, SpotEntry, AppState, TripEntry, BusinessTripEntry } from '../../types';
 
 const CURRENCIES: Currency[] = ['EUR', 'CHF', 'TRY', 'DKK', 'SEK', 'NOK', 'PLN', 'GBP'];
 const FUEL_TYPES: FuelType[] = ['Diesel', 'Benzin', 'Super E10', 'Super E5'];
@@ -29,7 +29,7 @@ interface LogbuchAddModalProps {
   tripLogMode: 'flex' | 'strict';
   // Tank
   tankForm: any;
-  setTankForm: (f: any) => void;
+  setTankForm: (f: FuelEntry) => void;
   handleTankChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   focusedTankField: string | null;
   setFocusedTankField: (f: string | null) => void;
@@ -40,9 +40,9 @@ interface LogbuchAddModalProps {
   maxKm: number;
   // Trip
   tripForm: any;
-  setTripForm: (f: any) => void;
+  setTripForm: (f: FuelEntry) => void;
   businessTripForm: any;
-  setBusinessTripForm: (f: any) => void;
+  setBusinessTripForm: (f: FuelEntry) => void;
   isTripValid: boolean;
   isBusinessTripValid: boolean;
   isBusinessTripPurposeValid: boolean;
@@ -53,7 +53,7 @@ interface LogbuchAddModalProps {
   tripGpsStatus: 'offline' | 'loading' | 'active';
   // Spot
   spotForm: any;
-  setSpotForm: (f: any) => void;
+  setSpotForm: (f: FuelEntry) => void;
   spotCategoryOpen: boolean;
   setSpotCategoryOpen: (v: boolean) => void;
   spotGpsError: boolean;
@@ -97,7 +97,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                                 type="button"
                                 onClick={() => {
                                     if(confirm('Möchtest du diesen Tankbeleg wirklich löschen?')) {
-                                        setState({...state, fuelLog: state.fuelLog.filter((f:any) => f.id !== editingTripId)});
+                                        setState({...state, fuelLog: state.fuelLog.filter((f: FuelEntry) => f.id !== editingTripId)});
                                         setEditingTripId(null);
                                         setIsAdding(false);
                                     }
@@ -108,7 +108,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                             </button>
                         )}
                     </div>
-                    <form onSubmit={(e:any) => {
+                    <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
                         const fd = new FormData(e.target);
                         if(logType === 'tank') {
@@ -142,16 +142,16 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                                 const entry: any = { 
                                     id: editingTripId || Date.now().toString(), 
                                     date: tripForm.date, 
-                                    fromKm: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
+                                    fromKm: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
                                     toKm: isNaN(parsedToKm) ? 0 : parsedToKm, 
                                     purpose: tripForm.purpose, 
                                     destination: tripForm.destination, 
                                     note: tripForm.note,
-                                    lat: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lat ?? undefined) : (tripGpsCoords?.lat || undefined),
-                                    lng: editingTripId ? (state.tripLog.find((t:any) => t.id === editingTripId)?.lng ?? undefined) : (tripGpsCoords?.lng || undefined)
+                                    lat: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.lat ?? undefined) : (tripGpsCoords?.lat || undefined),
+                                    lng: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.lng ?? undefined) : (tripGpsCoords?.lng || undefined)
                                 };
                                 if (editingTripId) {
-                                    setState({...state, tripLog: state.tripLog.map((t:any) => t.id === editingTripId ? entry : t)});
+                                    setState({...state, tripLog: state.tripLog.map((t: TripEntry) => t.id === editingTripId ? entry : t)});
                                 } else {
                                     setState({...state, tripLog: [entry, ...state.tripLog]});
                                 }
@@ -161,7 +161,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                         } else if(logType === 'spots') {
                             const entry: SpotEntry = { id: editingSpotId || Date.now().toString(), name: spotForm.name, date: spotForm.date, lat: parseFloat(spotForm.lat), lng: parseFloat(spotForm.lng), note: spotForm.note, category: spotForm.category };
                             if (editingSpotId) {
-                                setState({...state, spots: state.spots.map((s:any) => s.id === editingSpotId ? entry : s)});
+                                setState({...state, spots: state.spots.map((s: SpotEntry) => s.id === editingSpotId ? entry : s)});
                             } else {
                                 setState({...state, spots: [entry, ...state.spots]});
                             }
@@ -279,7 +279,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                                             </div>
                                         )}
                                         {editingTripId && (() => {
-                                            const existingEntry = state.tripLog.find((t:any) => t.id === editingTripId);
+                                            const existingEntry = state.tripLog.find((t: TripEntry) => t.id === editingTripId);
                                             if (existingEntry?.lat && existingEntry?.lng) {
                                                 return (
                                                     <a href={`https://www.google.com/maps?q=${existingEntry.lat},${existingEntry.lng}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-[var(--bg-card)] no-underline" style={{ textDecoration: 'none' }}>
@@ -370,7 +370,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                             };
                             const currentBusinessTrips = state.businessTripLog || [];
                             if (editingTripId) {
-                                setState({...state, businessTripLog: currentBusinessTrips.map((t:any) => t.id === editingTripId ? entry : t)});
+                                setState({...state, businessTripLog: currentBusinessTrips.map((t: BusinessTripEntry) => t.id === editingTripId ? entry : t)});
                             } else {
                                 setState({...state, businessTripLog: [entry, ...currentBusinessTrips]});
                             }

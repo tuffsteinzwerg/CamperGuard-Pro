@@ -93,15 +93,15 @@ message: hasApproximate
 };
 }
 
-export function calculateFuelLogStats(fuelEntries: any[]) {
-const sorted = [...fuelEntries].sort((a: any, b: any) => {
+export function calculateFuelLogStats(fuelEntries: FuelEntry[]) {
+const sorted = [...fuelEntries].sort((a: FuelEntry, b: FuelEntry) => {
 const timeDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
 if (timeDiff !== 0) return timeDiff;
 return (a.km || 0) - (b.km || 0);
 });
 
-const totalLiters = sorted.reduce((acc: number, entry: any) => acc + (entry.liters || 0), 0);
-const totalCost = sorted.reduce((acc: number, entry: any) => {
+const totalLiters = sorted.reduce((acc: number, entry: FuelEntry) => acc + (entry.liters || 0), 0);
+const totalCost = sorted.reduce((acc: number, entry: FuelEntry) => {
 if (entry.total != null && entry.total !== '') {
 return acc + Number(entry.total) / (entry.exchangeRateToEur || 1);
 }

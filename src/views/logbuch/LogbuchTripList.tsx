@@ -1,7 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, MapPin } from 'lucide-react';
 import { formatNumber } from '../../lib/formatters';
-import type { AppState, TripEntry, BusinessTripEntry } from '../../types';
+import type { AppState, TripEntry, BusinessTripEntry, FuelEntry } from '../../types';
 
 interface LogbuchTripListProps {
   state: AppState;
@@ -14,8 +14,8 @@ interface LogbuchTripListProps {
   setDisplayedTripsCount: React.Dispatch<React.SetStateAction<number>>;
   displayedBusinessTripsCount: number;
   setDisplayedBusinessTripsCount: React.Dispatch<React.SetStateAction<number>>;
-  setTripForm: (f: any) => void;
-  setBusinessTripForm: (f: any) => void;
+  setTripForm: (f: FuelEntry) => void;
+  setBusinessTripForm: (f: FuelEntry) => void;
   setEditingTripId: (id: string | null) => void;
   setIsAdding: (v: boolean) => void;
 }
@@ -38,7 +38,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
 
         {tripLogMode === 'flex' && (
             <div className="space-y-3">
-                {currentTripLog.slice(0, displayedTripsCount).map((entry: any) => (
+                {currentTripLog.slice(0, displayedTripsCount).map((entry: FuelEntry) => (
                     <div key={entry.id} className="cg-master-card-small !p-3">
                         <div className="flex justify-between items-start gap-3">
                             <div className="space-y-1">
@@ -63,7 +63,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
                 <div className="cg-master-card-small !mb-0 !p-3 border border-orange-500/20 bg-orange-500/5">
                     <div className="typo-body-dim text-orange-400">Das Fahrtenbuch dient dem Nachweis geschäftlicher Fahrten gegenüber dem Finanzamt. Bitte wenden Sie sich zur rechtlichen Prüfung an Ihren Steuerberater.</div>
                 </div>
-                {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry: any) => (
+                {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry: FuelEntry) => (
                     <div key={entry.id} className="cg-master-card-small !p-3">
                         <div className="flex justify-between items-start gap-3">
                             <div className="space-y-1">

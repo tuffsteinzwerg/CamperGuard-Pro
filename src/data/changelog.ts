@@ -6,6 +6,25 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.2.0-dev",
+    "date": "23.05.2026",
+    "entries": [
+      "588. TypeScript-Cleanup: ~200 Inline-Casts (any) in Callbacks durch korrekte Typen ersetzt (FuelEntry, TripEntry, BusinessTripEntry, SpotEntry, Archive, InventoryItem, EmergencyGear, PharmacyItem, MaintenanceItem). Automatisiert per Skript über 18 Dateien.",
+      "587. Karte: Auto-Center auf GPS-Standort beim Öffnen des Reise-Tabs. Einmalig per flyTo (Zoom 14), danach frei scrollbar.",
+      "586. Logbuch: Jahres-Übersicht Schriftgröße von typo-value-large auf typo-value-normal reduziert. Gesamtkosten nicht mehr rot.",
+      "585. SOS-Button: HeartPulse-Icon im Header statt ShieldPlus. Dezenter, passt zum Notfall-Kontext.",
+      "584. SOS-Button: Runden schwebenden FAB entfernt, durch Icon im Header ersetzt (zwischen Titel und Online-Status). Auf allen Tabs sichtbar, überdeckt keinen Content.",
+      "583. SOS-Button: Aus StatusView nach App.tsx verschoben. SosHub wird global gerendert, auf allen Tabs erreichbar.",
+      "582. Destination-Marker auf Karte entfernt. Tap auf Karte erzeugt keinen blauen Pin mehr (war ohne Funktion).",
+      "581. GPS-Punkt: Seitliches Schwingen gefixt — transform:scale() aus CSS-Animation entfernt, nur noch opacity-Pulse.",
+      "580. Karte: Beschriftungen und Grenzen heller — CSS-Filter brightness(1.4) contrast(1.1) auf Tile-Pane.",
+      "579. GPS-Punkt: CircleMarker durch Marker mit divIcon ersetzt + zIndexOffset 1000. Liegt immer über POI-Markern.",
+      "578. Fix: ChevronDown Import in DepartureChecklist.tsx ergänzt.",
+      "577. Fix: ShieldPlus Import in StatusView.tsx ergänzt.",
+      "576. StatusView-Fix: deletingGearItem Bestätigungs-Modal korrekt nach SosHub.tsx verschoben (z-[60])."
+    ]
+  },
+  {
     "version": "v0.1.9-dev",
     "date": "23.05.2026",
     "entries": [

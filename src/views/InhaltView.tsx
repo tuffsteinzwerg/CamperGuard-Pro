@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { AppState } from '../types';
+import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } from '../../types';
 import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
@@ -69,21 +69,21 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     if (!searchTerm) return [];
     const term = searchTerm.toLowerCase();
     
-    const inventoryResults = state.inventory.filter((item: any) => 
+    const inventoryResults = state.inventory.filter((item: InventoryItem) => 
         (item.name && item.name.toLowerCase().includes(term)) || 
         (item.subcategory && item.subcategory.toLowerCase().includes(term)) ||
         (item.category && item.category.toLowerCase().includes(term))
     );
 
     const gearResults = (state.sos?.gear || [])
-        .filter((g: any) => 
+        .filter((g: EmergencyGear) => 
             g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true &&
             ((g.name && g.name.toLowerCase().includes(term)) ||
             (g.locations && g.locations.some((l: string) => l.toLowerCase().includes(term))) ||
             "notfall-ausrüstung".includes(term) ||
             "safety hub".includes(term))
         )
-        .map((g: any) => ({
+        .map((g: EmergencyGear) => ({
             id: `sos-gear-${g.id}`,
             name: g.name,
             category: "Safety Hub",
@@ -96,7 +96,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
         }));
 
     const pharmacyResults = (state.sos?.pharmacy || [])
-        .filter((p: any) => {
+        .filter((p: PharmacyItem) => {
             if (!p) return false;
             const pName = String(p.name || '');
             const pPurpose = String(p.purpose || '');
@@ -111,7 +111,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
             "apotheke".includes(term) ||
             "safety hub".includes(term));
         })
-        .map((p: any) => ({
+        .map((p: PharmacyItem) => ({
             id: `sos-pharmacy-${p.id}`,
             name: p.name,
             category: "Safety Hub",
@@ -126,16 +126,16 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     return [...inventoryResults, ...gearResults, ...pharmacyResults];
   }, [state.inventory, state.sos, searchTerm]);
 
-  const filteredItems = state.inventory.filter((item: any) => 
+  const filteredItems = state.inventory.filter((item: InventoryItem) => 
     item.category === activeCategory
   );
 
   const groupedBySub = useMemo(() => {
     const groups: Record<string, any[]> = {};
     const uniqueSubs = Array.from(new Set(state.subcategories[activeCategory] || []));
-    uniqueSubs.forEach((sub:any) => groups[sub as string] = []);
+    uniqueSubs.forEach((sub: string) => groups[sub as string] = []);
     
-    filteredItems.forEach((item: any) => {
+    filteredItems.forEach((item: InventoryItem) => {
         if (groups[item.subcategory]) {
             groups[item.subcategory].push(item);
         }
@@ -178,7 +178,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
               <button 
                   onClick={() => {
                       const hasSubcats = (state.subcategories[activeCategory] || []).length > 0;
-                      const hasItems = state.inventory.some((i: any) => i.category === activeCategory);
+                      const hasItems = state.inventory.some((i: InventoryItem) => i.category === activeCategory);
                       if (hasSubcats || hasItems) {
                           setDeletingMainCategoryError("Dieser Bereich kann erst gelöscht werden, wenn er leer ist.");
                       } else {
@@ -203,7 +203,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                       <div className="text-center py-10 typo-body-dim text-[var(--text-muted)]">Keine Ergebnisse gefunden</div>
                   ) : (
                       <div className="w-full mb-4 space-y-3">
-                          {searchedItems.map((item:any) => (
+                          {searchedItems.map((item: InventoryItem) => (
                               <div key={item.id} className={`cg-master-card-small flex items-center justify-between ${item.quantity === 0 ? '!border-[var(--status-danger)]' : ''}`}>
                                   <div className="flex-1">
                                       <div className="typo-card-title">{item.name}</div>
@@ -236,7 +236,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
           </div>
       ) : (
           <div className="space-y-4 print-only print-table">
-          {Array.from(new Set(state.subcategories[activeCategory] || [])).map((sub:any) => (
+          {Array.from(new Set(state.subcategories[activeCategory] || [])).map((sub: string) => (
               <div key={sub} className="mb-4">
                   <div 
                       className="cg-master-card-small flex justify-between items-center cursor-pointer select-none"
@@ -246,7 +246,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                           <h3 className="typo-section-title min-w-0 flex-1 line-clamp-2" style={{ color: 'var(--accent)', marginBottom: 0, minHeight: '32px' }}>{sub}</h3>
                           <span className="typo-value-small whitespace-nowrap mt-0.5">
                               {(() => {
-                                  const totalKg = (groupedBySub[sub] || []).reduce((acc: number, item: any) => {
+                                  const totalKg = (groupedBySub[sub] || []).reduce((acc: number, item: InventoryItem) => {
                                       if (item.weight !== undefined && item.weight !== null && !isNaN(item.weight)) {
                                           const unit = (item.weightUnit || 'kg').toLowerCase();
                                           if (unit === 'gr' || unit === 'g') {
@@ -267,7 +267,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                   </div>
                   {activeAccordion === sub && (
                       <div className="w-full mb-4 space-y-3 mt-3">
-                          {(groupedBySub[sub] || []).map((item:any) => (
+                          {(groupedBySub[sub] || []).map((item: InventoryItem) => (
                               <div key={item.id} className={`cg-master-card-small flex items-center justify-between ${item.quantity === 0 ? '!border-[var(--status-danger)]' : ''}`}>
                                   <div className="flex-1">
                                       <div className="typo-card-title">{item.name}</div>
@@ -307,7 +307,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
                 <div className="cg-master-card-small w-full max-w-sm">
                     <h2 className="typo-section-title mb-4">Neuer Artikel</h2>
-                    <form onSubmit={(e:any) => {
+                    <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
                         const newItem = { 
                             id: Date.now().toString(), 
@@ -342,7 +342,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             </div>
                             <select required value={itemForm.subcategory} onChange={e => setItemForm({...itemForm, subcategory: e.target.value})} className="cg-master-input w-full">
                                 <option value="" disabled>Lagerort wählen...</option>
-                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s:any) => <option key={s} value={s}>{s}</option>)}
+                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: SpotEntry) => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="flex gap-3 mt-6"><button type="button" onClick={() => setIsAddingItem(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button><button type="submit" className="cg-master-button flex-1 !p-3">Speichern</button></div>
@@ -357,7 +357,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
                 <div className="cg-master-card-small w-full max-w-sm">
                     <h2 className="typo-section-title mb-4">Artikel bearbeiten</h2>
-                    <form onSubmit={(e:any) => {
+                    <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
                         const updatedItem = {
                             ...editingItem,
@@ -368,7 +368,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
                             weightUnit: itemForm.weightUnit
                         };
-                        const newInv = state.inventory.map((i:any) => i.id === editingItem.id ? updatedItem : i);
+                        const newInv = state.inventory.map((i: InventoryItem) => i.id === editingItem.id ? updatedItem : i);
                         setState({...state, inventory: newInv});
                         setEditingItem(null);
                     }}>
@@ -392,7 +392,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             </div>
                             <select required value={itemForm.subcategory} onChange={e => setItemForm({...itemForm, subcategory: e.target.value})} className="cg-master-input w-full">
                                 <option value="" disabled>Lagerort wählen...</option>
-                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s:any) => <option key={s} value={s}>{s}</option>)}
+                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: SpotEntry) => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="flex gap-3 mt-6">
@@ -414,7 +414,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <div className="flex gap-3 mt-6">
                         <button onClick={() => setDeletingItem(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
-                            const newInv = state.inventory.filter((i:any) => i.id !== deletingItem.id);
+                            const newInv = state.inventory.filter((i: InventoryItem) => i.id !== deletingItem.id);
                             setState({...state, inventory: newInv});
                             setDeletingItem(null);
                         }} className="cg-master-button-danger flex-1 py-3">Löschen</button>
@@ -447,7 +447,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                         <button onClick={() => {
                             if(editingSub.new && editingSub.new !== editingSub.old) {
                                 const newSubs = Array.from(new Set((state.subcategories[activeCategory]||[]).map((s:string) => s === editingSub.old ? editingSub.new : s)));
-                                const newInv = state.inventory.map((i:any) => i.category === activeCategory && i.subcategory === editingSub.old ? { ...i, subcategory: editingSub.new } : i);
+                                const newInv = state.inventory.map((i: InventoryItem) => i.category === activeCategory && i.subcategory === editingSub.old ? { ...i, subcategory: editingSub.new } : i);
                                 setState({...state, subcategories: {...state.subcategories, [activeCategory]: newSubs}, inventory: newInv});
                             }
                             setEditingSub(null);
@@ -468,7 +468,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                         <button onClick={() => setDeletingSub(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
                             const newSubs = (state.subcategories[activeCategory]||[]).filter((s:string) => s !== deletingSub);
-                            const newInv = state.inventory.filter((i:any) => !(i.category === activeCategory && i.subcategory === deletingSub));
+                            const newInv = state.inventory.filter((i: InventoryItem) => !(i.category === activeCategory && i.subcategory === deletingSub));
                             setState({...state, subcategories: {...state.subcategories, [activeCategory]: newSubs}, inventory: newInv});
                             setDeletingSub(null);
                         }} className="cg-master-button-danger flex-1 py-3">Löschen</button>

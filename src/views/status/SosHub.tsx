@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { AppState } from '../../types';
+import type { AppState, EmergencyGear, PharmacyItem } from '../../types';
 import { ShieldPlus, Phone, Edit2, Trash2, MapPin, AlertTriangle, Plus, Check, Pill, Droplet, ShieldCheck, ChevronDown, User, HeartPulse } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber, formatWeight, normalizeGearName } from '../../lib/formatters';
@@ -369,7 +369,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                              <h3 className="cg-master-section-title !mb-3 !mt-4 flex justify-between items-center">
                                  <span className="flex items-center"><ShieldPlus size={16} className="mr-2 text-[var(--accent)]"/>SOS-Ausrüstung</span>
                                  <button onClick={() => {
-                                     const emptyItem = (state.sos.gear || []).find((g: any) => (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === '')));
+                                     const emptyItem = (state.sos.gear || []).find((g: EmergencyGear) => (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === '')));
                                      if (emptyItem) {
                                          setEditingGearId(emptyItem.id);
                                          setTimeout(() => document.getElementById(`gear-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -381,7 +381,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                      }
                                  }} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/></button>
                              </h3>
-                             {(state.sos.gear || []).map((g: any, i: number) => {
+                             {(state.sos.gear || []).map((g: EmergencyGear, i: number) => {
                                  const gearElementId = `gear-${g.id}`;
                                  const validLocations = (g.locations || []).filter((l: string) => l.trim() !== '');
                                  const hasWeight = g.weight !== undefined && g.weight !== null && g.weight !== '';
@@ -397,7 +397,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                              else {
                                                  setEditingGearId(g.id);
                                                  if (!g.locations || g.locations.length === 0) {
-                                                     updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
+                                                     updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
                                                  }
                                              }
                                          }}>
@@ -416,7 +416,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                                  } else {
                                                      setEditingGearId(g.id);
                                                      if (!g.locations || g.locations.length === 0) {
-                                                         updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
+                                                         updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, locations: [''] } : gx));
                                                      }
                                                  }
                                              }} 
@@ -436,17 +436,17 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                         <div className="mt-3 pt-3 border-t border-[var(--cg-master-border)]">
                                             <div className="mb-5">
                                                 <div className="mb-3">
-                                                    <input value={g.name || ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, name: e.target.value } : gx))} placeholder="Ausrüstung" className={`cg-master-input w-full ${(!g.name || String(g.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
+                                                    <input value={g.name || ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, name: e.target.value } : gx))} placeholder="Ausrüstung" className={`cg-master-input w-full ${(!g.name || String(g.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
                                                         <span className="cg-master-label !mb-1 block">Menge</span>
                                                         <div className="flex h-[42px] items-center gap-1">
-                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: Math.max(0, (gx.count||0)-1), checked: Math.max(0, (gx.count||0)-1) > 0 } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, count: Math.max(0, (gx.count||0)-1), checked: Math.max(0, (gx.count||0)-1) > 0 } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
                                                                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                                             </button>
-                                                            <input type="number" min="0" value={g.count} onChange={e => { const val = parseInt(e.target.value) || 0; updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: val, checked: val > 0 } : gx)); }} className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
-                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1, checked: true } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
+                                                            <input type="number" min="0" value={g.count} onChange={e => { const val = parseInt(e.target.value) || 0; updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, count: val, checked: val > 0 } : gx)); }} className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, count: (gx.count||0)+1, checked: true } : gx))} className="cg-master-inset cg-master-control w-[36px] h-full rounded flex items-center justify-center shrink-0">
                                                                 <Plus size={12}/>
                                                             </button>
                                                         </div>
@@ -454,8 +454,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                                     <div>
                                                         <span className="cg-master-label !mb-1 block">Gewicht/Stk.</span>
                                                         <div className="flex h-[42px] items-center gap-1">
-                                                            <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="0" className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
-                                                            <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-[50px] !h-full !px-1 !text-sm shrink-0">
+                                                            <input type="number" step="0.01" min="0" value={g.weight !== undefined ? g.weight : ''} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, weight: e.target.value } : gx))} placeholder="0" className="cg-master-input flex-1 !h-full !text-center !px-1 !text-sm" />
+                                                            <select value={g.weightUnit || 'kg'} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, weightUnit: e.target.value } : gx))} className="cg-master-input w-[50px] !h-full !px-1 !text-sm shrink-0">
                                                                 <option value="kg">kg</option>
                                                                 <option value="g">g</option>
                                                             </select>
@@ -466,13 +466,13 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                             <div>
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="cg-master-label !mb-0">Lagerorte</span>
-                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: [...(gx.locations || []), ''] } : gx))} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/> Ort</button>
+                                                    <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, locations: [...(gx.locations || []), ''] } : gx))} className="cg-master-button !py-1.5 !px-3"><Plus size={14}/> Ort</button>
                                                 </div>
                                                 <div className="space-y-2">
                                                     {(g.locations || []).map((loc: string, locIdx: number) => (
                                                         <div key={locIdx} className="flex items-center gap-2">
-                                                            <input value={loc} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).map((l: string, lIdx: number) => lIdx === locIdx ? e.target.value : l) } : gx))} placeholder={`Lagerort ${locIdx + 1}`} className="cg-master-input w-full !h-[42px]" />
-                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: any, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).filter((_: any, lIdx: number) => lIdx !== locIdx) } : gx))} className="cg-master-inset cg-master-control-danger w-10 h-[42px] rounded flex items-center justify-center shrink-0"><Trash2 size={16} /></button>
+                                                            <input value={loc} onChange={e => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).map((l: string, lIdx: number) => lIdx === locIdx ? e.target.value : l) } : gx))} placeholder={`Lagerort ${locIdx + 1}`} className="cg-master-input w-full !h-[42px]" />
+                                                            <button onClick={() => updateSos('gear', (state.sos.gear || []).map((gx: EmergencyGear, idx: number) => idx === i ? { ...gx, locations: (gx.locations || []).filter((_: string, lIdx: number) => lIdx !== locIdx) } : gx))} className="cg-master-inset cg-master-control-danger w-10 h-[42px] rounded flex items-center justify-center shrink-0"><Trash2 size={16} /></button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -487,7 +487,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                                  <button onClick={() => {
                                                      const isEmpty = (!g.name || String(g.name).trim() === '') && (!g.count || g.count === 0) && (!g.weight || g.weight === '') && (!g.locations || g.locations.length === 0 || g.locations.every((l: string) => l.trim() === ''));
                                                      if (isEmpty) {
-                                                         updateSos('gear', (state.sos.gear || []).filter((gx: any) => gx.id !== g.id));
+                                                         updateSos('gear', (state.sos.gear || []).filter((gx: EmergencyGear) => gx.id !== g.id));
                                                          setEditingGearId(null);
                                                          return;
                                                      }
@@ -505,7 +505,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                              <h3 className="cg-master-section-title !mb-3 flex justify-between items-center">
                                  <span className="flex items-center"><Pill size={16} className="mr-2 text-[var(--accent)]"/>Apotheke</span>
                                  <button onClick={() => {
-                                     const emptyItem = (state.sos.pharmacy || []).find((p: any) => (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg'));
+                                     const emptyItem = (state.sos.pharmacy || []).find((p: PharmacyItem) => (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg'));
                                      if (emptyItem) {
                                          setEditingPharmacyId(emptyItem.id);
                                          setTimeout(() => document.getElementById(`pharmacy-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -555,7 +555,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                  </div>
                              )}
 
-                             {(state.sos.pharmacy || []).map((p: any, i: number) => {
+                             {(state.sos.pharmacy || []).map((p: PharmacyItem, i: number) => {
                                   if (!p) return null;
                                   const pharmacyElementId = `pharmacy-${p.id}`;
                                   const isEditing = editingPharmacyId === String(p.id);
@@ -568,24 +568,24 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                      {isEditing ? (
                                         <>
                                      <div className="grid grid-cols-2 gap-3">
-                                         <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className={`cg-master-input w-full ${(!p.name || String(p.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
-                                         <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-full" />
+                                         <input value={p.name || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, name: e.target.value } : px))} placeholder="Medikament" className={`cg-master-input w-full ${(!p.name || String(p.name).trim() === '') ? '!border-[var(--status-danger)]' : ''}`} />
+                                         <input value={p.purpose || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, purpose: e.target.value } : px))} placeholder="Zweck" className="cg-master-input w-full" />
                                          <div className="relative w-full">
                                              <div className={`cg-master-input w-full flex items-center ${!p.expiry ? 'text-[var(--text-muted)] !border-[var(--status-danger)]' : ''}`}>
                                                  {p.expiry ? p.expiry : 'Verfallsdatum'}
                                              </div>
-                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer" />
+                                             <input type="month" value={p.expiry || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, expiry: e.target.value } : px))} className="absolute inset-0 z-10 w-full h-full opacity-0 cursor-pointer" />
                                          </div>
-                                         <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-full" />
-                                         <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-full" />
-                                         <select value={p.unit} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, unit: e.target.value } : px))} className="cg-master-select w-full">
+                                         <input value={p.location || ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, location: e.target.value } : px))} placeholder="Lagerort" className="cg-master-input w-full" />
+                                         <input type="number" min="0" value={p.quantity} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, quantity: parseInt(e.target.value) || 0 } : px))} placeholder="Menge" className="cg-master-input w-full" />
+                                         <select value={p.unit} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, unit: e.target.value } : px))} className="cg-master-select w-full">
                                              <option value="stk">Stk</option>
                                              <option value="ml">ml</option>
                                              <option value="l">l</option>
                                              <option value="g">g</option>
                                          </select>
-                                         <input type="number" step="0.01" min="0" value={p.weight !== undefined ? p.weight : ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weight: e.target.value } : px))} placeholder="Gewicht/Stk." className="cg-master-input w-full" />
-                                         <select value={p.weightUnit || 'kg'} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: any, idx: number) => idx === i ? { ...px, weightUnit: e.target.value } : px))} className="cg-master-select w-full">
+                                         <input type="number" step="0.01" min="0" value={p.weight !== undefined ? p.weight : ''} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, weight: e.target.value } : px))} placeholder="Gewicht/Stk." className="cg-master-input w-full" />
+                                         <select value={p.weightUnit || 'kg'} onChange={e => updateSos('pharmacy', (state.sos.pharmacy || []).map((px: PharmacyItem, idx: number) => idx === i ? { ...px, weightUnit: e.target.value } : px))} className="cg-master-select w-full">
                                              <option value="kg">kg</option>
                                              <option value="g">g</option>
                                          </select>
@@ -599,7 +599,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                              <button onClick={() => {
                                                  const isEmpty = (!p.name || String(p.name).trim() === '') && (!p.purpose || String(p.purpose).trim() === '') && (!p.expiry || String(p.expiry).trim() === '') && (!p.location || String(p.location).trim() === '') && (!p.weight || String(p.weight).trim() === '') && (!p.quantity || p.quantity === 1 || p.quantity === 0) && (!p.unit || p.unit === 'stk') && (!p.weightUnit || p.weightUnit === 'kg');
                                                  if (isEmpty) {
-                                                     updateSos('pharmacy', (state.sos.pharmacy || []).filter((px: any) => px.id !== p.id));
+                                                     updateSos('pharmacy', (state.sos.pharmacy || []).filter((px: PharmacyItem) => px.id !== p.id));
                                                      setEditingPharmacyId(null);
                                                      return;
                                                  }
@@ -628,7 +628,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => setEditingPharmacyId(p.id)} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14}/></button>
-                                                <button onClick={() => { if(confirm('Medikament wirklich löschen?')) { updateSos('pharmacy', (state.sos.pharmacy || []).filter((_: any, idx: number) => idx !== i)); } }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
+                                                <button onClick={() => { if(confirm('Medikament wirklich löschen?')) { updateSos('pharmacy', (state.sos.pharmacy || []).filter((_: PharmacyItem, idx: number) => idx !== i)); } }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
                                             </div>
                                         </div>
                                     </div>
@@ -656,7 +656,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                               if (requiredCategories.includes(deletedName) && !newDeletedGear.includes(deletedName)) {
                                   newDeletedGear.push(deletedName);
                               }
-                              const newGear = (state.sos.gear || []).filter((gx: any) => gx.id !== deletingGearItem.id);
+                              const newGear = (state.sos.gear || []).filter((gx: EmergencyGear) => gx.id !== deletingGearItem.id);
                               setState({
                                   ...state,
                                   sos: {

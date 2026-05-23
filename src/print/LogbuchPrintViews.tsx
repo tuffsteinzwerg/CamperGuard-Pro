@@ -47,7 +47,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
           {((!selectedArchive && logType === 'tank') || (selectedArchive && archiveViewTab === 'tank')) && (
              printFuelLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              (() => {
-                 const sortedDates = [...printFuelLog].sort((a:any,b:any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                 const sortedDates = [...printFuelLog].sort((a: FuelEntry,b: FuelEntry) => new Date(a.date).getTime() - new Date(b.date).getTime());
                  const dateRangeStr = sortedDates.length > 0 ? `${new Date(sortedDates[0].date).toLocaleDateString('de-DE')} - ${new Date(sortedDates[sortedDates.length - 1].date).toLocaleDateString('de-DE')}` : `Jahr ${currentYear}`;
 
                  return (
@@ -85,11 +85,11 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
 
                          <div className="tank-print-row-list">
-                             {printFuelLog.map((f:any, idx:number) => {
+                             {printFuelLog.map((f: FuelEntry, idx: number) => {
                                  const totalBetrag = (f.liters * f.price) / (f.exchangeRateToEur || 1);
-                                 const sortedByKm = [...printFuelLog].filter((e:any) => e.km != null && !isNaN(e.km)).sort((a:any, b:any) => a.km - b.km);
+                                 const sortedByKm = [...printFuelLog].filter((e: FuelEntry) => e.km != null && !isNaN(e.km)).sort((a: FuelEntry, b: FuelEntry) => a.km - b.km);
                                  const isFirstTankung = sortedByKm.length > 0 && f.id === sortedByKm[0].id;
-                                 const prevEntry = sortedByKm.find((e:any, i:number) => i < sortedByKm.length - 1 && sortedByKm[i + 1].id === f.id);
+                                 const prevEntry = sortedByKm.find((e: FuelEntry, i: number) => i < sortedByKm.length - 1 && sortedByKm[i + 1].id === f.id);
                                  const kmDelta = (prevEntry && f.km != null && !isNaN(f.km)) ? f.km - prevEntry.km : null;
                                  const hasKm = f.km != null && !isNaN(f.km);
                                  let kmDeltaStr = '(—)';
@@ -150,7 +150,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-left-pad2"><span className="cg-print-icon-sm">📝</span> Notiz</div>
                  </div>
                  <div>
-                     {printTripLog.map((t:any) => {
+                     {printTripLog.map((t: TripEntry) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          return (
                              <div key={t.id} className="reise-print-row cg-print-row">
@@ -204,7 +204,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-left">📌 Notiz / Route</div>
                  </div>
                  <div>
-                     {printBusinessTripLog.map((t:any) => {
+                     {printBusinessTripLog.map((t: TripEntry) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          const addrParts = [t.street, t.houseNumber].filter(Boolean).join(' ');
                          const plzOrt = [t.zip, t.city].filter(Boolean).join(' ');
@@ -241,15 +241,15 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtstrecke</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">💼</span> Dienstlich</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category === 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category === 'Dienstlich').reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🏠</span> Privat / Arbeitsweg</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category !== 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category !== 'Dienstlich').reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                      </div>
                  </div>
@@ -267,7 +267,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-left-pad2"><span className="cg-print-icon-sm">📝</span> Notiz</div>
                  </div>
                  <div>
-                     {printSpots.map((s:any) => (
+                     {printSpots.map((s: SpotEntry) => (
                          <div key={s.id} className="poi-print-row cg-print-row">
                              <div className="cg-print-cell-date">{new Date(s.date).toLocaleDateString('de-DE')}</div>
                              <div className="cg-print-cell-name">{s.name}</div>
@@ -286,11 +286,11 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🏷️</span> Kategorien</div>
-                             <div className="cg-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
+                             <div className="cg-print-summary-value">{new Set(state.spots.map((s: SpotEntry) => s.category || 'Stellplatz')).size}</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🌐</span> Mit Koordinaten</div>
-                             <div className="cg-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
+                             <div className="cg-print-summary-value">{state.spots.filter((s: SpotEntry) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
                          </div>
                      </div>
                  </div>
@@ -309,7 +309,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-right"><span className="cg-print-icon-sm">💶</span> Kosten</div>
                  </div>
                  <div>
-                     {state.archives.map((a:any) => {
+                     {state.archives.map((a: Archive) => {
                          const typeName = a.type === 'year' ? 'Jahresabschluss' : a.type === 'fuel' ? 'Tankprotokoll' : a.type === 'triplog' ? 'Reisetagebuch' : a.type === 'business' ? 'Fahrtenbuch §' : a.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv';
                          return (
                              <div key={a.id} className="archiv-print-row cg-print-row">
@@ -332,11 +332,11 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtdistanz</div>
-                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc:number, a:any) => acc + (a.summary?.totalKm ?? 0), 0), 0)} km</div>
+                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc: number, a: Archive) => acc + (a.summary?.totalKm ?? 0), 0), 0)} km</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">💶</span> Gesamtkosten</div>
-                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc:number, a:any) => acc + (a.summary?.totalEur ?? 0), 0), 2)} €</div>
+                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc: number, a: Archive) => acc + (a.summary?.totalEur ?? 0), 0), 2)} €</div>
                          </div>
                      </div>
                  </div>

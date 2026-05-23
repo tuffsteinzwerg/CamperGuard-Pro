@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileDown, Edit2, Trash2, MapPin } from 'lucide-react';
-import type { AppState, SpotEntry } from '../../types';
+import type { AppState, SpotEntry, FuelEntry } from '../../types';
 
 interface LogbuchSpotListProps {
   state: AppState;
@@ -8,7 +8,7 @@ interface LogbuchSpotListProps {
   spots: SpotEntry[];
   SPOT_COLORS: Record<string, string>;
   downloadGPX: () => void;
-  setSpotForm: (f: any) => void;
+  setSpotForm: (f: FuelEntry) => void;
   setEditingSpotId: (id: string | null) => void;
   setSpotGpsError: (v: boolean) => void;
   setIsAdding: (v: boolean) => void;
@@ -21,14 +21,14 @@ export function LogbuchSpotList({
   return (
           <div className="space-y-3">
               <button onClick={downloadGPX} className="cg-master-button w-full py-2 mb-4 flex flex-row items-center justify-center gap-2"><FileDown size={14}/> GPX Export</button>
-              {state.spots.map((spot:any) => (
+              {state.spots.map((spot: SpotEntry) => (
                   <div key={spot.id} className="cg-master-card-small !p-3 relative border-l-2 !mb-0">
                       <div className="flex flex-col">
                          <div className="flex justify-between items-start">
                              <span className="typo-body-dim">{new Date(spot.date).toLocaleDateString('de-DE')}</span>
                              <div className="flex items-center gap-2">
                                 <button onClick={() => { setSpotForm({ date: spot.date, name: spot.name, lat: spot.lat.toString(), lng: spot.lng.toString(), note: spot.note || '', category: spot.category || 'Stellplatz' }); setEditingSpotId(spot.id); setSpotGpsError(false); setIsAdding(true); }} className="cg-master-button !p-1 !rounded flex-shrink-0"><Edit2 size={12}/></button>
-                                <button onClick={() => { if(confirm('Möchtest du diesen POI-Eintrag wirklich löschen?')) { setState({...state, spots: state.spots.filter((s:any) => s.id !== spot.id)}); } }} className="cg-master-button-danger !p-1 !rounded flex-shrink-0"><Trash2 size={12}/></button>
+                                <button onClick={() => { if(confirm('Möchtest du diesen POI-Eintrag wirklich löschen?')) { setState({...state, spots: state.spots.filter((s: SpotEntry) => s.id !== spot.id)}); } }} className="cg-master-button-danger !p-1 !rounded flex-shrink-0"><Trash2 size={12}/></button>
                              </div>
                          </div>
                          <div className="flex flex-wrap items-center gap-2 mt-1">

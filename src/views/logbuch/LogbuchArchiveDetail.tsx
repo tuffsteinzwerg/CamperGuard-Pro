@@ -2,7 +2,7 @@ import React from 'react';
 import { Archive, CheckCircle, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNumber } from '../../lib/formatters';
-import type { Archive as ArchiveType } from '../../types';
+import type { Archive as ArchiveType, FuelEntry } from '../../types';
 
 interface LogbuchArchiveDetailProps {
   selectedArchive: ArchiveType | null;
@@ -154,7 +154,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'tank' && (
                         <div className="space-y-3">
-                            {selectedArchive.fuelLog.map((entry:any) => (
+                            {selectedArchive.fuelLog.map((entry: FuelEntry) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="flex justify-between items-start gap-3">
                                         <div className="space-y-1">
@@ -188,7 +188,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'trip' && (
                         <div className="space-y-3">
-                            {selectedArchive.tripLog.map((entry:any) => (
+                            {selectedArchive.tripLog.map((entry: FuelEntry) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0">
                                     <div className="flex justify-between items-start gap-3">
                                         <div className="space-y-1">
@@ -230,7 +230,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'business' && (
                         <div className="space-y-3">
-                            {selectedArchive.businessTripLog.map((entry:any) => (
+                            {selectedArchive.businessTripLog.map((entry: FuelEntry) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-start gap-3">
@@ -278,7 +278,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'spots' && (
                         <div className="space-y-3">
-                            {selectedArchive.spots.map((entry:any) => (
+                            {selectedArchive.spots.map((entry: FuelEntry) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="space-y-1">
                                         <div className="typo-body-dim">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { calculateAverageFuelConsumptionFromFuelLog, calculateFuelLogStats } from '../../lib/fuelCalculator';
-import type { Currency, FuelType, FuelEntry, SpotEntry, AppState } from '../../types';
+import type { Currency, FuelType, FuelEntry, SpotEntry, AppState, TripEntry, BusinessTripEntry, Archive } from '../../types';
 
 export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: AppState) => AppState)) => void) {
   const [logType, setLogType] = useState<'tank' | 'fahrt' | 'spots' | 'archiv'>('tank');
@@ -9,19 +9,19 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
   const currentYear = new Date().getFullYear();
   const currentFuelLog = useMemo(() => {
-      const filtered = state.fuelLog.filter((f:any) => new Date(f.date).getFullYear() === currentYear);
-      return filtered.sort((a:any, b:any) => {
+      const filtered = state.fuelLog.filter((f: FuelEntry) => new Date(f.date).getFullYear() === currentYear);
+      return filtered.sort((a: any, b: any) => {
           const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
           if (dateDiff === 0) return b.km - a.km;
           return dateDiff;
       });
   }, [state.fuelLog, currentYear]);
-  const currentTripLog = useMemo(() => state.tripLog.filter((t:any) => new Date(t.date).getFullYear() === currentYear), [state.tripLog, currentYear]);
-  const currentBusinessTripLog = useMemo(() => (state.businessTripLog || []).filter((t:any) => new Date(t.date).getFullYear() === currentYear).sort((a:any, b:any) => new Date(b.date).getTime() - new Date(a.date).getTime()), [state.businessTripLog, currentYear]);
+  const currentTripLog = useMemo(() => state.tripLog.filter((t: TripEntry) => new Date(t.date).getFullYear() === currentYear), [state.tripLog, currentYear]);
+  const currentBusinessTripLog = useMemo(() => (state.businessTripLog || []).filter((t: TripEntry) => new Date(t.date).getFullYear() === currentYear).sort((a: BusinessTripEntry, b: BusinessTripEntry) => new Date(b.date).getTime() - new Date(a.date).getTime()), [state.businessTripLog, currentYear]);
   
-  const totalLiters = currentFuelLog.reduce((acc:number, f:any) => acc + f.liters, 0);
-  const totalEur = currentFuelLog.reduce((acc:number, f:any) => acc + (f.liters * f.price / (f.exchangeRateToEur || 1)), 0);
-  const totalKm = currentTripLog.reduce((acc:number, t:any) => acc + (t.toKm - t.fromKm), 0);
+  const totalLiters = currentFuelLog.reduce((acc: number, f: FuelEntry) => acc + f.liters, 0);
+  const totalEur = currentFuelLog.reduce((acc: number, f: FuelEntry) => acc + (f.liters * f.price / (f.exchangeRateToEur || 1)), 0);
+  const totalKm = currentTripLog.reduce((acc: number, t: TripEntry) => acc + (t.toKm - t.fromKm), 0);
 
   const result = calculateAverageFuelConsumptionFromFuelLog(currentFuelLog);
 
@@ -72,9 +72,9 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
   const getLastKnownKm = (): number => {
     let highestKm = 0;
-    (state.fuelLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.km) || 0));
-    (state.tripLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
-    (state.businessTripLog || []).forEach((e:any) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
+    (state.fuelLog || []).forEach((e: FuelEntry) => highestKm = Math.max(highestKm, Number(e.km) || 0));
+    (state.tripLog || []).forEach((e: TripEntry) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
+    (state.businessTripLog || []).forEach((e: BusinessTripEntry) => highestKm = Math.max(highestKm, Number(e.toKm) || 0));
     return highestKm;
   };
 
@@ -115,7 +115,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
     );
   }, [isAdding, logType, tripLogMode, editingTripId, state.sos?.gpsEnabled]);
 
-  state.fuelLog.forEach((f: any) => {
+  state.fuelLog.forEach((f: FuelEntry) => {
       const fTime = new Date(f.date).getTime();
       if (fTime < formDateMs) {
           if (f.km > minKm) minKm = f.km;
@@ -179,7 +179,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
   const downloadGPX = () => {
     let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="CamperGuard Pro">\n';
-    state.spots.forEach((s: any) => {
+    state.spots.forEach((s: SpotEntry) => {
       gpx += `  <wpt lat="${s.lat}" lon="${s.lng}">\n`;
       gpx += `    <name>${s.category ? `[${s.category}] ` : ''}${s.name}</name>\n`;
       if (s.note || s.category) {
@@ -206,7 +206,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
               return;
           }
 
-          archiveFuelLog = state.fuelLog.filter((f:any) => {
+          archiveFuelLog = state.fuelLog.filter((f: FuelEntry) => {
               return (
                   f.date >= fuelArchiveRange.from &&
                   f.date <= fuelArchiveRange.to
@@ -224,17 +224,17 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const totalLiters = archiveFuelLog.reduce((sum:number, fuel:any) => {
+      const totalLiters = archiveFuelLog.reduce((sum: number, fuel: FuelEntry) => {
           return sum + Number(fuel.liters || 0);
       }, 0);
 
-      const totalEur = archiveFuelLog.reduce((sum:number, fuel:any) => {
+      const totalEur = archiveFuelLog.reduce((sum: number, fuel: FuelEntry) => {
           return sum + ((Number(fuel.price || 0) * Number(fuel.liters || 0)) / Number(fuel.exchangeRateToEur || 1));
       }, 0);
 
       const sortedByKm = [...archiveFuelLog]
-          .filter((f:any) => !isNaN(Number(f.km)))
-          .sort((a:any, b:any) => Number(a.km) - Number(b.km));
+          .filter((f: FuelEntry) => !isNaN(Number(f.km)))
+          .sort((a: any, b: any) => Number(a.km) - Number(b.km));
 
       const totalKm =
           sortedByKm.length >= 2
@@ -245,14 +245,14 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           fuelArchiveMode === 'range'
               ? fuelArchiveRange.from
               : archiveFuelLog
-                    .map((f:any) => f.date)
+                    .map((f: FuelEntry) => f.date)
                     .sort()[0];
 
       const archiveDateTo =
           fuelArchiveMode === 'range'
               ? fuelArchiveRange.to
               : archiveFuelLog
-                    .map((f:any) => f.date)
+                    .map((f: FuelEntry) => f.date)
                     .sort()
                     .slice(-1)[0];
 
@@ -282,12 +282,12 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const archivedIds = new Set(archiveFuelLog.map((f:any) => f.id));
+      const archivedIds = new Set(archiveFuelLog.map((f: FuelEntry) => f.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => !archivedIds.has(f.id))
+          fuelLog: state.fuelLog.filter((f: FuelEntry) => !archivedIds.has(f.id))
       });
 
       setFuelArchiveMode('all');
@@ -307,7 +307,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
               return;
           }
 
-          archiveTripLog = state.tripLog.filter((t:any) => {
+          archiveTripLog = state.tripLog.filter((t: TripEntry) => {
               return (
                   t.date >= tripArchiveRange.from &&
                   t.date <= tripArchiveRange.to
@@ -325,7 +325,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const totalKm = archiveTripLog.reduce((sum:number, trip:any) => {
+      const totalKm = archiveTripLog.reduce((sum: number, trip: TripEntry) => {
           const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
           return sum + (isNaN(diff) ? 0 : diff);
       }, 0);
@@ -334,14 +334,14 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           tripArchiveMode === 'range'
               ? tripArchiveRange.from
               : archiveTripLog
-                    .map((t:any) => t.date)
+                    .map((t: TripEntry) => t.date)
                     .sort()[0];
 
       const archiveDateTo =
           tripArchiveMode === 'range'
               ? tripArchiveRange.to
               : archiveTripLog
-                    .map((t:any) => t.date)
+                    .map((t: TripEntry) => t.date)
                     .sort()
                     .slice(-1)[0];
 
@@ -368,12 +368,12 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const archivedIds = new Set(archiveTripLog.map((t:any) => t.id));
+      const archivedIds = new Set(archiveTripLog.map((t: TripEntry) => t.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          tripLog: state.tripLog.filter((t:any) => !archivedIds.has(t.id))
+          tripLog: state.tripLog.filter((t: TripEntry) => !archivedIds.has(t.id))
       });
 
       setTripArchiveMode('all');
@@ -393,7 +393,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
               return;
           }
 
-          archiveBusinessLog = (state.businessTripLog || []).filter((t:any) => {
+          archiveBusinessLog = (state.businessTripLog || []).filter((t: TripEntry) => {
               return (
                   t.date >= businessArchiveRange.from &&
                   t.date <= businessArchiveRange.to
@@ -411,7 +411,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const totalKm = archiveBusinessLog.reduce((sum:number, trip:any) => {
+      const totalKm = archiveBusinessLog.reduce((sum: number, trip: TripEntry) => {
           const diff = Number(trip.toKm || 0) - Number(trip.fromKm || 0);
           return sum + (isNaN(diff) ? 0 : diff);
       }, 0);
@@ -420,14 +420,14 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           businessArchiveMode === 'range'
               ? businessArchiveRange.from
               : archiveBusinessLog
-                    .map((t:any) => t.date)
+                    .map((t: TripEntry) => t.date)
                     .sort()[0];
 
       const archiveDateTo =
           businessArchiveMode === 'range'
               ? businessArchiveRange.to
               : archiveBusinessLog
-                    .map((t:any) => t.date)
+                    .map((t: TripEntry) => t.date)
                     .sort()
                     .slice(-1)[0];
 
@@ -454,12 +454,12 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const archivedIds = new Set(archiveBusinessLog.map((t:any) => t.id));
+      const archivedIds = new Set(archiveBusinessLog.map((t: BusinessTripEntry) => t.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          businessTripLog: (state.businessTripLog || []).filter((t:any) => !archivedIds.has(t.id))
+          businessTripLog: (state.businessTripLog || []).filter((t: TripEntry) => !archivedIds.has(t.id))
       });
 
       setBusinessArchiveMode('all');
@@ -475,7 +475,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
               return;
           }
 
-          archiveSpots = (state.spots || []).filter((s:any) => {
+          archiveSpots = (state.spots || []).filter((s: SpotEntry) => {
               return (
                   s.date >= spotsArchiveRange.from &&
                   s.date <= spotsArchiveRange.to
@@ -497,14 +497,14 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           spotsArchiveMode === 'range'
               ? spotsArchiveRange.from
               : archiveSpots
-                    .map((s:any) => s.date)
+                    .map((s: SpotEntry) => s.date)
                     .sort()[0];
 
       const archiveDateTo =
           spotsArchiveMode === 'range'
               ? spotsArchiveRange.to
               : archiveSpots
-                    .map((s:any) => s.date)
+                    .map((s: SpotEntry) => s.date)
                     .sort()
                     .slice(-1)[0];
 
@@ -531,12 +531,12 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const archivedIds = new Set(archiveSpots.map((s:any) => s.id));
+      const archivedIds = new Set(archiveSpots.map((s: SpotEntry) => s.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          spots: (state.spots || []).filter((s:any) => !archivedIds.has(s.id))
+          spots: (state.spots || []).filter((s: SpotEntry) => !archivedIds.has(s.id))
       });
 
       setSpotsArchiveMode('all');
@@ -559,10 +559,10 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
       const inRange = (date: string) => date >= tripArchiveFrom && date <= tripArchiveTo;
 
-      const archiveFuel = state.fuelLog.filter((f:any) => inRange(f.date));
-      const archiveTrips = state.tripLog.filter((t:any) => inRange(t.date));
-      const archiveBusiness = (state.businessTripLog || []).filter((t:any) => inRange(t.date));
-      const archiveSpots = (state.spots || []).filter((s:any) => inRange(s.date));
+      const archiveFuel = state.fuelLog.filter((f: FuelEntry) => inRange(f.date));
+      const archiveTrips = state.tripLog.filter((t: TripEntry) => inRange(t.date));
+      const archiveBusiness = (state.businessTripLog || []).filter((t: TripEntry) => inRange(t.date));
+      const archiveSpots = (state.spots || []).filter((s: SpotEntry) => inRange(s.date));
 
       const totalEntries = archiveFuel.length + archiveTrips.length + archiveBusiness.length + archiveSpots.length;
 
@@ -571,13 +571,13 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const totalLiters = archiveFuel.reduce((sum:number, f:any) => sum + Number(f.liters || 0), 0);
-      const totalEur = archiveFuel.reduce((sum:number, f:any) => sum + ((Number(f.price || 0) * Number(f.liters || 0)) / Number(f.exchangeRateToEur || 1)), 0);
+      const totalLiters = archiveFuel.reduce((sum: number, f: FuelEntry) => sum + Number(f.liters || 0), 0);
+      const totalEur = archiveFuel.reduce((sum: number, f: FuelEntry) => sum + ((Number(f.price || 0) * Number(f.liters || 0)) / Number(f.exchangeRateToEur || 1)), 0);
 
       const allKmSources = [
-          ...archiveFuel.filter((f:any) => !isNaN(Number(f.km))).map((f:any) => Number(f.km)),
-          ...archiveTrips.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
-          ...archiveBusiness.map((t:any) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
+          ...archiveFuel.filter((f: FuelEntry) => !isNaN(Number(f.km))).map((f: FuelEntry) => Number(f.km)),
+          ...archiveTrips.map((t: TripEntry) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
+          ...archiveBusiness.map((t: BusinessTripEntry) => [Number(t.fromKm || 0), Number(t.toKm || 0)]).flat(),
       ].filter((km) => !isNaN(km) && km > 0);
 
       const totalKm = allKmSources.length >= 2
@@ -614,18 +614,18 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
           return;
       }
 
-      const fuelIds = new Set(archiveFuel.map((f:any) => f.id));
-      const tripIds = new Set(archiveTrips.map((t:any) => t.id));
-      const businessIds = new Set(archiveBusiness.map((t:any) => t.id));
-      const spotIds = new Set(archiveSpots.map((s:any) => s.id));
+      const fuelIds = new Set(archiveFuel.map((f: FuelEntry) => f.id));
+      const tripIds = new Set(archiveTrips.map((t: TripEntry) => t.id));
+      const businessIds = new Set(archiveBusiness.map((t: BusinessTripEntry) => t.id));
+      const spotIds = new Set(archiveSpots.map((s: SpotEntry) => s.id));
 
       setState({
           ...state,
           archives: [...state.archives, archive],
-          fuelLog: state.fuelLog.filter((f:any) => !fuelIds.has(f.id)),
-          tripLog: state.tripLog.filter((t:any) => !tripIds.has(t.id)),
-          businessTripLog: (state.businessTripLog || []).filter((t:any) => !businessIds.has(t.id)),
-          spots: (state.spots || []).filter((s:any) => !spotIds.has(s.id)),
+          fuelLog: state.fuelLog.filter((f: FuelEntry) => !fuelIds.has(f.id)),
+          tripLog: state.tripLog.filter((t: TripEntry) => !tripIds.has(t.id)),
+          businessTripLog: (state.businessTripLog || []).filter((t: TripEntry) => !businessIds.has(t.id)),
+          spots: (state.spots || []).filter((s: SpotEntry) => !spotIds.has(s.id)),
       });
 
       setTripArchiveName('');
@@ -633,7 +633,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
       setTripArchiveTo('');
   };
 
-  const deleteArchive = (archive: any) => {
+  const deleteArchive = (archive: Archive) => {
       const isYearArchive = archive.type === 'year' || archive.type === 'triplog' || archive.type === 'business';
 
       const warningText = isYearArchive
@@ -654,7 +654,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
       setState({
           ...state,
-          archives: state.archives.filter((a:any) => a.id !== archive.id)
+          archives: state.archives.filter((a: Archive) => a.id !== archive.id)
       });
 
       if (selectedArchive?.id === archive.id) {

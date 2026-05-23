@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { AppState } from '../types';
+import type { AppState, SpotEntry, FuelEntry } from '../../types';
 import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 const SPOT_COLORS: Record<string, string> = {
@@ -31,23 +31,32 @@ const homeIcon = L.divIcon({
   iconAnchor: [7, 7],
 });
 
+const gpsLiveIcon = L.divIcon({
+  className: 'gps-live-marker',
+  html: `<div style="width:16px;height:16px;border-radius:50%;background:#00ff9c;border:2px solid white;box-shadow:0 0 8px rgba(0,255,156,0.6);"></div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
 let globalLeafletMap: L.Map | null = null;
 
-const MapHandlerComponent = ({ destination, setDestination }: { destination: [number, number] | null, setDestination: (d: [number, number]) => void }) => {
-  useMapEvents({
-    click(e) {
-      setDestination([e.latlng.lat, e.latlng.lng]);
-    },
-  });
-  return destination ? <Marker position={destination} /> : null;
+const MapHandlerComponent = () => {
+  return null;
 };
 
-const ResizeMapComponent = () => {
+const ResizeMapComponent = ({ liveGps }: { liveGps: { lat: number; lng: number } | null }) => {
   const map = useMap();
+  const hasCentered = useRef(false);
   useEffect(() => {
     globalLeafletMap = map;
     return () => { globalLeafletMap = null; };
   }, [map]);
+  useEffect(() => {
+    if (liveGps && !hasCentered.current) {
+      map.flyTo([liveGps.lat, liveGps.lng], 14, { duration: 1.5 });
+      hasCentered.current = true;
+    }
+  }, [liveGps, map]);
   return null;
 };
 
@@ -60,7 +69,6 @@ interface ReiseViewProps {
 }
 
 export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: ReiseViewProps) {
-  const [destination, setDestination] = useState<[number, number] | null>(null);
 
   // --- GPS-Live-Position für Karte ---
   const [liveGps, setLiveGps] = useState<{ lat: number; lng: number } | null>(null);
@@ -99,7 +107,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
         .then(r => r.json())
         .then(data => {
           if (data?.[0]?.lat && data?.[0]?.lon) {
-            setState((prev: any) => ({
+            setState((prev: AppState) => ({
               ...prev,
               sos: { ...prev.sos, homeCoords: { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } }
             }));
@@ -472,7 +480,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   }, [isAudioAssistActive]);
 
   const handleTaraReset = () => {
-      setState((prev: any) => ({ ...prev, profile: { ...prev.profile, pitchOffset: 0, rollOffset: 0 } }));
+      setState((prev: AppState) => ({ ...prev, profile: { ...prev.profile, pitchOffset: 0, rollOffset: 0 } }));
   };
 
   const handleAudioToggle = async () => {
@@ -531,7 +539,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
     if (state.fuelLog.length < 2) return 11.5;
     const sorted = [...state.fuelLog].sort((a,b) => b.km - a.km);
     const totalDist = sorted[0].km - sorted[sorted.length - 1].km;
-    const totalLiters = sorted.slice(0, -1).reduce((acc:number, curr:any) => acc + curr.liters, 0);
+    const totalLiters = sorted.slice(0, -1).reduce((acc: number, curr: FuelEntry) => acc + curr.liters, 0);
     return totalDist > 0 ? (totalLiters / totalDist) * 100 : 11.5;
   }, [state.fuelLog]);
 
@@ -893,20 +901,23 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           .leaflet-control-attribution a:hover {
             color: #bbb !important;
           }
-          .leaflet-interactive.pulse-gps {
+          .gps-live-marker div {
             animation: gps-pulse 2s ease-in-out infinite;
           }
           @keyframes gps-pulse {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.3); }
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+          }
+          .leaflet-tile-pane {
+            filter: brightness(1.4) contrast(1.1);
           }
         `}</style>
         <div className="relative overflow-hidden z-0 h-[400px] w-full cg-inset">
             <MapContainer id="map" center={[51.1657, 10.4515]} zoom={6} zoomControl={false} style={{ height: '100%', width: '100%', background: '#0a0b0c' }}>
               <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
-              <MapHandlerComponent destination={destination} setDestination={setDestination} />
-              <ResizeMapComponent />
-              {(state.spots || []).map((spot: any) => (
+              <MapHandlerComponent />
+              <ResizeMapComponent liveGps={liveGps} />
+              {(state.spots || []).map((spot: SpotEntry) => (
                 <Marker
                   key={spot.id}
                   position={[spot.lat, spot.lng]}
@@ -939,7 +950,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
 
               {/* GPS-Live-Position */}
               {liveGps && (
-                <CircleMarker center={[liveGps.lat, liveGps.lng]} radius={8} pathOptions={{ color: '#00ff9c', fillColor: '#00ff9c', fillOpacity: 0.4, weight: 2 }} className="pulse-gps">
+                <Marker position={[liveGps.lat, liveGps.lng]} icon={gpsLiveIcon} zIndexOffset={1000}>
                   <Popup>
                     <div style={{ color: '#1a1c1e', fontSize: '12px' }}>
                       <strong>📍 Aktuelle Position</strong>
@@ -948,7 +959,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                       </div>
                     </div>
                   </Popup>
-                </CircleMarker>
+                </Marker>
               )}
             </MapContainer>
         </div>

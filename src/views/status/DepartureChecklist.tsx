@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { AppState } from '../../types';
-import { Plus, Check, Edit2, Trash2, ChevronRight } from 'lucide-react';
+import type { AppState, InventoryItem } from '../../types';
+import { Plus, Check, Edit2, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface DepartureChecklistProps {
@@ -29,7 +29,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
           </div>
           {isChecklistOpen && (
               <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
-                  {(state.checklist || []).map((item: any) => {
+                  {(state.checklist || []).map((item: InventoryItem) => {
                       return (
                           <div key={item.id} className="cg-inset py-2 flex items-center justify-between group hover:bg-black/20 transition-colors px-3 rounded border border-white/5">
                               {editingChecklistItemId === item.id ? (
@@ -41,7 +41,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                                           className="cg-master-input flex-1 py-1 bg-black/50 border-white/10"
                                           onKeyDown={(e) => {
                                               if (e.key === 'Enter' && editingChecklistText.trim() !== '') {
-                                                  const nc = state.checklist.map((c:any) => c.id === item.id ? {...c, label: editingChecklistText.trim()} : c);
+                                                  const nc = state.checklist.map((c: { id: string; label: string; checked: boolean }) => c.id === item.id ? {...c, label: editingChecklistText.trim()} : c);
                                                   setState({...state, checklist: nc});
                                                   setEditingChecklistItemId(null);
                                               } else if (e.key === 'Escape') {
@@ -53,7 +53,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                                       <button 
                                           onClick={() => {
                                               if(editingChecklistText.trim() !== '') {
-                                                  const nc = state.checklist.map((c:any) => c.id === item.id ? {...c, label: editingChecklistText.trim()} : c);
+                                                  const nc = state.checklist.map((c: { id: string; label: string; checked: boolean }) => c.id === item.id ? {...c, label: editingChecklistText.trim()} : c);
                                                   setState({...state, checklist: nc});
                                                   setEditingChecklistItemId(null);
                                               }
@@ -67,7 +67,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                               ) : (
                                   <>
                                       <div onClick={() => {
-                                              const nc = state.checklist.map((c:any) => c.id === item.id ? {...c, checked: !c.checked} : c);
+                                              const nc = state.checklist.map((c: { id: string; label: string; checked: boolean }) => c.id === item.id ? {...c, checked: !c.checked} : c);
                                               setState({...state, checklist: nc});
                                           }}
                                           className="flex items-center gap-3 cursor-pointer flex-1 py-1"
@@ -79,7 +79,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                                       </div>
                                       <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                           <button onClick={(e) => { e.stopPropagation(); setEditingChecklistText(item.label); setEditingChecklistItemId(item.id); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14}/></button>
-                                          <button onClick={(e) => { e.stopPropagation(); setState({...state, checklist: state.checklist.filter((c:any) => c.id !== item.id)}); }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
+                                          <button onClick={(e) => { e.stopPropagation(); setState({...state, checklist: state.checklist.filter((c: { id: string; label: string; checked: boolean }) => c.id !== item.id)}); }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
                                       </div>
                                   </>
                               )}

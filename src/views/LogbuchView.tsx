@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppState } from '../types';
+import type { AppState, FuelEntry, Archive } from '../../types';
 import { Plus, Printer } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -55,15 +55,15 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
       <div className="cg-master-inset p-3 flex justify-between items-center sticky top-[-10px] z-20">
           <div className="text-center">
               <div className="typo-label">Jahres-KM</div>
-              <div className="typo-value-large">{formatNumber(lb.totalKm, 0)}</div>
+              <div className="typo-value-normal">{formatNumber(lb.totalKm, 0)}</div>
           </div>
           <div className="text-center">
               <div className="typo-label">Gesamtkosten</div>
-              <div className="typo-value-large text-[var(--status-danger)]">{formatNumber(lb.totalEur, 2)} €</div>
+              <div className="typo-value-normal">{formatNumber(lb.totalEur, 2)} €</div>
           </div>
           <div className="text-center">
               <div className="typo-label">Verbrauch</div>
-              <div className="typo-value-large">{formatNumber(lb.result?.consumption || 0, 1)} L</div>
+              <div className="typo-value-normal">{formatNumber(lb.result?.consumption || 0, 1)} L</div>
           </div>
       </div>
 
@@ -176,12 +176,12 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
                     onClick={() => { 
                         const highestKm = lb.getLastKnownKm();
                         if (lb.logType === 'tank') {
-                            lb.setTankForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
+                            lb.setTankForm((f: FuelEntry) => ({...f, date: new Date().toISOString().split('T')[0], km: highestKm > 0 ? highestKm.toString() : ''})); 
                         } else if (lb.logType === 'fahrt') {
-                            lb.setTripForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
-                            lb.setBusinessTripForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
+                            lb.setTripForm((f: FuelEntry) => ({...f, date: new Date().toISOString().split('T')[0], fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', destination: '', purpose: '', category: '', note: ''}));
+                            lb.setBusinessTripForm((f: FuelEntry) => ({...f, date: new Date().toISOString().split('T')[0], departureTime: '', arrivalTime: '', fromKm: highestKm > 0 ? highestKm.toString() : '', toKm: '', driver: '', category: 'Dienstlich', street: '', houseNumber: '', zip: '', city: '', purpose: '', businessPartner: '', note: ''}));
                         } else if (lb.logType === 'spots') {
-                            lb.setSpotForm((f: any) => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
+                            lb.setSpotForm((f: FuelEntry) => ({...f, date: new Date().toISOString().split('T')[0], name: '', lat: '', lng: '', note: '', category: 'Stellplatz'}));
                             lb.setSpotGpsError(false);
                         }
                         lb.setEditingTripId(null);

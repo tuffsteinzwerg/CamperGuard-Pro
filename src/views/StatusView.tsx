@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { AppState } from '../types';
+import type { AppState, InventoryItem, PharmacyItem, MaintenanceItem } from '../../types';
 import { AlertTriangle, CheckCircle, Droplet, Fuel, Settings, ShieldCheck, Flame } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { formatNumber, formatWeight } from '../lib/formatters';
-import { SosHub } from './status/SosHub';
 import { WeightGauge } from './status/WeightGauge';
 import { DepartureChecklist } from './status/DepartureChecklist';
 
@@ -34,7 +33,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
   const wasteWaterWeight = wasteWaterLiters * 1;
   const dieselWeight = fuelLiters * 0.84;
 
-  const inventoryWeight = (state.inventory || []).reduce((acc: number, item: any) => {
+  const inventoryWeight = (state.inventory || []).reduce((acc: number, item: InventoryItem) => {
     if (item.weight !== undefined && item.weight !== null && !isNaN(item.weight)) {
       const unit = (item.weightUnit || 'kg').toLowerCase();
       if (unit === 'g' || unit === 'gr') return acc + (item.weight * (item.quantity || 0)) / 1000;
@@ -86,7 +85,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       warnings.push({ type: 'danger', text: `Fahrzeug überladen! ${formatNumber(Math.abs(remainingWeight), 0)} kg über ZGG` });
   }
   const nowMs = new Date().getTime();
-  (state.maintenance || []).forEach((m: any) => {
+  (state.maintenance || []).forEach((m: MaintenanceItem) => {
       if (!m.date) return;
       const dateMs = new Date(m.date).getTime();
       const diffDays = (dateMs - nowMs) / (1000 * 3600 * 24);
@@ -103,7 +102,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
   (() => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      (state.sos?.pharmacy || []).forEach((p: any) => {
+      (state.sos?.pharmacy || []).forEach((p: PharmacyItem) => {
           if (!p || !p.name || String(p.name).trim() === '' || typeof p.expiry !== 'string' || !p.expiry) return;
           const parts = p.expiry.split('-');
           if (parts.length !== 2) return;
@@ -132,17 +131,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 pb-24 px-2 pt-4">
-      {/* Element 1: SOS-Button */}
-      {!showSos && (
-      <div className="fixed top-[11px] left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none px-4 z-[60] pointer-events-none flex justify-end">
-          <div className="pointer-events-auto mr-[46px]">
-              <button onClick={() => setShowSos(true)} className="cg-master-button animate-pulse flex items-center gap-1.5">
-                  <ShieldPlus size={16} strokeWidth={3} />
-                  SOS
-              </button>
-          </div>
-      </div>
-      )}
+
 
       <WeightGauge 
         totalWeight={totalWeight}
@@ -158,7 +147,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       {/* Element 2: Warnbereich */}
       {warnings.length > 0 && (
           <div className="flex flex-col gap-3">
-              {warnings.map((w: any, idx: number) => (
+              {warnings.map((w: { type: string; text: string; action?: string }, idx: number) => (
                   <div 
                       key={idx} 
                       className={`card-alert alert-${w.type} flex items-center gap-3 cg-alert ${w.action ? 'cursor-pointer active:opacity-70' : ''}`}
@@ -181,7 +170,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       <div className="cg-panel p-4">
           <div className="typo-engraved mb-4">WARTUNG</div>
           <div className="grid grid-cols-2 gap-4">
-              {(state.maintenance || []).map((item: any) => {
+              {(state.maintenance || []).map((item: InventoryItem) => {
                   const date = item.date ? new Date(item.date) : null;
                   const diffInDays = date ? (date.getTime() - new Date().getTime()) / (1000 * 3600 * 24) : 999;
                   const borderColor = diffInDays < 0 ? 'var(--status-danger)' : diffInDays < 60 ? 'var(--status-warn)' : 'rgba(255,255,255,0.05)';
@@ -210,17 +199,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       </div>
 
         <DepartureChecklist state={state} setState={setState} />
-      <SosHub
-        state={state}
-        setState={setState}
-        showSos={showSos}
-        setShowSos={setShowSos}
-        sosTab={sosTab}
-        setSosTab={setSosTab}
-        gpsCoords={gpsCoords}
-        gpsAlt={gpsAlt}
-        gpsStatus={gpsStatus}
-      />
+
 
     </div>
   );

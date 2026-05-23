@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { AppState } from '../types';
+import type { AppState, MaintenanceItem } from '../../types';
 import { Search, Droplet, Fuel, Download, Upload, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -116,7 +116,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
   const [focusedProfileField, setFocusedProfileField] = useState<string | null>(null);
 
   const hc = (path: string, val: any) => {
-    setState((prev:any) => {
+    setState((prev: AppState) => {
         const next = {...prev};
         const p = path.split('.');
         let c: any = next;
@@ -379,7 +379,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
           
           <div className="space-y-3 pt-2">
             <span className="typo-section-title mb-2 block">Wartungs-Termine</span>
-            {state.maintenance.map((m:any, idx:number) => (
+            {state.maintenance.map((m: MaintenanceItem, idx: number) => (
                 <div key={m.id} className="flex items-center gap-3">
                     <span className="typo-label w-24">{m.name}</span>
                     <input type="date" value={m.date} onChange={(e) => { const nm = [...state.maintenance]; nm[idx].date = e.target.value; setState({...state, maintenance: nm}); }} className={`cg-master-input flex-1 ${!m.date ? 'animate-pulse-border text-[var(--text-muted)]' : ''}`} />
@@ -512,7 +512,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                      <input type="text" placeholder="FAQ DURCHSUCHEN..." className="cg-master-input w-full pl-10 pr-4" value={faqSearch} onChange={(e) => setFaqSearch(e.target.value)} />
                  </div>
                  <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-                     {faqData.filter(f => f.q.toLowerCase().includes(faqSearch.toLowerCase()) || f.a.toLowerCase().includes(faqSearch.toLowerCase())).map((f:any, i:number) => (
+                     {faqData.filter(f => f.q.toLowerCase().includes(faqSearch.toLowerCase()) || f.a.toLowerCase().includes(faqSearch.toLowerCase())).map((f: FAQEntry, i: number) => (
                          <div key={i} className="cg-master-card-small space-y-3 relative">
                              <div className="w-full typo-card-title !mb-0">{f.q}</div>
                              <div className="w-full typo-body-dim">{f.a}</div>

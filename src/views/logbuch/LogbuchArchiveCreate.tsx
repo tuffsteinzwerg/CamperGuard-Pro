@@ -295,7 +295,7 @@ export function LogbuchArchiveCreate(props: LogbuchArchiveCreateProps) {
                   </div>
               </div>
               
-              {state.archives.map((a:any) => (
+              {state.archives.map((a: Archive) => (
                   <button
                       key={a.id || a.year}
                       onClick={() => {

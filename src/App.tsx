@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Settings, Map as MapIcon, BookOpen, Package, Activity, Wifi, WifiOff
+  ShieldCheck, HeartPulse, Settings, Map as MapIcon, BookOpen, Package, Activity, Wifi, WifiOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +10,7 @@ import { INITIAL_STATE, AppState } from './types.ts';
 import { normalizeGearName } from './lib/formatters';
 import { NavButton } from './components/NavButton';
 import { StatusView } from './views/StatusView';
+import { SosHub } from './views/status/SosHub';
 import { ProfilView } from './views/ProfilView';
 import { InhaltView } from './views/InhaltView';
 import { LogbuchView } from './views/LogbuchView';
@@ -97,7 +98,7 @@ export default function App() {
            if (loadedSos.gear) {
                const groupedGear: Record<string, any> = {};
                
-               loadedSos.gear.forEach((g: any) => {
+               loadedSos.gear.forEach((g: EmergencyGear) => {
                    const migrated = { ...g };
                    migrated.name = normalizeGearName(migrated.name || '');
                    
@@ -107,7 +108,7 @@ export default function App() {
                    
                    let locs: string[] = [];
                    if (Array.isArray(migrated.locations)) {
-                       migrated.locations.forEach((l: any) => locs.push(String(l).trim()));
+                       migrated.locations.forEach((l: string) => locs.push(String(l).trim()));
                    }
                    if (typeof migrated.location === 'string') {
                        locs.push(migrated.location.trim());
@@ -154,7 +155,7 @@ export default function App() {
                
                const requiredCategories = ['Feuerlöscher', 'Feuerlöschdecke', 'Warnweste', 'Erste-Hilfe-Kasten', 'Warndreieck'];
                requiredCategories.forEach((cat, idx) => {
-                   if (!loadedSos.gear.some((g: any) => normalizeGearName(g.name) === cat) && !loadedSos.deletedGear.some((d: string) => normalizeGearName(d) === cat)) {
+                   if (!loadedSos.gear.some((g: EmergencyGear) => normalizeGearName(g.name) === cat) && !loadedSos.deletedGear.some((d: string) => normalizeGearName(d) === cat)) {
                        loadedSos.gear.push({
                            id: `g_new_${idx}_${Date.now()}`,
                            name: cat,
@@ -190,7 +191,7 @@ export default function App() {
            });
            // Fehlende Lagerorte aus den Artikeln rekonstruieren
            if (saved.inventory && Array.isArray(saved.inventory)) {
-             saved.inventory.forEach((item: any) => {
+             saved.inventory.forEach((item: InventoryItem) => {
                if (item.category && item.subcategory && item.subcategory.trim() !== '') {
                  const subs = loadedSubcategories[item.category];
                  if (subs && !subs.includes(item.subcategory)) {
@@ -201,7 +202,7 @@ export default function App() {
            }
 
            const loadedArchives = Array.isArray(saved.archives)
-             ? saved.archives.map((archive: any) => {
+             ? saved.archives.map((archive: Archive) => {
                  if (archive && archive.id && archive.summary) return archive;
 
                  const legacyYear = Number(archive?.year || new Date().getFullYear());
@@ -447,6 +448,15 @@ export default function App() {
           </span>
         </div>
         <div className="flex items-center justify-end min-w-0 gap-3">
+          {!showSos && (
+            <button
+              onClick={() => { setActiveTab('status'); setShowSos(true); }}
+              className="flex items-center justify-center active:scale-95 transition-transform"
+              title="Safety Hub öffnen"
+            >
+              <HeartPulse size={20} className="text-[var(--accent)]" strokeWidth={2.5} />
+            </button>
+          )}
           <div className="flex items-center gap-1.5" title={isOnline ? 'Online' : 'Offline'}>
             <div className={`w-[7px] h-[7px] rounded-full ${isOnline ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--status-danger)] shadow-[0_0_6px_rgba(255,59,48,0.4)]'}`} />
             {isOnline ? <Wifi size={12} className="text-[#00ff9c]/60" /> : <WifiOff size={12} className="text-[var(--status-danger)]/60" />}
@@ -486,7 +496,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.9-dev
+          CamperGuard Pro v0.2.0-dev
         </div>
 
         {showChangelog && (
@@ -494,7 +504,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.9-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.2.0-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 22.05.2026</p>
                  </div>
                  <button 
@@ -523,6 +533,18 @@ export default function App() {
         )}
 
       </main>
+
+      <SosHub
+        state={state}
+        setState={setState}
+        showSos={showSos}
+        setShowSos={setShowSos}
+        sosTab={sosTab}
+        setSosTab={setSosTab}
+        gpsCoords={null}
+        gpsAlt={null}
+        gpsStatus={'offline'}
+      />
 
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none bg-[var(--bg-input)] border-t border-[var(--border)] h-[70px] px-4 flex justify-between items-center z-40 no-print">
         <NavButton active={activeTab === 'status'} onClick={() => setActiveTab('status')} icon={<Activity size={20} />} label="Status" />
