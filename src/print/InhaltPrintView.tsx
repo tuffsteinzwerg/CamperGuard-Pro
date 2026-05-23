@@ -161,13 +161,13 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
                 return (
                     <div key={category}>
-                        <div className="cg-print-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>📦</span> {category.toUpperCase()}</div>
+                        <div className="cg-print-section-title"><span className="cg-print-icon-sm">📦</span> {category.toUpperCase()}</div>
                         
                         <div className="inv-col-header cg-print-col-header">
-                            <div style={{textAlign: 'center'}}>✓</div>
-                            <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Artikel</div>
-                            <div style={{textAlign: 'right'}}>Menge</div>
-                            <div style={{textAlign: 'right'}}>Gewicht</div>
+                            <div className="cg-print-align-center">✓</div>
+                            <div className="cg-print-align-left-pad">Artikel</div>
+                            <div className="cg-print-align-right">Menge</div>
+                            <div className="cg-print-align-right">Gewicht</div>
                         </div>
 
                         {subcats.map((sub: any) => {
@@ -198,13 +198,13 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
             {Object.keys(groupedGear).length > 0 && (
                 <div>
-                    <div className="cg-print-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>🛡️</span> Notfallausrüstung</div>
+                    <div className="cg-print-section-title"><span className="cg-print-icon-sm">🛡️</span> Notfallausrüstung</div>
                     
                     <div className="inv-col-header cg-print-col-header">
-                        <div style={{textAlign: 'center'}}>✓</div>
-                        <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Ausrüstung</div>
-                        <div style={{textAlign: 'right'}}>Menge</div>
-                        <div style={{textAlign: 'right'}}>Gewicht</div>
+                        <div className="cg-print-align-center">✓</div>
+                        <div className="cg-print-align-left-pad">Ausrüstung</div>
+                        <div className="cg-print-align-right">Menge</div>
+                        <div className="cg-print-align-right">Gewicht</div>
                     </div>
 
                     {Object.keys(groupedGear).map(loc => (
@@ -229,15 +229,15 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
             {pharmacyFilter.length > 0 && (
                 <div>
-                    <div className="cg-print-section-title"><span style={{marginRight: '3px', fontSize: '8pt'}}>💊</span> Apotheke / Medikamente</div>
+                    <div className="cg-print-section-title"><span className="cg-print-icon-sm">💊</span> Apotheke / Medikamente</div>
                     
                     <div className="inv-med-col-header cg-print-col-header">
-                        <div style={{textAlign: 'center'}}>✓</div>
-                        <div style={{textAlign: 'left', paddingLeft: '1mm'}}>Medikament</div>
-                        <div style={{textAlign: 'left'}}>Zweck</div>
-                        <div style={{textAlign: 'center'}}>Ablaufdatum</div>
-                        <div style={{textAlign: 'right'}}>Menge</div>
-                        <div style={{textAlign: 'right'}}>Gewicht</div>
+                        <div className="cg-print-align-center">✓</div>
+                        <div className="cg-print-align-left-pad">Medikament</div>
+                        <div className="cg-print-align-left">Zweck</div>
+                        <div className="cg-print-align-center">Ablaufdatum</div>
+                        <div className="cg-print-align-right">Menge</div>
+                        <div className="cg-print-align-right">Gewicht</div>
                     </div>
 
                     {Object.keys(groupedPharmacy).map(loc => (
@@ -265,13 +265,13 @@ export function InhaltPrintView({ state }: { state: AppState }) {
             {totalWeightKg > 0 && (
                 <div className="inv-weight-footer cg-print-summary-wrapper">
                     <div>
-                        <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>⚖️</span> Gesamtgewicht</div>
+                        <div className="cg-print-summary-label"><span className="cg-print-icon-sm">⚖️</span> Gesamtgewicht</div>
                         <div className="cg-print-summary-value">
                             {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g` : `${totalWeightKg.toFixed(2)} kg`}
                         </div>
                     </div>
                     <div className="inv-article-count">
-                        <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📋</span> Artikel gesamt</div>
+                        <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📋</span> Artikel gesamt</div>
                         <div className="cg-print-summary-value">
                             {state.inventory.length + printableGear.length + pharmacyFilter.length}
                         </div>

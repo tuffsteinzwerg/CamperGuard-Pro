@@ -76,12 +76,12 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
                          
                          <div className="tank-print-column-grid cg-print-col-header">
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>📅</span> Datum</div>
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🔧</span> Kilometerstand<br/><span style={{fontWeight: 400, fontSize: '6pt', marginLeft: '16px'}}>(seit letzter Tankung)</span></div>
-                             <div style={{textAlign: 'left'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>⛽</span> Kraftstoff</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>💧</span> Liter</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🏷️</span> Preis / L</div>
-                             <div style={{textAlign: 'right'}}><span style={{marginRight: '4px', fontSize: '9pt'}}>🧾</span> Gesamtpreis</div>
+                             <div className="cg-print-align-left"><span className="cg-print-icon-md">📅</span> Datum</div>
+                             <div className="cg-print-align-left"><span className="cg-print-icon-md">🔧</span> Kilometerstand<br/><span className="cg-print-sub-hint">(seit letzter Tankung)</span></div>
+                             <div className="cg-print-align-left"><span className="cg-print-icon-md">⛽</span> Kraftstoff</div>
+                             <div className="cg-print-align-right"><span className="cg-print-icon-md">💧</span> Liter</div>
+                             <div className="cg-print-align-right"><span className="cg-print-icon-md">🏷️</span> Preis / L</div>
+                             <div className="cg-print-align-right"><span className="cg-print-icon-md">🧾</span> Gesamtpreis</div>
                          </div>
 
                          <div className="tank-print-row-list">
@@ -100,7 +100,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                                      <div key={f.id} className="tank-print-row cg-print-row">
                                          <div className="cg-print-cell-date">{new Date(f.date).toLocaleDateString('de-DE')}</div>
                                          <div className="cg-print-cell-name">
-                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span className="cg-print-km-delta">{kmDeltaStr}</span></> : <span style={{color: '#888'}}>-</span>}
+                                             {hasKm ? <><strong>{formatNumber(f.km, 0)} km</strong> <span className="cg-print-km-delta">{kmDeltaStr}</span></> : <span className="cg-print-color-muted">-</span>}
                                          </div>
                                          <div className="cg-print-cell-muted">{f.fuelType}</div>
                                          <div className="cg-print-cell-num">{formatNumber(f.liters, 2)} l</div>
@@ -115,19 +115,19 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                              <div className="cg-print-summary-title">Übersicht Zeitraum</div>
                              <div className="tank-print-bottom-summary cg-print-summary-grid">
                                  <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>🚐</span> Gefahrene Kilometer</div>
+                                     <div className="cg-print-summary-label"><span className="cg-print-icon-md">🚐</span> Gefahrene Kilometer</div>
                                      <div className="cg-print-summary-value">{formatNumber(totalKm, 0)} km</div>
                                  </div>
                                  <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💧</span> Getankte Liter</div>
+                                     <div className="cg-print-summary-label"><span className="cg-print-icon-md">💧</span> Getankte Liter</div>
                                      <div className="cg-print-summary-value">{formatNumber(totalLiters, 1)} l</div>
                                  </div>
                                  <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>💶</span> Gesamtkosten</div>
+                                     <div className="cg-print-summary-label"><span className="cg-print-icon-md">💶</span> Gesamtkosten</div>
                                      <div className="cg-print-summary-value">{formatNumber(totalEur, 2)} €</div>
                                  </div>
                                  <div>
-                                     <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '9pt'}}>⛽</span> Durchschnitt</div>
+                                     <div className="cg-print-summary-label"><span className="cg-print-icon-md">⛽</span> Durchschnitt</div>
                                      <div className="cg-print-summary-value">{result?.consumption != null ? `${formatNumber(result.consumption, 2)} l / 100 km` : '—'}</div>
                                      {totalLiters > 0 && totalEur > 0 && <div className="cg-print-summary-value">{formatNumber(totalEur / totalLiters, 2)} € / l</div>}
                                  </div>
@@ -142,12 +142,12 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
              printTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="reise-print-column-grid cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Zielort</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Start km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏁</span> Ziel km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Strecke</div>
-                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📅</span> Datum</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📍</span> Zielort</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">🏁</span> Start km</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">🏁</span> Ziel km</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">📏</span> Strecke</div>
+                     <div className="cg-print-align-left-pad2"><span className="cg-print-icon-sm">📝</span> Notiz</div>
                  </div>
                  <div>
                      {printTripLog.map((t:any) => {
@@ -168,15 +168,15 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-summary-title">Übersicht Zeitraum</div>
                      <div className="reise-print-summary-grid cg-print-summary-grid">
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🗺️</span> Fahrten</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🗺️</span> Fahrten</div>
                              <div className="cg-print-summary-value">{currentTripLog.length}</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtstrecke</div>
                              <div className="cg-print-summary-value">{Number(totalKm).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📏</span> Ø pro Fahrt</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📏</span> Ø pro Fahrt</div>
                              <div className="cg-print-summary-value">{currentTripLog.length > 0 ? Number(Math.round(totalKm / currentTripLog.length)).toLocaleString('de-DE') : '0'} km</div>
                          </div>
                      </div>
@@ -188,20 +188,20 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
              printBusinessTripLog.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="fb-print-hdr1 cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> Ab</div>
-                     <div style={{textAlign: 'center'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🕐</span> An</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>👤</span> Fahrer</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏷️</span> Kategorie</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Start km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>🏁</span> Ziel km</div>
-                     <div style={{textAlign: 'right'}}><span style={{marginRight: '2px', fontSize: '7pt'}}>📏</span> Strecke</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-xs">📅</span> Datum</div>
+                     <div className="cg-print-align-center"><span className="cg-print-icon-xs">🕐</span> Ab</div>
+                     <div className="cg-print-align-center"><span className="cg-print-icon-xs">🕐</span> An</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-xs">👤</span> Fahrer</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-xs">🏷️</span> Kategorie</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-xs">🏁</span> Start km</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-xs">🏁</span> Ziel km</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-xs">📏</span> Strecke</div>
                  </div>
                  <div className="fb-print-hdr2 cg-print-col-header-sub">
-                     <div style={{textAlign: 'left', paddingLeft: '1mm'}}>📍 Reiseziel (Straße Nr, PLZ Ort)</div>
-                     <div style={{textAlign: 'left'}}>📝 Reisezweck</div>
-                     <div style={{textAlign: 'left'}}>🤝 Geschäftspartner</div>
-                     <div style={{textAlign: 'left'}}>📌 Notiz / Route</div>
+                     <div className="cg-print-align-left-pad">📍 Reiseziel (Straße Nr, PLZ Ort)</div>
+                     <div className="cg-print-align-left">📝 Reisezweck</div>
+                     <div className="cg-print-align-left">🤝 Geschäftspartner</div>
+                     <div className="cg-print-align-left">📌 Notiz / Route</div>
                  </div>
                  <div>
                      {printBusinessTripLog.map((t:any) => {
@@ -236,19 +236,19 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-summary-title">Übersicht Zeitraum</div>
                      <div className="fb-summary-grid cg-print-summary-grid">
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📋</span> Fahrten</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📋</span> Fahrten</div>
                              <div className="cg-print-summary-value">{currentBusinessTripLog.length}</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🚐</span> Gesamtstrecke</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtstrecke</div>
                              <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>💼</span> Dienstlich</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">💼</span> Dienstlich</div>
                              <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category === 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏠</span> Privat / Arbeitsweg</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🏠</span> Privat / Arbeitsweg</div>
                              <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t:any) => t.category !== 'Dienstlich').reduce((acc:number, t:any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                      </div>
@@ -260,11 +260,11 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
              printSpots.length === 0 ? <p className="text-center italic mt-10">Keine Einträge vorhanden</p> :
              <div>
                  <div className="poi-print-column-grid cg-print-col-header">
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📅</span> Datum</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Name</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorie</div>
-                     <div style={{textAlign: 'left'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Koordinaten</div>
-                     <div style={{textAlign: 'left', paddingLeft: '2mm'}}><span style={{marginRight: '3px', fontSize: '8pt'}}>📝</span> Notiz</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📅</span> Datum</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📍</span> Name</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">🏷️</span> Kategorie</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">🌐</span> Koordinaten</div>
+                     <div className="cg-print-align-left-pad2"><span className="cg-print-icon-sm">📝</span> Notiz</div>
                  </div>
                  <div>
                      {printSpots.map((s:any) => (
@@ -281,15 +281,15 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-summary-title">Übersicht</div>
                      <div className="poi-print-summary-grid cg-print-summary-grid">
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>📍</span> Gespeicherte Orte</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📍</span> Gespeicherte Orte</div>
                              <div className="cg-print-summary-value">{state.spots.length}</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🏷️</span> Kategorien</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🏷️</span> Kategorien</div>
                              <div className="cg-print-summary-value">{new Set(state.spots.map((s:any) => s.category || 'Stellplatz')).size}</div>
                          </div>
                          <div>
-                             <div className="cg-print-summary-label"><span style={{marginRight: '3px', fontSize: '8pt'}}>🌐</span> Mit Koordinaten</div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🌐</span> Mit Koordinaten</div>
                              <div className="cg-print-summary-value">{state.spots.filter((s:any) => s.lat != null && s.lng != null).length} von {state.spots.length}</div>
                          </div>
                      </div>
