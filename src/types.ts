@@ -154,6 +154,7 @@ export interface SosData {
   deletedGear?: string[];
   pharmacy: PharmacyItem[];
   gpsEnabled?: boolean;
+  homeCoords?: { lat: number; lng: number } | null;
 }
 
 export interface TirePressures {

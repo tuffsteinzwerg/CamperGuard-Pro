@@ -6,6 +6,32 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.1.9-dev",
+    "date": "23.05.2026",
+    "entries": [
+      "575. StatusView-Fix: deletingGearItem Bestätigungs-Modal korrekt nach SosHub.tsx verschoben.",
+      "574. StatusView-Refactoring: DepartureChecklist.tsx extrahiert (~122 Z.). Eigene State-Variablen für Checkliste.",
+      "573. StatusView-Refactoring: WeightGauge.tsx extrahiert (~204 Z.). Rundinstrument + Gewichtsaufschlüsselung.",
+      "572. StatusView-Refactoring: SosHub.tsx extrahiert (~646 Z.). SOS-Modal mit 3 Tabs als eigene Komponente. StatusView von 1.145 auf 240 Zeilen reduziert.",
+      "571. Tankstatistik: Kompakte Summary-Zeile über Tank-Liste (Ø Verbrauch, Ø Preis/L, Kosten/km). Nutzt bestehende fuelStats-Berechnung.",
+      "570. Offline-Status: Online/Offline-Indikator im Header mit Live-Event-Listener (grün=online, rot=offline).",
+      "569. Toast-Feedback: Globale 'Gespeichert ✓' Einblendung nach jedem State-Save. Auto-dismiss nach 1.5s mit Animation.",
+      "568. GPS-Live-Standort: Pulsierender grüner CircleMarker auf der Leaflet-Karte in ReiseView. Eigener watchPosition, nur aktiv wenn Karte sichtbar.",
+      "567. Heimatadresse auf Karte: Orangener Marker mit Popup. Einmalige Geocodierung via Nominatim, gecacht in state.sos.homeCoords.",
+      "566. types.ts: homeCoords Feld in SosData Interface ergänzt.",
+      "565. Backup/Export: JSON-Export mit Metadaten (_meta: App, Version, Exportdatum). JSON-Import mit Validierung und Bestätigungsdialog. Buttons im Profil-Tab.",
+      "564. Archiv-Übersicht: Neues Print-Layout für Archiv-Liste (Name, Typ, Zeitraum, KM, Liter, Kosten + Summary).",
+      "563. LogbuchView: Lokalen Style-Block von 28 CSS-Regeln auf 2 reduziert (nur dynamische @page + .logbuch-normal). Doppelte Grid-Definitionen entfernt.",
+      "562. Grid-Breiten synchronisiert: Reise, Fahrtenbuch §, POI Spaltenbreiten in print-styles.css an funktionierende Werte angeglichen.",
+      "561. Footer-Fix: @page Regel global in print-styles.css ergänzt. Fußzeile und Summary-Box wieder korrekt am Seitenende fixiert.",
+      "560. LogbuchPrintViews: Datei von src/views/logbuch/ nach src/print/ verschoben. Import-Pfade angepasst.",
+      "559. LogbuchPrintViews: 44 Inline-Styles durch zentrale CSS-Klassen ersetzt (cg-print-align-*, cg-print-icon-sm/xs/md, cg-print-sub-hint, cg-print-color-muted).",
+      "558. InhaltPrintView: 19 Inline-Styles durch zentrale CSS-Klassen ersetzt.",
+      "557. PrintHeader: 6 Inline-Styles entfernt. Neue CSS-Klassen cg-print-header-logo-area und cg-print-header-meta-label-spaced.",
+      "556. Print-System zentralisiert: Alle Grid-Definitionen (Inventar, Tank, Reise, Fahrtenbuch §, POI) zentral in print-styles.css (Abschnitte J–P). Lokale Style-Blöcke aus InhaltPrintView und LogbuchPrintViews entfernt. 0 Inline-Styles in allen Print-Komponenten."
+    ]
+  },
+  {
     "version": "v0.1.8-dev",
     "date": "22.05.2026",
     "entries": [

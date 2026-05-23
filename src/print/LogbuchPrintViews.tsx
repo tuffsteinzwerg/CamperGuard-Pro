@@ -297,6 +297,52 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
              </div>
           )}
 
+          {logType === 'archiv' && !selectedArchive && (
+             state.archives.length === 0 ? <p className="text-center italic mt-10">Keine Archive vorhanden</p> :
+             <div>
+                 <div className="archiv-print-column-grid cg-print-col-header">
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📁</span> Name</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">🏷️</span> Typ</div>
+                     <div className="cg-print-align-left"><span className="cg-print-icon-sm">📅</span> Zeitraum</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">🚐</span> KM</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">💧</span> Liter</div>
+                     <div className="cg-print-align-right"><span className="cg-print-icon-sm">💶</span> Kosten</div>
+                 </div>
+                 <div>
+                     {state.archives.map((a:any) => {
+                         const typeName = a.type === 'year' ? 'Jahresabschluss' : a.type === 'fuel' ? 'Tankprotokoll' : a.type === 'triplog' ? 'Reisetagebuch' : a.type === 'business' ? 'Fahrtenbuch §' : a.type === 'spots' ? 'POI-Archiv' : 'Reisearchiv';
+                         return (
+                             <div key={a.id} className="archiv-print-row cg-print-row">
+                                 <div className="cg-print-cell-name">{a.name || a.year}</div>
+                                 <div className="cg-print-cell-muted">{typeName}</div>
+                                 <div className="cg-print-cell-date">{new Date(a.dateFrom).toLocaleDateString('de-DE')} – {new Date(a.dateTo).toLocaleDateString('de-DE')}</div>
+                                 <div className="cg-print-cell-num">{formatNumber(a.summary?.totalKm ?? 0, 0)} km</div>
+                                 <div className="cg-print-cell-num">{formatNumber(a.summary?.totalLiters ?? 0, 1)} l</div>
+                                 <div className="cg-print-cell-orange">{formatNumber(a.summary?.totalEur ?? 0, 2)} €</div>
+                             </div>
+                         );
+                     })}
+                 </div>
+                 <div className="cg-print-summary-wrapper">
+                     <div className="cg-print-summary-title">Übersicht</div>
+                     <div className="archiv-print-summary-grid">
+                         <div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📁</span> Archive gesamt</div>
+                             <div className="cg-print-summary-value">{state.archives.length}</div>
+                         </div>
+                         <div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtdistanz</div>
+                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc:number, a:any) => acc + (a.summary?.totalKm ?? 0), 0), 0)} km</div>
+                         </div>
+                         <div>
+                             <div className="cg-print-summary-label"><span className="cg-print-icon-sm">💶</span> Gesamtkosten</div>
+                             <div className="cg-print-summary-value">{formatNumber(state.archives.reduce((acc:number, a:any) => acc + (a.summary?.totalEur ?? 0), 0), 2)} €</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+          )}
+
       </div>
   );
 }

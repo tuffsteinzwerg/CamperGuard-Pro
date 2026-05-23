@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldCheck, Settings, Map as MapIcon, BookOpen, Package, Activity
+  ShieldCheck, Settings, Map as MapIcon, BookOpen, Package, Activity, Wifi, WifiOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import 'leaflet/dist/leaflet.css';
@@ -44,7 +44,22 @@ export default function App() {
       setDismissedForTab(null);
     }
   }, [activeTab, dismissedForTab]);
+
+  // Online/Offline detection
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+  }, []);
+
   const [showSos, setShowSos] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
 
   useEffect(() => {
@@ -255,7 +270,10 @@ export default function App() {
     if (loading) return;
 
     const timer = setTimeout(() => {
-      initDB().then(db => db.put('store', state, 'state'));
+      initDB().then(db => db.put('store', state, 'state')).then(() => {
+        setToastVisible(true);
+        setTimeout(() => setToastVisible(false), 1500);
+      });
     }, 700);
 
     return () => clearTimeout(timer);
@@ -429,11 +447,30 @@ export default function App() {
           </span>
         </div>
         <div className="flex items-center justify-end min-w-0 gap-3">
+          <div className="flex items-center gap-1.5" title={isOnline ? 'Online' : 'Offline'}>
+            <div className={`w-[7px] h-[7px] rounded-full ${isOnline ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--status-danger)] shadow-[0_0_6px_rgba(255,59,48,0.4)]'}`} />
+            {isOnline ? <Wifi size={12} className="text-[#00ff9c]/60" /> : <WifiOff size={12} className="text-[var(--status-danger)]/60" />}
+          </div>
           <button onClick={() => setActiveTab('profil')} className="cg-master-button !p-2 !rounded flex-shrink-0">
             <Settings size={16} />
           </button>
         </div>
       </header>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toastVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-[68px] left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-4 py-2 shadow-lg no-print"
+          >
+            <span className="text-[12px] font-bold tracking-wide text-[#00ff9c]">✓ Gespeichert</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="p-4 overflow-y-auto lg:max-w-6xl lg:mx-auto min-h-[80vh] print:p-0 print:overflow-visible print:min-h-0 print:h-auto print:max-w-none print:mx-0 print:w-full">
         <AnimatePresence mode="wait">
@@ -449,7 +486,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.1.8-dev
+          CamperGuard Pro v0.1.9-dev
         </div>
 
         {showChangelog && (
@@ -457,7 +494,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.8-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.1.9-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 22.05.2026</p>
                  </div>
                  <button 

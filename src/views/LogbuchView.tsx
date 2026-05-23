@@ -36,29 +36,7 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
       <style>{`
         @media print {
             @page { size: A4 ${lb.logType === 'tank' || (lb.logType === 'fahrt' && lb.tripLogMode === 'strict') ? 'landscape' : 'portrait'}; margin: ${lb.logType === 'tank' ? '15mm' : '10mm 15mm'}; }
-            body { background: white !important; }
             .logbuch-normal { display: none !important; }
-            .logbuch-print-wrapper { display: block !important; width: 100%; color: black !important; }
-            .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; font-family: sans-serif; }
-            .print-table th { border-bottom: 2px solid #000; padding: 6px; text-align: left; font-weight: bold; text-transform: uppercase; color: #000 !important; background: transparent !important; }
-            .print-table td { border-bottom: 1px solid #ccc; padding: 6px; color: #000 !important; vertical-align: top; }
-            .tank-print-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9pt; font-family: sans-serif; }
-            .tank-print-table th { border-bottom: 1px solid #666; padding: 4px 2px; text-align: left; font-weight: 500; text-transform: uppercase; color: #333 !important; background: transparent !important; font-size: 8pt; }
-            .tank-print-table td { border-bottom: 1px solid #eaeaea; padding: 4px 2px; color: #333 !important; vertical-align: middle; }
-            .fahrtenbuch-table { table-layout: fixed; width: 100%; }
-            .fahrtenbuch-table th, .fahrtenbuch-table td { overflow-wrap: break-word; word-wrap: break-word; hyphens: auto; }
-            .reise-print-column-grid { display: grid; grid-template-columns: 12% 22% 12% 12% 12% 30%; }
-            .reise-print-row { display: grid; grid-template-columns: 12% 22% 12% 12% 12% 30%; }
-            .reise-print-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-            .poi-print-column-grid { display: grid; grid-template-columns: 12% 22% 14% 18% 34%; }
-            .poi-print-row { display: grid; grid-template-columns: 12% 22% 14% 18% 34%; }
-            .poi-print-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-            .fb-print-hdr1 { display: grid; grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%; }
-            .fb-print-hdr2 { display: grid; grid-template-columns: 30% 25% 25% 20%; }
-            .fb-row1 { display: grid; grid-template-columns: 10% 7% 7% 11% 14% 11% 11% 10%; }
-            .fb-row2 { display: grid; grid-template-columns: 30% 25% 25% 20%; }
-            .fb-row1 + .fb-row2 { border-top: 0.15pt dashed #e0e0e0; }
-            .fb-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
         }
       `}</style>
       <div className="space-y-6 logbuch-normal">
@@ -94,6 +72,23 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
         <button key={t} onClick={() => lb.setLogType(t as any)} className={`cg-master-tab typo-label ${lb.logType === t ? 'cg-master-tab-active' : ''}`}>{t === 'tank' ? 'Tanken' : t === 'spots' ? "POIs" : t === 'fahrt' ? 'Fahrten' : t}</button>
       ))}
       </div>
+
+      {lb.logType === 'tank' && lb.currentFuelLog.length >= 2 && lb.fuelStats.tankKm != null && lb.fuelStats.tankKm > 0 && (
+        <div className="cg-master-inset p-2.5 mb-3 flex justify-between items-center text-center">
+          <div>
+            <div className="typo-label text-[var(--text-muted)]">Ø VERBRAUCH</div>
+            <div className="typo-value-normal">{lb.fuelStats.averageConsumption != null ? `${formatNumber(lb.fuelStats.averageConsumption, 1)} L/100` : '—'}</div>
+          </div>
+          <div>
+            <div className="typo-label text-[var(--text-muted)]">Ø PREIS/L</div>
+            <div className="typo-value-normal">{lb.fuelStats.totalLiters > 0 ? `${formatNumber(lb.fuelStats.totalCost / lb.fuelStats.totalLiters, 2)} €` : '—'}</div>
+          </div>
+          <div>
+            <div className="typo-label text-[var(--text-muted)]">KOSTEN/KM</div>
+            <div className="typo-value-normal">{lb.fuelStats.tankKm > 0 ? `${formatNumber(lb.fuelStats.totalCost / lb.fuelStats.tankKm, 2)} €` : '—'}</div>
+          </div>
+        </div>
+      )}
 
       {lb.logType === 'tank' && (
         <LogbuchTankList

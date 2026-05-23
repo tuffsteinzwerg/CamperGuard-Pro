@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { AppState } from '../types';
 import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap, CircleMarker } from 'react-leaflet';
 import L from 'leaflet';
 
 const SPOT_COLORS: Record<string, string> = {
@@ -22,6 +22,13 @@ const createSpotIcon = (color: string) => L.divIcon({
   iconAnchor: [7, 7],
   popupAnchor: [0, -10],
   html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.8);box-shadow:0 0 6px ${color}80;"></div>`,
+});
+
+const homeIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:14px;height:14px;border-radius:50%;background:#FF6600;border:2px solid white;box-shadow:0 0 6px rgba(255,102,0,0.6);"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
 
 let globalLeafletMap: L.Map | null = null;
@@ -54,6 +61,55 @@ interface ReiseViewProps {
 
 export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: ReiseViewProps) {
   const [destination, setDestination] = useState<[number, number] | null>(null);
+
+  // --- GPS-Live-Position für Karte ---
+  const [liveGps, setLiveGps] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (state.sos?.gpsEnabled === false) {
+      setLiveGps(null);
+      return;
+    }
+    let watchId: number | undefined;
+    try {
+      watchId = navigator.geolocation.watchPosition(
+        (p) => setLiveGps({ lat: p.coords.latitude, lng: p.coords.longitude }),
+        () => setLiveGps(null),
+        { enableHighAccuracy: true, maximumAge: 5000 }
+      );
+    } catch { setLiveGps(null); }
+    return () => { if (watchId !== undefined) navigator.geolocation.clearWatch(watchId); };
+  }, [state.sos?.gpsEnabled]);
+
+  // --- Heimatadresse geocoden (einmalig) ---
+  useEffect(() => {
+    const sos = state.sos;
+    if (!sos?.street || !sos?.city) return;
+    if (sos.homeCoords) return; // bereits gecached
+
+    const addr = [sos.street, sos.houseNumber, sos.zipCode, sos.city, sos.country].filter(Boolean).join(', ');
+    if (addr.length < 5) return;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, {
+        signal: controller.signal,
+        headers: { 'User-Agent': 'CamperGuardPro/0.1.8' }
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data?.[0]?.lat && data?.[0]?.lon) {
+            setState((prev: any) => ({
+              ...prev,
+              sos: { ...prev.sos, homeCoords: { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } }
+            }));
+          }
+        })
+        .catch(() => {}); // Geocoding fehlgeschlagen — kein Marker, kein Problem
+    }, 1000);
+
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [state.sos?.street, state.sos?.houseNumber, state.sos?.zipCode, state.sos?.city, state.sos?.country]);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
   const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');
   const [soundTestIndex, setSoundTestIndex] = useState(0);
@@ -837,6 +893,13 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
           .leaflet-control-attribution a:hover {
             color: #bbb !important;
           }
+          .leaflet-interactive.pulse-gps {
+            animation: gps-pulse 2s ease-in-out infinite;
+          }
+          @keyframes gps-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.3); }
+          }
         `}</style>
         <div className="relative overflow-hidden z-0 h-[400px] w-full cg-inset">
             <MapContainer id="map" center={[51.1657, 10.4515]} zoom={6} zoomControl={false} style={{ height: '100%', width: '100%', background: '#0a0b0c' }}>
@@ -858,6 +921,35 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                   </Popup>
                 </Marker>
               ))}
+
+              {/* Heimatadresse */}
+              {state.sos?.homeCoords && (
+                <Marker position={[state.sos.homeCoords.lat, state.sos.homeCoords.lng]} icon={homeIcon}>
+                  <Popup>
+                    <div style={{ color: '#1a1c1e', fontSize: '12px', lineHeight: '1.4' }}>
+                      <strong>🏠 Heimatadresse</strong>
+                      <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                        {[state.sos.street, state.sos.houseNumber].filter(Boolean).join(' ')}<br/>
+                        {[state.sos.zipCode, state.sos.city].filter(Boolean).join(' ')}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+
+              {/* GPS-Live-Position */}
+              {liveGps && (
+                <CircleMarker center={[liveGps.lat, liveGps.lng]} radius={8} pathOptions={{ color: '#00ff9c', fillColor: '#00ff9c', fillOpacity: 0.4, weight: 2 }} className="pulse-gps">
+                  <Popup>
+                    <div style={{ color: '#1a1c1e', fontSize: '12px' }}>
+                      <strong>📍 Aktuelle Position</strong>
+                      <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                        {liveGps.lat.toFixed(5)}, {liveGps.lng.toFixed(5)}
+                      </div>
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              )}
             </MapContainer>
         </div>
       </div>

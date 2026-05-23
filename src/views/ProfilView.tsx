@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { AppState } from '../types';
-import { Search, Droplet, Fuel } from 'lucide-react';
+import { Search, Droplet, Fuel, Download, Upload, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import type { TireProfile } from '../types';
@@ -34,6 +34,82 @@ interface ProfilViewProps {
 }
 
 export function ProfilView({ state, setState }: ProfilViewProps) {
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [importData, setImportData] = useState<any>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
+
+  const handleExport = () => {
+    try {
+      const exportPayload = {
+        _meta: {
+          app: 'CamperGuard Pro',
+          version: '0.1.8-dev',
+          exportDate: new Date().toISOString(),
+          format: 1
+        },
+        data: state
+      };
+      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `camperguard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setExportSuccess(true);
+      setTimeout(() => setExportSuccess(false), 3000);
+    } catch (e) {
+      console.error('Export failed:', e);
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImportError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith('.json')) {
+      setImportError('Nur JSON-Dateien werden unterstützt.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        if (!parsed._meta || !parsed.data) {
+          setImportError('Ungültiges Backup-Format. Keine CamperGuard Pro Datei.');
+          return;
+        }
+        if (parsed._meta.app !== 'CamperGuard Pro') {
+          setImportError('Diese Datei stammt nicht von CamperGuard Pro.');
+          return;
+        }
+        if (!parsed.data.profile || !parsed.data.sos) {
+          setImportError('Backup-Datei ist beschädigt (fehlende Pflichtfelder).');
+          return;
+        }
+        setImportData(parsed);
+        setShowImportConfirm(true);
+      } catch {
+        setImportError('Datei konnte nicht gelesen werden. Ungültiges JSON.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const confirmImport = () => {
+    if (!importData?.data) return;
+    setState(importData.data);
+    setShowImportConfirm(false);
+    setImportData(null);
+    setImportSuccess(true);
+    setTimeout(() => setImportSuccess(false), 3000);
+  };
+
   const [activeTireProfile, setActiveTireProfile] = useState<TireProfile>('Straße');
   const [showFaqModal, setShowFaqModal] = useState(false);
   const [faqSearch, setFaqSearch] = useState("");
@@ -379,6 +455,53 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
              })()}
           </div>
       </div>
+
+      {/* --- BACKUP / EXPORT --- */}
+      <div className="cg-master-card p-4 mt-6">
+          <h2 className="typo-section-title mb-4">Datensicherung</h2>
+          <div className="space-y-3">
+              <button onClick={handleExport} className="cg-master-button w-full flex items-center justify-center gap-2 py-3">
+                  <Download size={16} />
+                  <span className="typo-label">Daten exportieren</span>
+              </button>
+              {exportSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Export erfolgreich</div>}
+
+              <label className="cg-master-button w-full flex items-center justify-center gap-2 py-3 cursor-pointer">
+                  <Upload size={16} />
+                  <span className="typo-label">Daten importieren</span>
+                  <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+              </label>
+              {importError && <div className="text-center typo-body text-[var(--status-danger)] py-1">{importError}</div>}
+              {importSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Import erfolgreich — Daten wiederhergestellt</div>}
+          </div>
+      </div>
+
+      {/* --- IMPORT BESTÄTIGUNG --- */}
+      <AnimatePresence>
+          {showImportConfirm && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-6">
+                 <div className="cg-master-card p-6 max-w-sm w-full space-y-4">
+                     <div className="flex items-center gap-3">
+                         <AlertTriangle size={24} className="text-[var(--status-danger)] flex-shrink-0" />
+                         <h2 className="typo-section-title">Daten überschreiben?</h2>
+                     </div>
+                     <p className="typo-body-dim">Alle aktuellen Daten werden durch das Backup ersetzt. Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+                     {importData?._meta && (
+                         <div className="cg-master-inset p-3 space-y-1">
+                             <div className="typo-label text-[var(--text-muted)]">Backup vom</div>
+                             <div className="typo-value-normal">{new Date(importData._meta.exportDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                             <div className="typo-label text-[var(--text-muted)] mt-2">App-Version</div>
+                             <div className="typo-value-normal">{importData._meta.version}</div>
+                         </div>
+                     )}
+                     <div className="flex gap-3">
+                         <button onClick={() => { setShowImportConfirm(false); setImportData(null); }} className="cg-master-button flex-1 py-3">Abbrechen</button>
+                         <button onClick={confirmImport} className="cg-master-button-danger flex-1 py-3">Überschreiben</button>
+                     </div>
+                 </div>
+             </motion.div>
+          )}
+      </AnimatePresence>
 
       <AnimatePresence>
           {showFaqModal && (
