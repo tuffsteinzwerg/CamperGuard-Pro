@@ -145,37 +145,6 @@ export function InhaltPrintView({ state }: { state: AppState }) {
 
     return (
         <div className="hidden print-only inhalt-print-wrapper bg-white">
-            <style>{`
-                @media print {
-                    @page { size: A4 portrait; margin: 10mm 15mm; }
-                    .inhalt-print-wrapper {
-                        display: block !important;
-                        width: 100%;
-                        color: black !important;
-                        font-family: Arial, Helvetica, sans-serif;
-                    }
-                    .inv-col-header {
-                        display: grid;
-                        grid-template-columns: 5% 55% 20% 20%;
-                    }
-                    .inv-row {
-                        display: grid;
-                        grid-template-columns: 5% 55% 20% 20%;
-                    }
-                    .inv-med-col-header {
-                        display: grid;
-                        grid-template-columns: 5% 25% 22% 16% 16% 16%;
-                    }
-                    .inv-med-row {
-                        display: grid;
-                        grid-template-columns: 5% 25% 22% 16% 16% 16%;
-                    }
-                    .inv-weight-footer {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                    }
-                }
-            `}</style>
 
             <PrintHeader 
                 title="Inventarliste" 

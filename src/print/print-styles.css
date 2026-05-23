@@ -304,4 +304,95 @@
         margin-right: 3px !important;
         font-size: 10pt !important;
     }
+
+    /* ============================================================
+       J) LAYOUT-GRIDS — Inventar
+       ============================================================ */
+    .inv-col-header,
+    .inv-row {
+        display: grid !important;
+        grid-template-columns: 5% 55% 20% 20% !important;
+    }
+
+    .inv-med-col-header,
+    .inv-med-row {
+        display: grid !important;
+        grid-template-columns: 5% 25% 22% 16% 16% 16% !important;
+    }
+
+    .inv-weight-footer {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* ============================================================
+       K) LAYOUT-GRIDS — Tank
+       ============================================================ */
+    .tank-print-meta-grid {
+        display: grid !important;
+        grid-template-columns: 1.3fr 0.8fr 1fr 1fr 1fr !important;
+        gap: 5mm !important;
+        margin: 2mm 0 2mm 0 !important;
+        padding-bottom: 2mm !important;
+        border-bottom: 0.4pt solid #cfcfcf !important;
+    }
+
+    .tank-print-column-grid,
+    .tank-print-row {
+        display: grid !important;
+        grid-template-columns: 13% 19% 18% 14% 16% 20% !important;
+    }
+
+    .tank-print-bottom-summary {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    /* ============================================================
+       L) LAYOUT-GRIDS — Reisetagebuch (flex)
+       ============================================================ */
+    .reise-print-column-grid,
+    .reise-print-row {
+        display: grid !important;
+        grid-template-columns: 13% 22% 14% 14% 14% 23% !important;
+    }
+
+    .reise-print-summary-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    /* ============================================================
+       M) LAYOUT-GRIDS — Fahrtenbuch § (strict)
+       ============================================================ */
+    .fb-print-hdr1,
+    .fb-row1 {
+        display: grid !important;
+        grid-template-columns: 11% 7% 7% 12% 12% 14% 14% 10% !important;
+    }
+
+    .fb-print-hdr2,
+    .fb-row2 {
+        display: grid !important;
+        grid-template-columns: 30% 25% 22% 23% !important;
+    }
+
+    .fb-summary-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    /* ============================================================
+       N) LAYOUT-GRIDS — POI / Spots
+       ============================================================ */
+    .poi-print-column-grid,
+    .poi-print-row {
+        display: grid !important;
+        grid-template-columns: 12% 25% 16% 20% 27% !important;
+    }
+
+    .poi-print-summary-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
 }

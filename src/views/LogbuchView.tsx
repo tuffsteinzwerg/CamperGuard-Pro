@@ -3,7 +3,7 @@ import type { AppState } from '../types';
 import { Plus, Printer } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
-import { LogbuchPrintViews } from './logbuch/LogbuchPrintViews';
+import { LogbuchPrintViews } from '../print/LogbuchPrintViews';
 import { LogbuchArchiveDetail } from './logbuch/LogbuchArchiveDetail';
 import { LogbuchArchiveCreate } from './logbuch/LogbuchArchiveCreate';
 import { LogbuchTankList } from './logbuch/LogbuchTankList';
