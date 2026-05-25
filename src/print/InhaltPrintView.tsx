@@ -17,7 +17,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
     const gearFilter = state.sos?.gear?.filter((g: EmergencyGear) => g.checked === true && Number(g.count) > 0 && g.isHidden !== true && g.isDeleted !== true) || [];
     const pharmacyFilter = state.sos?.pharmacy || [];
 
-    const getWeightInKg = (weight: any, unit: any) => {
+    const getWeightInKg = (weight: number | string | undefined | null, unit: string | undefined) => {
         if (weight === undefined || weight === null || weight === '') return 0;
         const num = Number(weight);
         if (isNaN(num)) return 0;
@@ -47,7 +47,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
         totalWeightKg += getWeightInKg(p.weight, p.weightUnit);
     });
 
-    const normalizePrintGearName = (name: any): string => {
+    const normalizePrintGearName = (name: string | undefined | null): string => {
         const str = String(name || '').trim();
         const lower = str.toLowerCase();
         const cleaned = lower.replace(/[\s\-\(\)\[\]\{\}_.,!?"']/g, '');

@@ -22,7 +22,7 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                 
                 {/* Logo Area */}
                 <div className="cg-print-header-logo-area">
-                    <img src="/CGProLogo.png" alt="CamperGuard Pro" className="cg-print-logo" />
+                    <img src="/CGProLogo.png" alt="Guard4Campers" className="cg-print-logo" />
                 </div>
                 
                 {/* Center Title and Vehicle Area */}
@@ -45,7 +45,7 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
             </div>
 
             <div className="cg-print-footer hidden print-only">
-                <span className="cg-print-footer-text">CamperGuard Pro – Smart, sicher, unterwegs.</span>
+                <span className="cg-print-footer-text">Guard4Campers – Smart, sicher, unterwegs.</span>
                 <span className="cg-print-footer-text cg-print-footer-page"></span>
             </div>
         </>

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import 'leaflet/dist/leaflet.css';
 import './lib/setupLeafletIcons';
 import { openDB } from 'idb';
-import { INITIAL_STATE, AppState } from './types.ts';
+import { INITIAL_STATE, AppState, EmergencyGear, InventoryItem } from './types.ts';
 import { normalizeGearName } from './lib/formatters';
 import { NavButton } from './components/NavButton';
 import { StatusView } from './views/StatusView';
@@ -17,8 +17,9 @@ import { LogbuchView } from './views/LogbuchView';
 import { ReiseView } from './views/ReiseView';
 import { CHANGELOG } from './data/changelog';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
-const DB_NAME = 'CamperGuardDB_V2';
+const DB_NAME = 'Guard4CampersDB_V1';
 
 async function initDB() {
   return openDB(DB_NAME, 1, {
@@ -62,6 +63,9 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [sosTab, setSosTab] = useState<'hilfe'|'id'|'inhalt'>('hilfe');
+  const [gpsCoords, setGpsCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [gpsAlt, setGpsAlt] = useState<number | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<'offline'|'loading'|'active'>('offline');
 
   useEffect(() => {
     (async () => {
@@ -268,6 +272,41 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let watchId: number | undefined;
+    if (state.sos?.gpsEnabled !== false) {
+      setGpsStatus('loading');
+      try {
+        watchId = navigator.geolocation.watchPosition(
+          p => {
+            setGpsAlt(p.coords.altitude);
+            setGpsCoords({ lat: p.coords.latitude, lng: p.coords.longitude });
+            setGpsStatus('active');
+          },
+          e => {
+            console.warn(e);
+            setGpsStatus('offline');
+            setGpsCoords(null);
+            setGpsAlt(null);
+          },
+          { enableHighAccuracy: true }
+        );
+      } catch (err) {
+        console.warn("Geolocation start error:", err);
+        setGpsStatus('offline');
+      }
+    } else {
+      setGpsStatus('offline');
+      setGpsCoords(null);
+      setGpsAlt(null);
+    }
+    return () => {
+      if (watchId !== undefined) {
+        try { navigator.geolocation.clearWatch(watchId); } catch(e){}
+      }
+    };
+  }, [state.sos?.gpsEnabled]);
+
+  useEffect(() => {
     if (loading) return;
 
     const timer = setTimeout(() => {
@@ -384,9 +423,9 @@ export default function App() {
           !p.height ||
           !p.width ||
           !p.length ||
-          !p.freshWaterCapacity ||
-          !p.wasteWaterCapacity ||
-          !p.dieselCapacity ||
+          (p.freshWaterCapacity === undefined || p.freshWaterCapacity === null) ||
+          (p.wasteWaterCapacity === undefined || p.wasteWaterCapacity === null) ||
+          (p.dieselCapacity === undefined || p.dieselCapacity === null) ||
           !s.firstName ||
           !s.lastName ||
           !s.ice1Name ||
@@ -405,9 +444,9 @@ export default function App() {
           if (!p.height) missing.push('profile.height');
           if (!p.width) missing.push('profile.width');
           if (!p.length) missing.push('profile.length');
-          if (!p.freshWaterCapacity) missing.push('profile.freshWaterCapacity');
-          if (!p.wasteWaterCapacity) missing.push('profile.wasteWaterCapacity');
-          if (!p.dieselCapacity) missing.push('profile.dieselCapacity');
+          if (p.freshWaterCapacity === undefined || p.freshWaterCapacity === null) missing.push('profile.freshWaterCapacity');
+          if (p.wasteWaterCapacity === undefined || p.wasteWaterCapacity === null) missing.push('profile.wasteWaterCapacity');
+          if (p.dieselCapacity === undefined || p.dieselCapacity === null) missing.push('profile.dieselCapacity');
           if (!s.firstName) missing.push('sos.firstName');
           if (!s.lastName) missing.push('sos.lastName');
           if (!s.ice1Name) missing.push('sos.ice1Name');
@@ -444,7 +483,7 @@ export default function App() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <ShieldCheck className="text-[var(--accent)]" size={20} />
           <span className="brand-title whitespace-nowrap">
-            <span className="brand-big">C</span>amper<span className="brand-big">G</span>uard Pro
+            <span className="brand-big">G</span>uard<span className="brand-big">4</span>Campers
           </span>
         </div>
         <div className="flex items-center justify-end min-w-0 gap-3">
@@ -485,18 +524,20 @@ export default function App() {
       <main className="p-4 overflow-y-auto lg:max-w-6xl lg:mx-auto min-h-[80vh] print:p-0 print:overflow-visible print:min-h-0 print:h-auto print:max-w-none print:mx-0 print:w-full">
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
-            {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} showSos={showSos} setShowSos={setShowSos} sosTab={sosTab} setSosTab={setSosTab} />}
-            {activeTab === 'inhalt' && <InhaltView state={state} setState={setState} />}
-            {activeTab === 'logbuch' && <LogbuchView state={state} setState={setState} />}
-            {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} orientationPermission={orientationPermission} requestOrientationPermission={requestOrientationPermission} />}
-            {activeTab === 'profil' && <ProfilView state={state} setState={setState} />}
+            <ErrorBoundary key={activeTab}>
+              {activeTab === 'status' && <StatusView state={state} setState={setState} orientation={orientation} showSos={showSos} setShowSos={setShowSos} sosTab={sosTab} setSosTab={setSosTab} gpsCoords={gpsCoords} gpsAlt={gpsAlt} gpsStatus={gpsStatus} />}
+              {activeTab === 'inhalt' && <InhaltView state={state} setState={setState} />}
+              {activeTab === 'logbuch' && <LogbuchView state={state} setState={setState} />}
+              {activeTab === 'reise' && <ReiseView state={state} setState={setState} orientation={orientation} orientationPermission={orientationPermission} requestOrientationPermission={requestOrientationPermission} gpsCoords={gpsCoords} />}
+              {activeTab === 'profil' && <ProfilView state={state} setState={setState} />}
+            </ErrorBoundary>
           </motion.div>
         </AnimatePresence>
         <div 
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          CamperGuard Pro v0.2.0-dev
+          Guard4Campers v0.2.1-dev
         </div>
 
         {showChangelog && (
@@ -504,7 +545,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">CamperGuard Pro v0.2.0-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">Guard4Campers v0.2.1-dev</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 22.05.2026</p>
                  </div>
                  <button 
@@ -541,9 +582,9 @@ export default function App() {
         setShowSos={setShowSos}
         sosTab={sosTab}
         setSosTab={setSosTab}
-        gpsCoords={null}
-        gpsAlt={null}
-        gpsStatus={'offline'}
+        gpsCoords={gpsCoords}
+        gpsAlt={gpsAlt}
+        gpsStatus={gpsStatus}
       />
 
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none bg-[var(--bg-input)] border-t border-[var(--border)] h-[70px] px-4 flex justify-between items-center z-40 no-print">

@@ -3,7 +3,7 @@ import type { AppState, MaintenanceItem } from '../../types';
 import { Search, Droplet, Fuel, Download, Upload, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
-import type { TireProfile } from '../types';
+import type { TireProfile } from '../../types';
 
 const faqData = [
   {q: "Warum Medikationsdaten?", a: "Im Notfall zählen Sekunden. Rettungskräfte sehen sofort lebenswichtige Infos im Safety Hub."},
@@ -22,7 +22,7 @@ const faqData = [
   {q: "Die Karte lädt nicht richtig?", a: "Ein integrierter Fix (200ms Delay) sorgt beim Tab-Wechsel für das korrekte Nachladen der Kacheln."},
   {q: "Ist die App auf Tablets nutzbar?", a: "Ja, ab 10 Zoll schaltet die App automatisch in ein optimiertes Zwei-Spalten-Layout."},
   {q: "Funktioniert die App auch im Tunnel?", a: "Die App ist offline-fähig. Nur die Kartenkacheln benötigen eine aktive Internetverbindung."},
-  {q: "Wo finde ich das Logo auf Ausdrucken?", a: "Das CamperGuard Pro Logo wird automatisch unten links auf jedem PDF/Druck platziert."},
+  {q: "Wo finde ich das Logo auf Ausdrucken?", a: "Das Guard4Campers Logo wird automatisch unten links auf jedem PDF/Druck platziert."},
   {q: "Kann ich Lagerorte umbenennen?", a: "Ja, die Bezeichnungen der Staufächer können in den Einstellungen individuell angepasst werden."},
   {q: "Warum sollte ich GPS deaktivieren?", a: "Im Safety Hub kannst du GPS manuell ausschalten, um Akku zu sparen oder deine Privatsphäre zu schützen."},
   {q: "Was schreibe ich in das Zweck-Feld?", a: "Hier ist Platz für Notizen zur Tour, wie z.B. 'Schönster Stellplatz' oder 'Werkstattbesuch'."}
@@ -44,8 +44,8 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
     try {
       const exportPayload = {
         _meta: {
-          app: 'CamperGuard Pro',
-          version: '0.1.8-dev',
+          app: 'Guard4Campers',
+          version: '0.3.0-dev',
           exportDate: new Date().toISOString(),
           format: 1
         },
@@ -55,7 +55,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `camperguard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `guard4campers-backup-${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -80,11 +80,11 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
       try {
         const parsed = JSON.parse(ev.target?.result as string);
         if (!parsed._meta || !parsed.data) {
-          setImportError('Ungültiges Backup-Format. Keine CamperGuard Pro Datei.');
+          setImportError('Ungültiges Backup-Format. Keine Guard4Campers Datei.');
           return;
         }
-        if (parsed._meta.app !== 'CamperGuard Pro') {
-          setImportError('Diese Datei stammt nicht von CamperGuard Pro.');
+        if (parsed._meta.app !== 'Guard4Campers' && parsed._meta.app !== 'CamperGuard Pro') {
+          setImportError('Diese Datei stammt nicht von Guard4Campers.');
           return;
         }
         if (!parsed.data.profile || !parsed.data.sos) {
@@ -115,11 +115,11 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
   const [faqSearch, setFaqSearch] = useState("");
   const [focusedProfileField, setFocusedProfileField] = useState<string | null>(null);
 
-  const hc = (path: string, val: any) => {
+  const hc = (path: string, val: string | number | boolean | null | undefined) => {
     setState((prev: AppState) => {
         const next = {...prev};
         const p = path.split('.');
-        let c: any = next;
+        let c: Record<string, unknown> = next as Record<string, unknown>;
         for(let i=0; i<p.length-1; i++) {
           c[p[i]] = Array.isArray(c[p[i]]) ? [...c[p[i]]] : {...c[p[i]]};
           c = c[p[i]];
@@ -169,11 +169,11 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
       <div className="cg-master-card-small">
           <label className="cg-master-label">FAHRZEUGABMESSUNGEN IN CM</label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
               {[ 
-                  { l: 'HÖHE', k: 'height', min: 100, max: 500 }, 
-                  { l: 'BREITE', k: 'width', min: 100, max: 300 }, 
-                  { l: 'LÄNGE', k: 'length', min: 200, max: 1200 } 
+                  { l: 'HÖHE', k: 'height', min: 100, max: 500, digits: 3 }, 
+                  { l: 'BREITE', k: 'width', min: 100, max: 300, digits: 3 }, 
+                  { l: 'LÄNGE', k: 'length', min: 200, max: 1200, digits: 4 } 
               ].map(d => {
               const val = state.profile[d.k];
               const numVal = val !== '' && val !== undefined ? Number(val) : NaN;
@@ -186,17 +186,20 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                   <input 
                       type="text" 
                       inputMode="numeric"
+                      maxLength={d.digits}
                       value={!isEmpty && !isNaN(numVal) ? String(numVal) : ''} 
                       onChange={e => {
-                          let rawVal = e.target.value.replace(/\D/g, '');
+                          let rawVal = e.target.value.replace(/\D/g, '').slice(0, d.digits);
                           hc(`profile.${d.k}`, rawVal !== '' ? Number(rawVal) : '');
                       }} 
                       onKeyDown={e => {
                           if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') e.preventDefault();
                       }}
-                      className={`cg-master-input w-full text-center py-1 ${isEmpty ? 'text-[var(--text-muted)]' : 'text-white'} ${isInvalid ? 'text-[var(--status-danger)]' : ''}`} 
-                      style={{ fontSize: '14px', fontWeight: 'normal', border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent' }} 
+                      className={`cg-master-input w-full text-center ${isEmpty ? 'text-[var(--text-muted)]' : 'text-white'} ${isInvalid ? 'text-[var(--status-danger)]' : ''}`} 
+                      style={{ border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent', fontSize: '14px', padding: '6px 2px' }} 
+                      placeholder="—"
                   />
+                  <span className="text-[9px] text-[#555] mt-0.5 block">cm</span>
                   {isInvalid && <span className="text-[var(--status-danger)] text-[10px] uppercase font-bold mt-1 block">Ungültiger Wert</span>}
               </div>
           )})}
@@ -204,8 +207,8 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
           <label className="cg-master-label mt-4">FAHRWERK (FÜR HÖHENKORREKTUR)</label>
           <div className="grid grid-cols-2 gap-3">
               {[
-                  { l: 'SPURBREITE', k: 'trackWidth', min: 100, max: 250, hint: 'links ↔ rechts' },
-                  { l: 'ACHSABSTAND', k: 'wheelbase', min: 150, max: 700, hint: 'vorne ↔ hinten' }
+                  { l: 'SPURBREITE', k: 'trackWidth', min: 100, max: 300, hint: 'links ↔ rechts' },
+                  { l: 'ACHSABSTAND', k: 'wheelbase', min: 150, max: 9999, hint: 'vorne ↔ hinten' }
               ].map(d => {
                   const val = state.profile[d.k as keyof typeof state.profile];
                   const numVal = val !== '' && val !== undefined ? Number(val) : NaN;
@@ -218,17 +221,20 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                           <input
                               type="text"
                               inputMode="numeric"
+                              maxLength={4}
                               value={!isEmpty && !isNaN(numVal) ? String(numVal) : ''}
                               onChange={e => {
-                                  let rawVal = e.target.value.replace(/\D/g, '');
+                                  let rawVal = e.target.value.replace(/\D/g, '').slice(0, 4);
                                   hc(`profile.${d.k}`, rawVal !== '' ? Number(rawVal) : '');
                               }}
                               onKeyDown={e => {
                                   if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === '.') e.preventDefault();
                               }}
-                              className={`cg-master-input w-full text-center py-1 ${isEmpty ? 'text-[var(--text-muted)]' : 'text-white'} ${isInvalid ? 'text-[var(--status-danger)]' : ''}`}
-                              style={{ fontSize: '14px', fontWeight: 'normal', border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent' }}
+                              className={`cg-master-input w-full text-center py-1 text-sm px-2 ${isEmpty ? 'text-[var(--text-muted)]' : 'text-white'} ${isInvalid ? 'text-[var(--status-danger)]' : ''}`}
+                              style={{ border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent' }}
+                              placeholder="—"
                           />
+                          <span className="text-[9px] text-[#555] mt-0.5 block">cm</span>
                           {isInvalid && <span className="text-[var(--status-danger)] text-[10px] uppercase font-bold mt-1 block">Ungültiger Wert</span>}
                       </div>
                   );
@@ -247,7 +253,9 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                        value={state.profile.emptyWeight ? Number(state.profile.emptyWeight).toLocaleString('de-DE') : ''} 
                        onChange={e => {
                            let rawVal = e.target.value.replace(/\D/g, '');
-                           hc('profile.emptyWeight', rawVal !== '' ? Number(rawVal) : '');
+                           let num = rawVal !== '' ? Number(rawVal) : '';
+                           if (typeof num === 'number' && num > 10000) num = 10000;
+                           hc('profile.emptyWeight', num);
                        }} 
                        onBlur={e => {
                            let val = state.profile.emptyWeight || 0;
@@ -270,7 +278,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                        onChange={e => {
                            let rawVal = e.target.value.replace(/\D/g, '');
                            let num = rawVal !== '' ? Number(rawVal) : '';
-                           if (typeof num === 'number' && num > 60000) num = 60000;
+                           if (typeof num === 'number' && num > 30000) num = 30000;
                            hc('profile.maxWeight', num);
                        }} 
                        className={`cg-master-input w-20 text-center ${!state.profile.maxWeight ? 'text-[var(--text-muted)]' : 'text-[var(--accent)]'}`} 
@@ -320,57 +328,83 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                   const liters = (level / 100) * capacity;
                   
                   return (
-                      <div key={d.k} className="cg-master-inset p-4 relative overflow-hidden flex flex-col gap-3">
-                          <div className="flex justify-between items-center relative z-10">
-                              <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 flex items-center justify-center rounded-full cg-master-inset" style={{ color: d.colorEnd }}>
-                                      {d.icon}
-                                  </div>
-                                  <span className="cg-master-label !mb-0">{d.l}</span>
+                      <div key={d.k} className="relative overflow-hidden flex flex-col gap-3 rounded-2xl" style={{
+                        background: 'linear-gradient(180deg, #08090a 0%, #12141a 40%, #0e1013 70%, #08090a 100%)',
+                        boxShadow: 'inset 0 8px 16px rgba(0,0,0,1), inset 0 -1px 2px rgba(255,255,255,0.02), 0 4px 16px rgba(0,0,0,0.6), 0 1px 1px rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(0,0,0,0.9)',
+                        padding: '14px'
+                      }}>
+                          {/* Vignette */}
+                          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.5) 100%)' }} />
+
+                          {/* Grid texture */}
+                          <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+                          {/* Top metallic edge */}
+                          <div className="absolute top-0 left-[8%] right-[8%] h-[1px] pointer-events-none" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)' }} />
+
+                          {/* Corner screws */}
+                          {[{top:8,left:8},{top:8,right:8},{bottom:8,left:8},{bottom:8,right:8}].map((pos,i) => (
+                            <div key={i} className="absolute flex items-center justify-center" style={{ ...Object.fromEntries(Object.entries(pos).map(([k,v])=>[k,v+'px'])), width:'10px', height:'10px', borderRadius:'50%', background:'linear-gradient(135deg, #444, #111)', border:'1px solid #000', boxShadow:'inset 0 1px 1px rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.8)', zIndex:20 }}>
+                              <div style={{ width:'5px', height:'5px', borderRadius:'50%', background:'linear-gradient(180deg, #111, #2a2c30)', boxShadow:'inset 0 2px 3px rgba(0,0,0,1)' }} />
+                            </div>
+                          ))}
+
+                          {/* Ambient glow */}
+                          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height:'50%', background: `radial-gradient(ellipse at 50% 100%, ${d.shadowColor.replace('0.5','0.3').replace('0.4','0.2')}, transparent 70%)`, opacity: level > 5 ? 0.7 : 0, transition:'opacity 0.3s' }} />
+
+                          {/* Header */}
+                          <div className="flex justify-between items-center relative z-10" style={{ marginBottom: '4px' }}>
+                              <div className="flex items-center">
+                                  <span className="cg-master-label !mb-0 tracking-wider" style={{ textShadow: '0 -1px 2px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.05)' }}>{d.l.toUpperCase()}</span>
                               </div>
-                              <div className="flex items-baseline gap-1.5">
-                                  <span className="cg-master-value !text-2xl leading-none">{level}<span className="text-sm opacity-50 ml-[1px]">%</span></span>
-                                  <span className="cg-master-label text-white/40 mb-0.5">({formatNumber(liters, 0)} L)</span>
+                              <div className="flex items-baseline gap-1 flex-shrink-0">
+                                  <span className="cg-master-value !text-xl leading-none" style={{ textShadow: `0 0 20px ${d.shadowColor}, 0 2px 4px rgba(0,0,0,0.8)` }}>{level}<span className="text-xs opacity-50 ml-[1px]">%</span></span>
+                                  <span className="text-[10px] text-white/30 font-semibold whitespace-nowrap">({formatNumber(liters, 0)} L)</span>
                               </div>
                           </div>
                       
-                          <div className="relative h-6 flex items-center mt-1 z-10 group">
-                              {/* Background Track */}
-                              <div className="absolute w-full h-3 cg-master-inset rounded-full" />
-                              
-                              {/* Filled Track with Gradient & Glow */}
-                              <div 
-                                className="absolute h-3 rounded-full shadow-[0_0_10px_var(--shadow-color)] overflow-hidden"
-                                style={{ 
-                                  width: `${level}%`, 
-                                  background: `linear-gradient(90deg, ${d.colorStart}, ${d.colorEnd})`,
-                                  '--shadow-color': d.shadowColor,
-                                  transition: 'width 0.1s ease-out'
-                                } as React.CSSProperties}
-                              >
-                                  <div className="absolute inset-0 bg-gradient-to-b from-[var(--text-secondary)] via-transparent to-transparent pointer-events-none" />
+                          {/* Track — instrument-grade */}
+                          <div className="relative flex items-center z-10" style={{ height: '36px' }}>
+                              {/* Outer bezel ring */}
+                              <div className="absolute w-full" style={{ height:'24px', borderRadius:'12px', background:'linear-gradient(135deg, #383b42 0%, #1f2125 40%, #0a0a0c 100%)', boxShadow:'0 6px 16px rgba(0,0,0,0.9), inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -2px 6px rgba(0,0,0,0.8)', border:'1px solid #000' }} />
+
+                              {/* Inner bevel */}
+                              <div className="absolute" style={{ left:'3px', right:'3px', height:'18px', top:'50%', transform:'translateY(-50%)', borderRadius:'9px', background:'linear-gradient(180deg, #020304 0%, #0a0c0e 100%)', boxShadow:'inset 0 4px 10px rgba(0,0,0,0.95)', border:'1px solid rgba(0,0,0,0.8)' }} />
+
+                              {/* Glass tube */}
+                              <div className="absolute overflow-hidden" style={{ left:'5px', right:'5px', height:'14px', top:'50%', transform:'translateY(-50%)', borderRadius:'7px', background:`radial-gradient(ellipse at 50% 80%, #0a0c14, #010101)`, boxShadow:'inset 0 8px 16px rgba(0,0,0,0.95)' }}>
+                                {/* Glass surface highlight */}
+                                <div className="absolute pointer-events-none" style={{ top:'-20%', left:'5%', width:'90%', height:'50%', background:'linear-gradient(180deg, rgba(255,255,255,0.06), transparent)', borderRadius:'100%' }} />
+
+                                {/* Liquid fill */}
+                                <div className="absolute overflow-hidden" style={{ left:0, top:0, bottom:0, width:`${Math.max(level, 1)}%`, borderRadius:'7px', transition:'width 0.15s ease-out' }}>
+                                  <div className="absolute inset-0" style={{ background:`linear-gradient(90deg, ${d.colorStart}, ${d.colorEnd})`, boxShadow:`0 0 20px ${d.shadowColor}, 0 0 8px ${d.shadowColor}` }} />
+                                  <div className="absolute inset-0" style={{ background:'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.02) 30%, transparent 45%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0.35) 100%)' }} />
+                                  <div className="absolute" style={{ top:'2px', left:'6px', right:'6px', height:'2px', borderRadius:'1px', background:'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 10%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 90%, transparent 100%)' }} />
+                                  <div className="absolute" style={{ bottom:'2px', left:'10%', right:'10%', height:'1px', borderRadius:'1px', background:'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
+                                  <div className="absolute" style={{ top:0, right:0, width:'8px', height:'100%', background:'linear-gradient(270deg, rgba(255,255,255,0.2), transparent)', filter:'blur(1px)' }} />
+                                  <div className="absolute" style={{ bottom:0, left:'15%', width:'70%', height:'2px', background:`linear-gradient(90deg, transparent, ${d.colorEnd}, transparent)`, boxShadow:`0 -2px 6px ${d.shadowColor}`, filter:'blur(0.5px)' }} />
+                                </div>
                               </div>
-                              
-                              {/* Range Input over top - fully transparent but functional */}
+
+                              {/* Range input */}
                               <input 
-                                  type="range" 
-                                  min="0" 
-                                  max="100" 
-                                  step="1"
+                                  type="range" min="0" max="100" step="1"
                                   value={level} 
                                   onChange={(e) => setState({...state, [d.levelKey]: parseInt(e.target.value)})}
                                   className="absolute w-full h-full opacity-0 cursor-pointer z-20 m-0 p-0"
                               />
 
-                              {/* Custom Thumb - positioned based on percentage */}
-                              <div 
-                                className="absolute h-5 w-5 cg-master-inset rounded-full border-2 pointer-events-none z-10 top-1/2 -translate-y-1/2 -ml-2.5 transition-transform"
-                                style={{ 
-                                  left: `${level}%`,
-                                  borderColor: d.colorStart,
-                                  transition: 'left 0.1s ease-out, transform 0.2s'
-                                }}
-                              />
+                              {/* Thumb — icon in 3-ring bezel */}
+                              <div className="absolute pointer-events-none z-10" style={{ left:`${level}%`, top:'50%', transform:'translateY(-50%)', marginLeft:'-14px', width:'28px', height:'28px', borderRadius:'50%', background:'linear-gradient(135deg, #383b42, #1f2125, #0a0a0c)', boxShadow:`0 4px 8px rgba(0,0,0,0.8), inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 4px rgba(0,0,0,0.8), 0 0 12px ${d.shadowColor}`, border:'1px solid #000', transition:'left 0.15s ease-out' }}>
+                                <div className="absolute" style={{ inset:'2px', borderRadius:'50%', background:'linear-gradient(180deg, #020304, #121418)', boxShadow:'inset 0 3px 6px rgba(0,0,0,0.9)', border:'1px solid rgba(0,0,0,0.8)' }} />
+                                <div className="absolute flex items-center justify-center overflow-hidden" style={{ inset:'4px', borderRadius:'50%', background:`radial-gradient(circle at center, #0a0c14, #010101)`, boxShadow:`inset 0 6px 12px rgba(0,0,0,0.95), 0 0 8px ${d.shadowColor}`, color: d.colorEnd }}>
+                                  <div className="absolute pointer-events-none" style={{ top:'-5%', left:'10%', width:'80%', height:'40%', background:'linear-gradient(180deg, rgba(255,255,255,0.08), transparent)', borderRadius:'100%' }} />
+                                  <div className="absolute pointer-events-none" style={{ bottom:0, width:'100%', height:'40%', background:`radial-gradient(ellipse at bottom, ${d.colorEnd}40, transparent 70%)`, opacity:0.6, filter:'blur(2px)' }} />
+                                  {React.cloneElement(d.icon as React.ReactElement, { size: 12 })}
+                                </div>
+                              </div>
                           </div>
                       </div>
                   );
@@ -401,7 +435,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
           <div className="grid grid-cols-2 gap-4 pt-2">
              {/* FRONT LEFT */}
              {(() => {
-                 const isInv = (v: any) => v !== undefined && v !== '' && v !== null && !isNaN(Number(v)) && (Number(v) <= 0 || Number(v) > 10);
+                 const isInv = (v: number | string | undefined | null) => v !== undefined && v !== '' && v !== null && !isNaN(Number(v)) && (Number(v) <= 0 || Number(v) > 10);
                  const iFL = isInv(tp.frontLeft);
                  const iFR = isInv(tp.frontRight);
                  const iRL = isInv(tp.rearLeft);

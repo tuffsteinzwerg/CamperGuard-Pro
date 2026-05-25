@@ -1,6 +1,6 @@
 {
-  "name": "CamperGuard Pro",
-  "short_name": "CamperGuard",
+  "name": "Guard4Campers",
+  "short_name": "Guard4Campers",
   "description": "Dein digitaler Bordcompanion fürs Wohnmobil",
   "start_url": "/",
   "display": "standalone",

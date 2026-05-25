@@ -6,6 +6,22 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.2.1-dev",
+    "date": "25.05.2026",
+    "entries": [
+      "603. Fahrzeugabmessungen: Font-Größe auf Standard zurückgesetzt, Zahlen werden nicht mehr abgeschnitten.",
+      "602. Fahrzeugabmessungen: 'cm' Label unter allen Feldern, Placeholder '—', maxLength=4.",
+      "601. Fahrwerk-Limits angepasst: Spurbreite max=300 (war 250), Achsabstand max=9999 (war 700).",
+      "600. Tankstände: 3D-Optik auf Instrument-Niveau (Glasröhre, Metallschlitz, 3-Ring-Thumb, Schrauben, Vignette). Kompaktere Darstellung.",
+      "599. Tankstände: Glasreflexion dezenter, Prozent+Liter einzeilig (whitespace-nowrap).",
+      "598. Onboarding: Doppelten 'Einrichten'-Button entfernt.",
+      "597. SosHub Inhalt-Tab: Bug gefixt — expiredPharmacyItems und soonExpiringPharmacyItems werden berechnet.",
+      "596. Kompletter Rebrand: CamperGuard Pro → Guard4Campers (12 Dateien, Backup abwärtskompatibel).",
+      "595. Naming-Prozess: 550+ Namen geprüft, Guard4Campers als finaler Name. Domains gesichert.",
+      "594. Neue Datenbank: Guard4CampersDB_V1 (neuer Name nach Rebrand)."
+    ]
+  },
+  {
     "version": "v0.2.0-dev",
     "date": "23.05.2026",
     "entries": [

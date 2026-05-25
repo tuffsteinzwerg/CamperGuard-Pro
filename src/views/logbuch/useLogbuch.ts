@@ -10,7 +10,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
   const currentYear = new Date().getFullYear();
   const currentFuelLog = useMemo(() => {
       const filtered = state.fuelLog.filter((f: FuelEntry) => new Date(f.date).getFullYear() === currentYear);
-      return filtered.sort((a: any, b: any) => {
+      return filtered.sort((a: FuelEntry, b: FuelEntry) => {
           const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
           if (dateDiff === 0) return b.km - a.km;
           return dateDiff;
@@ -178,7 +178,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
   };
 
   const downloadGPX = () => {
-    let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="CamperGuard Pro">\n';
+    let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Guard4Campers">\n';
     state.spots.forEach((s: SpotEntry) => {
       gpx += `  <wpt lat="${s.lat}" lon="${s.lng}">\n`;
       gpx += `    <name>${s.category ? `[${s.category}] ` : ''}${s.name}</name>\n`;
@@ -234,7 +234,7 @@ export function useLogbuch(state: AppState, setState: (s: AppState | ((prev: App
 
       const sortedByKm = [...archiveFuelLog]
           .filter((f: FuelEntry) => !isNaN(Number(f.km)))
-          .sort((a: any, b: any) => Number(a.km) - Number(b.km));
+          .sort((a: FuelEntry, b: FuelEntry) => Number(a.km) - Number(b.km));
 
       const totalKm =
           sortedByKm.length >= 2

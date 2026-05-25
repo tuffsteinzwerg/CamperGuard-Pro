@@ -4,17 +4,7 @@ import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-
-const SPOT_COLORS: Record<string, string> = {
-  'Stellplatz': '#3B82F6',
-  'Freistehen': '#22C55E',
-  'Campingplatz': '#FBBF24',
-  'Entsorgung': '#EF4444',
-  'Versorgung': '#EC4899',
-  'Einkauf': '#06B6D4',
-  'Aussicht': '#A855F7',
-  'Sonstiges': '#9CA3AF',
-};
+import { SPOT_COLORS } from '../data/constants';
 
 const createSpotIcon = (color: string) => L.divIcon({
   className: '',
@@ -66,28 +56,13 @@ interface ReiseViewProps {
   orientation: { pitch: number; roll: number; heading: number };
   orientationPermission: 'granted' | 'denied' | 'prompt' | 'unknown';
   requestOrientationPermission: () => Promise<void>;
+  gpsCoords: { lat: number; lng: number } | null;
 }
 
-export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission }: ReiseViewProps) {
+export function ReiseView({ state, setState, orientation, orientationPermission, requestOrientationPermission, gpsCoords }: ReiseViewProps) {
 
-  // --- GPS-Live-Position für Karte ---
-  const [liveGps, setLiveGps] = useState<{ lat: number; lng: number } | null>(null);
-
-  useEffect(() => {
-    if (state.sos?.gpsEnabled === false) {
-      setLiveGps(null);
-      return;
-    }
-    let watchId: number | undefined;
-    try {
-      watchId = navigator.geolocation.watchPosition(
-        (p) => setLiveGps({ lat: p.coords.latitude, lng: p.coords.longitude }),
-        () => setLiveGps(null),
-        { enableHighAccuracy: true, maximumAge: 5000 }
-      );
-    } catch { setLiveGps(null); }
-    return () => { if (watchId !== undefined) navigator.geolocation.clearWatch(watchId); };
-  }, [state.sos?.gpsEnabled]);
+  // --- GPS-Live-Position für Karte (von App.tsx als Prop) ---
+  const liveGps = gpsCoords;
 
   // --- Heimatadresse geocoden (einmalig) ---
   useEffect(() => {
@@ -102,7 +77,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
     const timer = setTimeout(() => {
       fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(addr)}`, {
         signal: controller.signal,
-        headers: { 'User-Agent': 'CamperGuardPro/0.1.8' }
+        headers: { 'User-Agent': 'Guard4Campers/0.2.1' }
       })
         .then(r => r.json())
         .then(data => {

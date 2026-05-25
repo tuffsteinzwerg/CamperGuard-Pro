@@ -28,7 +28,7 @@ interface LogbuchAddModalProps {
   logType: 'tank' | 'fahrt' | 'spots' | 'archiv';
   tripLogMode: 'flex' | 'strict';
   // Tank
-  tankForm: any;
+  tankForm: Record<string, string>;
   setTankForm: (f: FuelEntry) => void;
   handleTankChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   focusedTankField: string | null;
@@ -39,9 +39,9 @@ interface LogbuchAddModalProps {
   minKm: number;
   maxKm: number;
   // Trip
-  tripForm: any;
+  tripForm: Record<string, string>;
   setTripForm: (f: FuelEntry) => void;
-  businessTripForm: any;
+  businessTripForm: Record<string, string>;
   setBusinessTripForm: (f: FuelEntry) => void;
   isTripValid: boolean;
   isBusinessTripValid: boolean;
@@ -52,7 +52,7 @@ interface LogbuchAddModalProps {
   tripGpsCoords: { lat: number; lng: number } | null;
   tripGpsStatus: 'offline' | 'loading' | 'active';
   // Spot
-  spotForm: any;
+  spotForm: Record<string, string>;
   setSpotForm: (f: FuelEntry) => void;
   spotCategoryOpen: boolean;
   setSpotCategoryOpen: (v: boolean) => void;
@@ -139,7 +139,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                                 setIsConfirmingBusinessTrip(true);
                             } else {
                                 const parsedToKm = parseFloat(tripForm.fromKm);
-                                const entry: any = { 
+                                const entry: TripEntry = { 
                                     id: editingTripId || Date.now().toString(), 
                                     date: tripForm.date, 
                                     fromKm: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
@@ -353,9 +353,11 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                     </p>
                     <div className="flex flex-col gap-3">
                         <button onClick={() => {
-                            const entry: any = { 
+                            const entry: BusinessTripEntry = { 
                                 id: editingTripId || Date.now().toString(), 
                                 date: businessTripForm.date, 
+                                departureTime: businessTripForm.departureTime || '',
+                                arrivalTime: businessTripForm.arrivalTime || '',
                                 fromKm: parseFloat(businessTripForm.fromKm), 
                                 toKm: parseFloat(businessTripForm.toKm), 
                                 category: businessTripForm.category,

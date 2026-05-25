@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import React from 'react';
 import type { AppState, InventoryItem, PharmacyItem, MaintenanceItem } from '../../types';
-import { AlertTriangle, CheckCircle, Droplet, Fuel, Settings, ShieldCheck, Flame } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ChevronRight, Droplet, Fuel, Settings, ShieldCheck, Flame } from 'lucide-react';
 import { motion } from 'motion/react';
-import { formatNumber, formatWeight } from '../lib/formatters';
+import { formatNumber } from '../lib/formatters';
 import { WeightGauge } from './status/WeightGauge';
 import { DepartureChecklist } from './status/DepartureChecklist';
 
@@ -14,13 +14,12 @@ interface StatusViewProps {
   setShowSos: (v: boolean) => void;
   sosTab: 'hilfe' | 'id' | 'inhalt';
   setSosTab: (t: 'hilfe' | 'id' | 'inhalt') => void;
+  gpsCoords: { lat: number; lng: number } | null;
+  gpsAlt: number | null;
+  gpsStatus: 'offline' | 'loading' | 'active';
 }
 
-export function StatusView({ state, setState, orientation, showSos, setShowSos, sosTab, setSosTab }: StatusViewProps) {
-  const [gpsAlt, setGpsAlt] = useState<number|null>(null);
-  const [gpsCoords, setGpsCoords] = useState<{lat: number, lng: number} | null>(null);
-  const [gpsStatus, setGpsStatus] = useState<'offline'|'loading'|'active'>('offline');
-
+export function StatusView({ state, setState, orientation, showSos, setShowSos, sosTab, setSosTab, gpsCoords, gpsAlt, gpsStatus }: StatusViewProps) {
   const pitchNormalized = Math.max(-20, Math.min(20, orientation.pitch));
   const rollNormalized = Math.max(-20, Math.min(20, orientation.roll));
   const heading = orientation.heading;
@@ -44,41 +43,6 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
   const totalWeight = (state.profile.emptyWeight || 0) + waterWeightImpact + wasteWaterWeight + dieselWeight + inventoryWeight;
   const remainingWeight = (state.profile.maxWeight || 0) - totalWeight;
 
-  useEffect(() => {
-     let watchId: number | undefined;
-     if (state.sos.gpsEnabled !== false) {
-       setGpsStatus('loading');
-       try {
-         watchId = navigator.geolocation.watchPosition(
-            p => {
-               setGpsAlt(p.coords.altitude);
-               setGpsCoords({ lat: p.coords.latitude, lng: p.coords.longitude });
-               setGpsStatus('active');
-            },
-            e => {
-               console.warn(e);
-               setGpsStatus('offline');
-               setGpsCoords(null);
-               setGpsAlt(null);
-            },
-            { enableHighAccuracy: true }
-         );
-       } catch (err) {
-         console.warn("Geolocation start error:", err);
-         setGpsStatus('offline');
-       }
-     } else {
-       setGpsStatus('offline');
-       setGpsCoords(null);
-       setGpsAlt(null);
-     }
-     return () => {
-       if (watchId !== undefined) {
-         try { navigator.geolocation.clearWatch(watchId); } catch(e){}
-       }
-     };
-  }, [state.sos.gpsEnabled]);
-
 
   const warnings: { type: 'danger' | 'warn'; text: string; action?: 'pharmacy' }[] = [];
   if (remainingWeight < 0) {
@@ -97,8 +61,8 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
   });
 
   // --- Medikamenten Ablauf Logik Start ---
-  const expiredPharmacyItems: any[] = [];
-  const soonExpiringPharmacyItems: any[] = [];
+  const expiredPharmacyItems: PharmacyItem[] = [];
+  const soonExpiringPharmacyItems: PharmacyItem[] = [];
   (() => {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -170,7 +134,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       <div className="cg-panel p-4">
           <div className="typo-engraved mb-4">WARTUNG</div>
           <div className="grid grid-cols-2 gap-4">
-              {(state.maintenance || []).map((item: InventoryItem) => {
+              {(state.maintenance || []).map((item: MaintenanceItem) => {
                   const date = item.date ? new Date(item.date) : null;
                   const diffInDays = date ? (date.getTime() - new Date().getTime()) / (1000 * 3600 * 24) : 999;
                   const borderColor = diffInDays < 0 ? 'var(--status-danger)' : diffInDays < 60 ? 'var(--status-warn)' : 'rgba(255,255,255,0.05)';

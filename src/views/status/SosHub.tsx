@@ -22,7 +22,25 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
   const [deletingGearItem, setDeletingGearItem] = useState<any>(null);
   const [isEditingId, setIsEditingId] = useState(false);
 
-  const updateSos = (field: string, val: any) => setState({...state, sos: {...state.sos, [field]: val}});
+  // Pharmacy expiry calculations
+  const now = new Date();
+  const threeMonthsFromNow = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
+  
+  const expiredPharmacyItems = (state.sos.pharmacy || []).filter((p: PharmacyItem) => {
+    if (!p.expiry) return false;
+    const [year, month] = p.expiry.split('-').map(Number);
+    const expiryDate = new Date(year, month - 1, 1);
+    return expiryDate < now;
+  });
+
+  const soonExpiringPharmacyItems = (state.sos.pharmacy || []).filter((p: PharmacyItem) => {
+    if (!p.expiry) return false;
+    const [year, month] = p.expiry.split('-').map(Number);
+    const expiryDate = new Date(year, month - 1, 1);
+    return expiryDate >= now && expiryDate <= threeMonthsFromNow;
+  });
+
+  const updateSos = (field: string, val: string | boolean | number | EmergencyGear[] | PharmacyItem[] | null) => setState({...state, sos: {...state.sos, [field]: val}});
 
   return (
       <AnimatePresence>
@@ -144,7 +162,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
             <div className="cg-master-inset p-3">
               <input
                 value={state.sos.ice1Name}
-                onChange={e => updateSos('ice1Name', e.target.value)}
+                onChange={e => updateSos('ice1Name', e.target.value.replace(/[^a-zA-ZäöüÄÖÜßéèêàáâùúûìíîñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜŸ\s\-]/g, '').slice(0, 30))}
+                maxLength={30}
                 className="w-full bg-transparent border-none outline-none cg-master-value !p-0 !mb-2"
                 placeholder="Name"
               />
@@ -153,7 +172,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                 <input
                   type="tel"
                   value={state.sos.ice1Phone}
-                  onChange={e => updateSos('ice1Phone', e.target.value)}
+                  onChange={e => updateSos('ice1Phone', e.target.value.replace(/[^\d+\s]/g, '').slice(0, 20))}
+                  maxLength={20}
                   className="w-full bg-transparent border-none outline-none cg-master-value !p-0"
                   placeholder="Telefonnummer"
                 />
@@ -166,7 +186,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
             <div className="cg-master-inset p-3">
               <input
                 value={state.sos.ice2Name}
-                onChange={e => updateSos('ice2Name', e.target.value)}
+                onChange={e => updateSos('ice2Name', e.target.value.replace(/[^a-zA-ZäöüÄÖÜßéèêàáâùúûìíîñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜŸ\s\-]/g, '').slice(0, 30))}
+                maxLength={30}
                 className="w-full bg-transparent border-none outline-none cg-master-value !p-0 !mb-2"
                 placeholder="Name"
               />
@@ -175,7 +196,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                 <input
                   type="tel"
                   value={state.sos.ice2Phone}
-                  onChange={e => updateSos('ice2Phone', e.target.value)}
+                  onChange={e => updateSos('ice2Phone', e.target.value.replace(/[^\d+\s]/g, '').slice(0, 20))}
+                  maxLength={20}
                   className="w-full bg-transparent border-none outline-none cg-master-value !p-0"
                   placeholder="Telefonnummer"
                 />
@@ -214,7 +236,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
               <input
                 type="text"
                 value={state.sos.firstName || ''}
-                onChange={e => updateSos('firstName', e.target.value)}
+                onChange={e => updateSos('firstName', e.target.value.replace(/[^a-zA-ZäöüÄÖÜßéèêàáâùúûìíîñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜŸ\s\-]/g, '').slice(0, 30))}
+                maxLength={30}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="Max"
               />
@@ -224,7 +247,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
               <input
                 type="text"
                 value={state.sos.lastName || ''}
-                onChange={e => updateSos('lastName', e.target.value)}
+                onChange={e => updateSos('lastName', e.target.value.replace(/[^a-zA-ZäöüÄÖÜßéèêàáâùúûìíîñçÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜŸ\s\-]/g, '').slice(0, 30))}
+                maxLength={30}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="Mustermann"
               />
@@ -237,7 +261,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
               <input
                 type="text"
                 value={state.sos.street || ''}
-                onChange={e => updateSos('street', e.target.value)}
+                onChange={e => updateSos('street', e.target.value.slice(0, 50))}
+                maxLength={50}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="Musterstraße"
               />
@@ -247,7 +272,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
               <input
                 type="text"
                 value={state.sos.houseNumber || ''}
-                onChange={e => updateSos('houseNumber', e.target.value)}
+                onChange={e => updateSos('houseNumber', e.target.value.replace(/[^a-zA-Z0-9\/\-]/g, '').slice(0, 6))}
+                maxLength={6}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="12"
               />
@@ -261,7 +287,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                 type="text"
                 inputMode="numeric"
                 value={state.sos.zipCode || ''}
-                onChange={e => updateSos('zipCode', e.target.value)}
+                onChange={e => updateSos('zipCode', e.target.value.replace(/[^a-zA-Z0-9\s\-]/g, '').slice(0, 10))}
+                maxLength={10}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="12345"
               />
@@ -271,7 +298,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
               <input
                 type="text"
                 value={state.sos.city || ''}
-                onChange={e => updateSos('city', e.target.value)}
+                onChange={e => updateSos('city', e.target.value.slice(0, 40))}
+                maxLength={40}
                 className="w-full bg-transparent border-none outline-none cg-master-value"
                 placeholder="Musterstadt"
               />
@@ -283,7 +311,8 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
             <input
               type="text"
               value={state.sos.country || ''}
-              onChange={e => updateSos('country', e.target.value)}
+              onChange={e => updateSos('country', e.target.value.slice(0, 30))}
+              maxLength={30}
               className="w-full bg-transparent border-none outline-none cg-master-value"
               placeholder="Deutschland"
             />

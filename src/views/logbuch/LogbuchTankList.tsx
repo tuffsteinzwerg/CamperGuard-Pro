@@ -77,7 +77,7 @@ export function LogbuchTankList({
                 <div className="cg-master-card-small !p-6 !mb-0 text-center">
                     <div className="typo-value-large mb-2 opacity-30">⛽</div>
                     <div className="typo-card-title mb-1">Noch keine Tankungen</div>
-                    <div className="typo-body-dim cg-master-muted">Tippe auf + um deine erste Tankung zu erfassen. CamperGuard Pro berechnet daraus deinen Verbrauch.</div>
+                    <div className="typo-body-dim cg-master-muted">Tippe auf + um deine erste Tankung zu erfassen. Guard4Campers berechnet daraus deinen Verbrauch.</div>
                 </div>
             )}
           </div>

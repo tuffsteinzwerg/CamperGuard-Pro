@@ -40,7 +40,7 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
         {/* Logo */}
         <img
           src="/CGP2DLogo.png"
-          alt="CamperGuard Pro"
+          alt="Guard4Campers"
           className="w-[160px] h-[160px] object-contain mb-4"
         />
 
@@ -61,7 +61,7 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
 
         {/* Beschreibung */}
         <p className="typo-body-dim text-center mb-6 px-2 leading-relaxed">
-          Bitte hinterlege die folgenden Angaben, damit CamperGuard Pro dir alle Funktionen zur Verfügung stellen kann.
+          Bitte hinterlege die folgenden Angaben, damit Guard4Campers dir alle Funktionen zur Verfügung stellen kann.
         </p>
 
         {/* Pflicht-Karten */}
@@ -114,14 +114,6 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
             <span>Denk auch an deine Wartungstermine — TÜV, Gas, Dichtigkeit und Service findest du im Profil.</span>
           </p>
         </div>
-
-        {/* Einrichten-Button */}
-        <button
-          onClick={() => onNavigate('profil')}
-          className="btn-primary px-10"
-        >
-          Einrichten
-        </button>
 
         {/* Hinweis */}
         <p className="typo-tiny text-center mt-4 opacity-60">

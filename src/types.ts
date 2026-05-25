@@ -30,6 +30,7 @@ export interface FuelEntry {
   currency: Currency;
   exchangeRateToEur: number; // multiplier to get EUR
   fuelType: FuelType;
+  total?: number | string;
 }
 
 export interface TripEntry {
@@ -120,6 +121,8 @@ export interface EmergencyGear {
   locations: string[];
   weight?: number | string;
   weightUnit?: string;
+  isHidden?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface PharmacyItem {
@@ -132,6 +135,8 @@ export interface PharmacyItem {
   unit: 'stk' | 'ml';
   weight?: number | string;
   weightUnit?: string;
+  isHidden?: boolean;
+  isDeleted?: boolean;
 }
 
 export interface SosData {
