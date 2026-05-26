@@ -55,7 +55,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `guard4campers-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `guard4campers-backup.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
