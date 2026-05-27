@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { AppState, MaintenanceItem } from '../../types';
-import { Search, Droplet, Fuel, Download, Upload, AlertTriangle } from 'lucide-react';
+import { Search, Droplet, Fuel, Download, Upload, AlertTriangle, Cloud, CloudOff, RefreshCw, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import type { TireProfile } from '../../types';
+import { getInitialAuthState, signIn, signOut, type GoogleAuthState } from '../lib/googleAuth';
+import { uploadState } from '../lib/syncService';
 
 const faqData = [
   {q: "Warum Medikationsdaten?", a: "Im Notfall zählen Sekunden. Rettungskräfte sehen sofort lebenswichtige Infos im Safety Hub."},
-  {q: "Wo werden meine Daten gespeichert?", a: "Alle Daten bleiben lokal in deinem Browser (IndexedDB). Es findet kein Cloud-Upload statt."},
+  {q: "Wo werden meine Daten gespeichert?", a: "Alle Daten bleiben lokal auf deinem Gerät (IndexedDB). Optional kannst du sie per Google Drive synchronisieren."},
   {q: "Was ist der ICE 2 Kontakt?", a: "Ein zweiter Notfallkontakt für den Fall, dass die primäre Kontaktperson nicht erreichbar ist."},
   {q: "Wofür dienen die Fahrzeugdaten?", a: "Sie helfen bei der Berechnung von Verbräuchen und erinnern an wichtige Service-Intervalle."},
   {q: "Was bedeuten Heading und Elevation?", a: "Heading zeigt deine Kompassrichtung, Elevation deine aktuelle Höhe über dem Meeresspiegel."},
@@ -40,12 +42,62 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
   const [importSuccess, setImportSuccess] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
 
+  // Google Drive Sync State
+  const [authState, setAuthState] = useState<GoogleAuthState>(getInitialAuthState);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [syncMessage, setSyncMessage] = useState<string>('');
+
+  const handleGoogleSignIn = () => {
+    signIn((newState) => {
+      setAuthState(newState);
+      if (newState.isSignedIn) {
+        setSyncMessage('Verbunden mit Google Drive');
+        setTimeout(() => setSyncMessage(''), 3000);
+      }
+    });
+  };
+
+  const handleGoogleSignOut = () => {
+    signOut((newState) => {
+      setAuthState(newState);
+      setSyncStatus('idle');
+      setSyncMessage('');
+    });
+  };
+
+  const handleManualSync = async () => {
+    setSyncStatus('syncing');
+    setSyncMessage('Synchronisiere...');
+    const result = await uploadState(state);
+    if (result.success) {
+      setSyncStatus('success');
+      setSyncMessage('Synchronisiert um ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } else {
+      setSyncStatus('error');
+      setSyncMessage(result.error === 'not_signed_in' ? 'Nicht eingeloggt' : 'Sync fehlgeschlagen');
+      setTimeout(() => setSyncStatus('idle'), 5000);
+    }
+  };
+
+  // Token-Ablauf prüfen
+  useEffect(() => {
+    const check = () => {
+      if (authState.expiresAt && authState.expiresAt < Date.now()) {
+        setAuthState({ isSignedIn: false, accessToken: null, userEmail: null, expiresAt: null });
+        setSyncMessage('Sitzung abgelaufen — bitte erneut verbinden');
+      }
+    };
+    const interval = setInterval(check, 60000);
+    return () => clearInterval(interval);
+  }, [authState.expiresAt]);
+
   const handleExport = () => {
     try {
       const exportPayload = {
         _meta: {
           app: 'Guard4Campers',
-          version: '0.3.0-dev',
+          version: '0.2.1-dev',
           exportDate: new Date().toISOString(),
           format: 1
         },
@@ -487,6 +539,59 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                      </>
                  );
              })()}
+          </div>
+      </div>
+
+      {/* --- CLOUD SYNC --- */}
+      <div className="cg-master-card p-4 mt-6">
+          <h2 className="typo-section-title mb-4">Cloud-Synchronisation</h2>
+          <div className="space-y-3">
+              {!authState.isSignedIn ? (
+                  <>
+                      <p className="typo-body-dim">Verbinde dein Google-Konto, um Daten automatisch zu synchronisieren und mit anderen zu teilen.</p>
+                      <button onClick={handleGoogleSignIn} className="cg-master-button w-full flex items-center justify-center gap-2 py-3">
+                          <Cloud size={16} />
+                          <span className="typo-label">Mit Google verbinden</span>
+                      </button>
+                  </>
+              ) : (
+                  <>
+                      <div className="cg-master-inset p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                  <Cloud size={14} className="text-[var(--status-success)]" />
+                                  <span className="typo-body">Verbunden</span>
+                              </div>
+                              <button onClick={handleGoogleSignOut} className="flex items-center gap-1 text-[var(--text-muted)] hover:text-white transition-colors">
+                                  <LogOut size={12} />
+                                  <span className="typo-label text-xs">Trennen</span>
+                              </button>
+                          </div>
+                          {authState.userEmail && (
+                              <div className="typo-label text-[var(--text-muted)] text-xs">{authState.userEmail}</div>
+                          )}
+                      </div>
+
+                      <button
+                          onClick={handleManualSync}
+                          disabled={syncStatus === 'syncing'}
+                          className="cg-master-button w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50"
+                      >
+                          <RefreshCw size={16} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
+                          <span className="typo-label">{syncStatus === 'syncing' ? 'Synchronisiere...' : 'Jetzt synchronisieren'}</span>
+                      </button>
+
+                      {syncMessage && (
+                          <div className={`text-center typo-body py-1 ${
+                              syncStatus === 'success' ? 'text-[var(--status-success)]' :
+                              syncStatus === 'error' ? 'text-[var(--status-danger)]' :
+                              'text-[var(--text-muted)]'
+                          }`}>
+                              {syncStatus === 'success' && '✓ '}{syncMessage}
+                          </div>
+                      )}
+                  </>
+              )}
           </div>
       </div>
 

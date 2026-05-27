@@ -18,6 +18,8 @@ import { ReiseView } from './views/ReiseView';
 import { CHANGELOG } from './data/changelog';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { uploadState, checkForRemoteUpdate } from './lib/syncService';
+import { getInitialAuthState } from './lib/googleAuth';
 
 const DB_NAME = 'Guard4CampersDB_V1';
 
@@ -310,9 +312,13 @@ export default function App() {
     if (loading) return;
 
     const timer = setTimeout(() => {
+      // Lokal speichern (IndexedDB)
       initDB().then(db => db.put('store', state, 'state')).then(() => {
         setToastVisible(true);
         setTimeout(() => setToastVisible(false), 1500);
+
+        // Parallel auf Google Drive hochladen (wenn eingeloggt)
+        uploadState(state).catch(err => console.warn('Drive sync:', err));
       });
     }, 700);
 
