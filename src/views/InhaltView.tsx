@@ -1,11 +1,14 @@
 import { createUuid } from "../lib/uuid.ts";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } from '../types';
 import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
 import { dispatchInventoryEvent } from '../lib/syncRepository';
 import { openAppDatabase } from '../lib/appDatabase';
+import { formatWeight } from '../lib/formatters';
+import { startSync, subscribeSyncStatus, countPendingOutbox } from '../lib/syncRuntime';
+import type { SyncStatus } from '../lib/syncCoordinator';
 
 // --- TAB: INHALT ---
 
@@ -15,7 +18,19 @@ interface InhaltViewProps {
 }
 
 export function InhaltView({ state, setState }: InhaltViewProps) {
-    const [showHistory, setShowHistory] = useState(false);
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    startSync();
+    const unsubscribe = subscribeSyncStatus(setSyncStatus);
+    const refresh = () => { countPendingOutbox().then(setPendingCount); };
+    refresh();
+    const iv = setInterval(refresh, 3000);
+    return () => { unsubscribe(); clearInterval(iv); };
+  }, []);
+
+  const [showHistory, setShowHistory] = useState(false);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
   const [deviceId, setDeviceId] = useState<string>('');
 
@@ -167,7 +182,16 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
       <div className="flex justify-between items-end mb-4 px-2 no-print">
           <h1 className="typo-section-title">INHALT</h1>
           <div className="flex items-center gap-2">
-            <button onClick={openHistory} className="cg-master-button !py-1.5 !px-3"><History size={14}/></button>
+            <button onClick={openHistory} className="cg-master-button !py-1.5 !px-3">
+              <History
+                size={14}
+                className={
+                  (syncStatus === 'uploading' || syncStatus === 'downloading' || pendingCount > 0)
+                    ? 'text-[var(--status-danger)]'
+                    : 'text-[#00ff9c]'
+                }
+              />
+            </button>
             <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
           </div>
       </div>
@@ -278,7 +302,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                       }
                                       return acc;
                                   }, 0);
-                                  return `${Math.round(totalKg)} kg`;
+                                  return formatWeight(totalKg);
                               })()}
                           </span>
                       </div>
