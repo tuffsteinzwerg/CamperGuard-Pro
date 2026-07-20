@@ -1,3 +1,4 @@
+import { createUuid } from "../../lib/uuid.ts";
 import React, { useState } from 'react';
 import type { AppState, EmergencyGear, PharmacyItem } from '../../types';
 import { ShieldPlus, Phone, Edit2, Trash2, MapPin, AlertTriangle, Plus, Check, Pill, Droplet, ShieldCheck, ChevronDown, User, HeartPulse } from 'lucide-react';
@@ -22,22 +23,24 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
   const [deletingGearItem, setDeletingGearItem] = useState<any>(null);
   const [isEditingId, setIsEditingId] = useState(false);
 
-  // Pharmacy expiry calculations
+  // Pharmacy expiry calculations (einheitlich mit StatusView: abgelaufen = nach Monatsende, "bald" = binnen 60 Tagen)
   const now = new Date();
-  const threeMonthsFromNow = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
-  
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
   const expiredPharmacyItems = (state.sos.pharmacy || []).filter((p: PharmacyItem) => {
     if (!p.expiry) return false;
     const [year, month] = p.expiry.split('-').map(Number);
-    const expiryDate = new Date(year, month - 1, 1);
-    return expiryDate < now;
+    const expiryDate = new Date(year, month, 0);
+    return expiryDate < today;
   });
 
   const soonExpiringPharmacyItems = (state.sos.pharmacy || []).filter((p: PharmacyItem) => {
     if (!p.expiry) return false;
     const [year, month] = p.expiry.split('-').map(Number);
-    const expiryDate = new Date(year, month - 1, 1);
-    return expiryDate >= now && expiryDate <= threeMonthsFromNow;
+    const expiryDate = new Date(year, month, 0);
+    if (expiryDate < today) return false;
+    const diffDays = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays <= 60;
   });
 
   const updateSos = (field: string, val: string | boolean | number | EmergencyGear[] | PharmacyItem[] | null) => setState({...state, sos: {...state.sos, [field]: val}});
@@ -403,7 +406,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                          setEditingGearId(emptyItem.id);
                                          setTimeout(() => document.getElementById(`gear-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      } else {
-                                         const newId = Date.now().toString();
+                                         const newId = createUuid();
                                          updateSos('gear', [...(state.sos.gear || []), { id: newId, name: '', checked: false, count: 0, locations: [''], weight: '', weightUnit: 'kg' }]);
                                          setEditingGearId(newId);
                                          setTimeout(() => document.getElementById(`gear-${newId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
@@ -539,7 +542,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                          setEditingPharmacyId(emptyItem.id);
                                          setTimeout(() => document.getElementById(`pharmacy-${emptyItem.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
                                      } else {
-                                         const newId = Date.now().toString(); 
+                                         const newId = createUuid(); 
                                          updateSos('pharmacy', [...(state.sos.pharmacy || []), {id: newId, name:'', purpose:'', expiry:'', location:'', quantity:1, unit:'stk', weight: '', weightUnit: 'kg'}]); 
                                          setEditingPharmacyId(newId);
                                          setTimeout(() => document.getElementById(`pharmacy-${newId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);

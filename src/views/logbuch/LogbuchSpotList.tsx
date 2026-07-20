@@ -8,7 +8,7 @@ interface LogbuchSpotListProps {
   spots: SpotEntry[];
   SPOT_COLORS: Record<string, string>;
   downloadGPX: () => void;
-  setSpotForm: (f: FuelEntry) => void;
+  setSpotForm: (f: any) => void;
   setEditingSpotId: (id: string | null) => void;
   setSpotGpsError: (v: boolean) => void;
   setIsAdding: (v: boolean) => void;

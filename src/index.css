@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
 @import "tailwindcss";
 
 @theme {
@@ -193,6 +192,8 @@ body {
   font-weight: 900;
   letter-spacing: 0.08em;
   color: #FF6600;
+  display: inline-flex;
+  align-items: center;
 }
 
 .brand-big {
@@ -706,5 +707,23 @@ option {
 
 .cg-master-control-danger:hover {
   opacity: 1;
+}
+
+.brand-word {
+  color: #E0E0E0;
+  display: inline-block;
+  transform: skewX(-9deg);
+}
+.brand-4 {
+  height: 1em;
+  width: auto;
+  vertical-align: -0.05em;
+  margin: 0 0.02em;
+}
+
+.brand-logo {
+  height: 26px;
+  width: auto;
+  display: block;
 }
 

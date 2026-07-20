@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { AppState, MaintenanceItem } from '../../types';
+import { importState } from '../lib/syncRepository';
+import type { AppState, MaintenanceItem } from '../types';
 import { Search, Droplet, Fuel, Download, Upload, AlertTriangle, Cloud, CloudOff, RefreshCw, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
-import type { TireProfile } from '../../types';
+import type { TireProfile } from '../types';
 import { getInitialAuthState, signIn, signOut, type GoogleAuthState } from '../lib/googleAuth';
 import { uploadState } from '../lib/syncService';
 
@@ -155,11 +156,17 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
   const confirmImport = () => {
     if (!importData?.data) return;
-    setState(importData.data);
-    setShowImportConfirm(false);
-    setImportData(null);
-    setImportSuccess(true);
-    setTimeout(() => setImportSuccess(false), 3000);
+    
+    importState(importData.data).then(newState => {
+        setState(newState);
+        setShowImportConfirm(false);
+        setImportData(null);
+        setImportSuccess(true);
+        setTimeout(() => setImportSuccess(false), 3000);
+    }).catch(err => {
+        console.error(err);
+        setImportError('Fehler beim Importieren: ' + err.message);
+    });
   };
 
   const [activeTireProfile, setActiveTireProfile] = useState<TireProfile>('Straße');
@@ -171,7 +178,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
     setState((prev: AppState) => {
         const next = {...prev};
         const p = path.split('.');
-        let c: Record<string, unknown> = next as Record<string, unknown>;
+        let c: any = next as any;
         for(let i=0; i<p.length-1; i++) {
           c[p[i]] = Array.isArray(c[p[i]]) ? [...c[p[i]]] : {...c[p[i]]};
           c = c[p[i]];
@@ -377,7 +384,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
               ].map((d, index) => {
                   const capacity = state.profile[d.k as keyof typeof state.profile] || 0;
                   const level = state[d.levelKey as keyof typeof state] || 0;
-                  const liters = (level / 100) * capacity;
+                  const liters = (Number(level) / 100) * Number(capacity);
                   
                   return (
                       <div key={d.k} className="relative overflow-hidden flex flex-col gap-3 rounded-2xl" style={{
@@ -403,7 +410,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                           ))}
 
                           {/* Ambient glow */}
-                          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height:'50%', background: `radial-gradient(ellipse at 50% 100%, ${d.shadowColor.replace('0.5','0.3').replace('0.4','0.2')}, transparent 70%)`, opacity: level > 5 ? 0.7 : 0, transition:'opacity 0.3s' }} />
+                          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height:'50%', background: `radial-gradient(ellipse at 50% 100%, ${d.shadowColor.replace('0.5','0.3').replace('0.4','0.2')}, transparent 70%)`, opacity: Number(level) > 5 ? 0.7 : 0, transition:'opacity 0.3s' }} />
 
                           {/* Header */}
                           <div className="flex justify-between items-center relative z-10" style={{ marginBottom: '4px' }}>
@@ -430,7 +437,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                                 <div className="absolute pointer-events-none" style={{ top:'-20%', left:'5%', width:'90%', height:'50%', background:'linear-gradient(180deg, rgba(255,255,255,0.06), transparent)', borderRadius:'100%' }} />
 
                                 {/* Liquid fill */}
-                                <div className="absolute overflow-hidden" style={{ left:0, top:0, bottom:0, width:`${Math.max(level, 1)}%`, borderRadius:'7px', transition:'width 0.15s ease-out' }}>
+                                <div className="absolute overflow-hidden" style={{ left:0, top:0, bottom:0, width:`${Math.max(Number(level) || 0, 1)}%`, borderRadius:'7px', transition:'width 0.15s ease-out' }}>
                                   <div className="absolute inset-0" style={{ background:`linear-gradient(90deg, ${d.colorStart}, ${d.colorEnd})`, boxShadow:`0 0 20px ${d.shadowColor}, 0 0 8px ${d.shadowColor}` }} />
                                   <div className="absolute inset-0" style={{ background:'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.02) 30%, transparent 45%, rgba(0,0,0,0.08) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0.35) 100%)' }} />
                                   <div className="absolute" style={{ top:'2px', left:'6px', right:'6px', height:'2px', borderRadius:'1px', background:'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 10%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.25) 90%, transparent 100%)' }} />
@@ -651,7 +658,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                      <input type="text" placeholder="FAQ DURCHSUCHEN..." className="cg-master-input w-full pl-10 pr-4" value={faqSearch} onChange={(e) => setFaqSearch(e.target.value)} />
                  </div>
                  <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-                     {faqData.filter(f => f.q.toLowerCase().includes(faqSearch.toLowerCase()) || f.a.toLowerCase().includes(faqSearch.toLowerCase())).map((f: FAQEntry, i: number) => (
+                     {faqData.filter(f => f.q.toLowerCase().includes(faqSearch.toLowerCase()) || f.a.toLowerCase().includes(faqSearch.toLowerCase())).map((f: any, i: number) => (
                          <div key={i} className="cg-master-card-small space-y-3 relative">
                              <div className="w-full typo-card-title !mb-0">{f.q}</div>
                              <div className="w-full typo-body-dim">{f.a}</div>

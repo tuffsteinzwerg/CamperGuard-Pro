@@ -1,3 +1,4 @@
+import { createUuid } from "../../lib/uuid.ts";
 import React from 'react';
 import { Trash2, MapPin, ChevronDown } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -29,7 +30,7 @@ interface LogbuchAddModalProps {
   tripLogMode: 'flex' | 'strict';
   // Tank
   tankForm: Record<string, string>;
-  setTankForm: (f: FuelEntry) => void;
+  setTankForm: (f: any) => void;
   handleTankChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   focusedTankField: string | null;
   setFocusedTankField: (f: string | null) => void;
@@ -40,9 +41,9 @@ interface LogbuchAddModalProps {
   maxKm: number;
   // Trip
   tripForm: Record<string, string>;
-  setTripForm: (f: FuelEntry) => void;
+  setTripForm: (f: any) => void;
   businessTripForm: Record<string, string>;
-  setBusinessTripForm: (f: FuelEntry) => void;
+  setBusinessTripForm: (f: any) => void;
   isTripValid: boolean;
   isBusinessTripValid: boolean;
   isBusinessTripPurposeValid: boolean;
@@ -53,7 +54,7 @@ interface LogbuchAddModalProps {
   tripGpsStatus: 'offline' | 'loading' | 'active';
   // Spot
   spotForm: Record<string, string>;
-  setSpotForm: (f: FuelEntry) => void;
+  setSpotForm: (f: any) => void;
   spotCategoryOpen: boolean;
   setSpotCategoryOpen: (v: boolean) => void;
   spotGpsError: boolean;
@@ -131,8 +132,13 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                             const cur = fd.get('currency') as Currency;
                             const rate = state.exchangeRates[cur] || 1;
                             const isVollgetankt = fd.get('vollgetankt') !== 'false';
-                            const entry: FuelEntry = { id: Date.now().toString(), date: tankForm.date, km: parseFloat(tankForm.km), liters: parseFloat(tankForm.liters), price: parseFloat(tankForm.price), currency: cur, exchangeRateToEur: rate, fuelType: fd.get('fuelType') as FuelType, vollgetankt: isVollgetankt };
-                            setState({...state, fuelLog: [entry, ...state.fuelLog]});
+                            const entry: FuelEntry = { id: editingTripId || createUuid(), date: tankForm.date, km: parseFloat(tankForm.km), liters: parseFloat(tankForm.liters), price: parseFloat(tankForm.price), currency: cur, exchangeRateToEur: rate, fuelType: fd.get('fuelType') as FuelType, vollgetankt: isVollgetankt };
+                            if (editingTripId) {
+                                setState({...state, fuelLog: state.fuelLog.map((f: FuelEntry) => f.id === editingTripId ? entry : f)});
+                            } else {
+                                setState({...state, fuelLog: [entry, ...state.fuelLog]});
+                            }
+                            setEditingTripId(null);
                             setIsAdding(false);
                         } else if(logType === 'fahrt') {
                             if (tripLogMode === 'strict') {
@@ -140,13 +146,13 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                             } else {
                                 const parsedToKm = parseFloat(tripForm.fromKm);
                                 const entry: TripEntry = { 
-                                    id: editingTripId || Date.now().toString(), 
+                                    id: editingTripId || createUuid(), 
                                     date: tripForm.date, 
                                     fromKm: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.fromKm ?? getLastKnownKm()) : getLastKnownKm(), 
                                     toKm: isNaN(parsedToKm) ? 0 : parsedToKm, 
                                     purpose: tripForm.purpose, 
                                     destination: tripForm.destination, 
-                                    note: tripForm.note,
+                                    
                                     lat: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.lat ?? undefined) : (tripGpsCoords?.lat || undefined),
                                     lng: editingTripId ? (state.tripLog.find((t: TripEntry) => t.id === editingTripId)?.lng ?? undefined) : (tripGpsCoords?.lng || undefined)
                                 };
@@ -159,7 +165,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                                 setIsAdding(false);
                             }
                         } else if(logType === 'spots') {
-                            const entry: SpotEntry = { id: editingSpotId || Date.now().toString(), name: spotForm.name, date: spotForm.date, lat: parseFloat(spotForm.lat), lng: parseFloat(spotForm.lng), note: spotForm.note, category: spotForm.category };
+                            const entry: SpotEntry = { id: editingSpotId || createUuid(), name: spotForm.name, date: spotForm.date, lat: parseFloat(spotForm.lat), lng: parseFloat(spotForm.lng), note: spotForm.note, category: spotForm.category };
                             if (editingSpotId) {
                                 setState({...state, spots: state.spots.map((s: SpotEntry) => s.id === editingSpotId ? entry : s)});
                             } else {
@@ -354,7 +360,7 @@ export function LogbuchAddModal(props: LogbuchAddModalProps) {
                     <div className="flex flex-col gap-3">
                         <button onClick={() => {
                             const entry: BusinessTripEntry = { 
-                                id: editingTripId || Date.now().toString(), 
+                                id: editingTripId || createUuid(), 
                                 date: businessTripForm.date, 
                                 departureTime: businessTripForm.departureTime || '',
                                 arrivalTime: businessTripForm.arrivalTime || '',

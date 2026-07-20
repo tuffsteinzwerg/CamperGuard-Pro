@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppState, InventoryItem, EmergencyGear, PharmacyItem } from '../../types';
+import type { AppState, InventoryItem, EmergencyGear, PharmacyItem } from '../types';
 import { PrintHeader } from './PrintHeader';
 
 export function InhaltPrintView({ state }: { state: AppState }) {
@@ -86,7 +86,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
         const merged = printableGearMap[normName];
         let locsToMerge: string[] = [];
         if (g.locations && Array.isArray(g.locations)) locsToMerge.push(...g.locations);
-        if (typeof g.location === 'string') locsToMerge.push(g.location);
+        if (typeof g.locations === 'string') locsToMerge.push(g.locations);
         
         locsToMerge.forEach(l => {
             const locStr = String(l).trim();
@@ -183,7 +183,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
                                             <div className="cg-print-cell-name">{item.name}</div>
                                             <div className="cg-print-cell-num">{item.quantity} {formatUnit(item.unit)}</div>
                                             <div className="cg-print-cell-num">
-                                                {item.weight !== undefined && item.weight !== null && item.weight !== '' 
+                                                {item.weight !== undefined && item.weight !== null 
                                                     ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}` 
                                                     : ''}
                                             </div>
@@ -214,7 +214,7 @@ export function InhaltPrintView({ state }: { state: AppState }) {
                                 <div className="inv-row cg-print-row" key={`${g.id}-${_idx}`}>
                                     <div className="cg-print-cell-check">□</div>
                                     <div className="cg-print-cell-name">{g.name}</div>
-                                    <div className="cg-print-cell-num">{g.printCount} Stk</div>
+                                    <div className="cg-print-cell-num">{(g as any).printCount || g.count} Stk</div>
                                     <div className="cg-print-cell-num">
                                         {g.weight !== undefined && g.weight !== null && g.weight !== ''
                                             ? `${g.weight} ${formatUnit(g.weightUnit || 'kg')}`

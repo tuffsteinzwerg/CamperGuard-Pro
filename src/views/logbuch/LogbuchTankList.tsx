@@ -5,7 +5,7 @@ import type { FuelEntry } from '../../types';
 
 interface LogbuchTankListProps {
   currentFuelLog: FuelEntry[];
-  setTankForm: (f: FuelEntry) => void;
+  setTankForm: (f: any) => void;
   setEditingTripId: (id: string | null) => void;
   setIsAdding: (v: boolean) => void;
 }
@@ -15,7 +15,7 @@ export function LogbuchTankList({
 }: LogbuchTankListProps) {
   return (
           <div className="space-y-3">
-            {currentFuelLog.map((entry: FuelEntry) => {
+            {currentFuelLog.map((entry: any) => {
                 const totalLocal = entry.price * entry.liters;
                 const totalEur = totalLocal / (entry.exchangeRateToEur || 1);
                 return (

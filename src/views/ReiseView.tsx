@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import type { AppState, SpotEntry, FuelEntry } from '../../types';
+import type { AppState, SpotEntry, FuelEntry } from '../types';
 import { ArrowLeftRight, ArrowUpDown } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppState, InventoryItem, PharmacyItem, MaintenanceItem } from '../../types';
+import type { AppState, InventoryItem, PharmacyItem, MaintenanceItem } from '../types';
 import { AlertTriangle, CheckCircle, ChevronRight, Droplet, Fuel, Settings, ShieldCheck, Flame } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -41,7 +41,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
     return acc;
   }, 0);
   const totalWeight = (state.profile.emptyWeight || 0) + waterWeightImpact + wasteWaterWeight + dieselWeight + inventoryWeight;
-  const remainingWeight = (state.profile.maxWeight || 0) - totalWeight;
+  const remainingWeight = (state.profile.maxWeight || 3500) - totalWeight;
 
 
   const warnings: { type: 'danger' | 'warn'; text: string; action?: 'pharmacy' }[] = [];
@@ -55,7 +55,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
       const diffDays = (dateMs - nowMs) / (1000 * 3600 * 24);
       if (diffDays < 0) {
           warnings.push({ type: 'danger', text: `${m.name} überfällig seit ${new Date(m.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}` });
-      } else if (diffDays <= 30) {
+      } else if (diffDays <= 60) {
           warnings.push({ type: 'warn', text: `${m.name} fällig am ${new Date(m.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}` });
       }
   });
@@ -79,7 +79,7 @@ export function StatusView({ state, setState, orientation, showSos, setShowSos, 
           } else {
               const diffTime = expiryDate.getTime() - today.getTime();
               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-              if (diffDays <= 30) {
+              if (diffDays <= 60) {
                   soonExpiringPharmacyItems.push(p);
               }
           }

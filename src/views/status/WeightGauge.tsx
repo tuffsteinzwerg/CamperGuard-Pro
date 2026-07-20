@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatNumber, formatWeight } from '../../lib/formatters';
+import type { AppState } from "../../types";
 import { Scale, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface WeightGaugeProps {

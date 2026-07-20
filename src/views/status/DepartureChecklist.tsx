@@ -1,3 +1,4 @@
+import { createUuid } from "../../lib/uuid.ts";
 import React, { useState } from 'react';
 import type { AppState, InventoryItem } from '../../types';
 import { Plus, Check, Edit2, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
@@ -29,7 +30,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
           </div>
           {isChecklistOpen && (
               <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
-                  {(state.checklist || []).map((item: InventoryItem) => {
+                  {(state.checklist || []).map((item: { id: string; label: string; checked: boolean }) => {
                       return (
                           <div key={item.id} className="cg-inset py-2 flex items-center justify-between group hover:bg-black/20 transition-colors px-3 rounded border border-white/5">
                               {editingChecklistItemId === item.id ? (
@@ -77,7 +78,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                                           </div>
                                           <span className={`typo-body ${item.checked ? 'opacity-40 line-through' : ''}`}>{item.label}</span>
                                       </div>
-                                      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <div className="flex items-center">
                                           <button onClick={(e) => { e.stopPropagation(); setEditingChecklistText(item.label); setEditingChecklistItemId(item.id); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14}/></button>
                                           <button onClick={(e) => { e.stopPropagation(); setState({...state, checklist: state.checklist.filter((c: { id: string; label: string; checked: boolean }) => c.id !== item.id)}); }} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14}/></button>
                                       </div>
@@ -95,7 +96,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                           className="cg-master-input flex-1 bg-black/50 border-white/10"
                           onKeyDown={(e) => {
                               if (e.key === 'Enter' && newChecklistItem.trim() !== '') {
-                                  const n = { id: Date.now().toString(), label: newChecklistItem.trim(), checked: false };
+                                  const n = { id: createUuid(), label: newChecklistItem.trim(), checked: false };
                                   setState({...state, checklist: [...(state.checklist || []), n]});
                                   setNewChecklistItem("");
                               }
@@ -104,7 +105,7 @@ export function DepartureChecklist({ state, setState }: DepartureChecklistProps)
                       <button 
                           onClick={() => {
                               if (newChecklistItem.trim() !== '') {
-                                  const n = { id: Date.now().toString(), label: newChecklistItem.trim(), checked: false };
+                                  const n = { id: createUuid(), label: newChecklistItem.trim(), checked: false };
                                   setState({...state, checklist: [...(state.checklist || []), n]});
                                   setNewChecklistItem("");
                               }

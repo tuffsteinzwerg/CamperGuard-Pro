@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import 'leaflet/dist/leaflet.css';
 import './lib/setupLeafletIcons';
 import { openDB } from 'idb';
-import { INITIAL_STATE, AppState, EmergencyGear, InventoryItem } from './types.ts';
+import { openAppDatabase } from './lib/appDatabase';
+import { INITIAL_STATE, AppState, Archive, EmergencyGear, InventoryItem } from './types.ts';
 import { normalizeGearName } from './lib/formatters';
 import { NavButton } from './components/NavButton';
 import { StatusView } from './views/StatusView';
@@ -20,17 +21,11 @@ import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { uploadState, checkForRemoteUpdate } from './lib/syncService';
 import { getInitialAuthState } from './lib/googleAuth';
+import { createUuid } from './lib/uuid';
 
-const DB_NAME = 'Guard4CampersDB_V1';
 
 async function initDB() {
-  return openDB(DB_NAME, 1, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains('store')) {
-        db.createObjectStore('store');
-      }
-    },
-  });
+  return openAppDatabase();
 }
 
 
@@ -73,9 +68,96 @@ export default function App() {
     (async () => {
       try {
         const db = await initDB();
-        const saved = await db.get('store', 'state');
+        
+        // Metadata init
+        let deviceId = await db.get('appMeta', 'deviceId');
+        if (!deviceId) {
+          deviceId = createUuid();
+          await db.put('appMeta', deviceId, 'deviceId');
+        }
+        let actorId = await db.get('appMeta', 'actorId');
+        if (!actorId) {
+          actorId = createUuid();
+          await db.put('appMeta', actorId, 'actorId');
+        }
+
+        let saved = await db.get('store', 'state');
         // Ensure default SOS exists if loaded from old DB
         if (saved) {
+           // Atomare ID-Migration
+           if (!saved.vehicleId) {
+             saved.vehicleId = createUuid();
+           }
+           if ((saved.idMigrationVersion || 0) < 2) {
+             const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+             const seenIds = new Set<string>();
+
+             const getUniqueId = (candidateId?: string): string => {
+               let id = candidateId;
+               if (!id || !isUuid(id) || seenIds.has(id)) {
+                 do {
+                   id = createUuid();
+                 } while (seenIds.has(id));
+               }
+               seenIds.add(id);
+               return id;
+             };
+
+             const migrateArray = (arr: any[]) => {
+               if (!Array.isArray(arr)) return arr;
+               return arr.map(item => {
+                 if (item) {
+                   return { ...item, id: getUniqueId(item.id) };
+                 }
+                 return item;
+               });
+             };
+
+             saved.inventory = migrateArray(saved.inventory);
+             saved.fuelLog = migrateArray(saved.fuelLog);
+             saved.tripLog = migrateArray(saved.tripLog);
+             saved.businessTripLog = migrateArray(saved.businessTripLog);
+             saved.spots = migrateArray(saved.spots);
+             saved.faqs = migrateArray(saved.faqs);
+             saved.checklist = migrateArray(saved.checklist);
+             saved.maintenance = migrateArray(saved.maintenance);
+             
+             if (saved.sos) {
+               saved.sos.gear = migrateArray(saved.sos.gear);
+               saved.sos.pharmacy = migrateArray(saved.sos.pharmacy);
+               saved.sos.documents = migrateArray(saved.sos.documents);
+             }
+
+             if (Array.isArray(saved.archives)) {
+               saved.archives = saved.archives.map((arch: any) => {
+                 if (arch) {
+                   arch.id = getUniqueId(arch.id);
+                 }
+                 arch.fuelLog = migrateArray(arch.fuelLog);
+                 arch.tripLog = migrateArray(arch.tripLog);
+                 arch.businessTripLog = migrateArray(arch.businessTripLog);
+                 arch.spots = migrateArray(arch.spots);
+                 return arch;
+               });
+             }
+             
+             saved.idMigrationVersion = 2;
+             await db.put('store', saved, 'state');
+           }
+
+           if ((saved.syncModelVersion || 0) < 1) {
+             if (Array.isArray(saved.inventory)) {
+               saved.inventory = saved.inventory.map((item: any) => {
+                 if (item && typeof item.version !== 'number') {
+                   return { ...item, version: 1 };
+                 }
+                 return item;
+               });
+             }
+             saved.syncModelVersion = 1;
+             await db.put('store', saved, 'state');
+           }
+
            const loadedSos = saved.sos || INITIAL_STATE.sos;
            
            // Migrate old 'name', 'address', 'iceName', 'icePhone' if they exist
@@ -116,10 +198,10 @@ export default function App() {
                    if (Array.isArray(migrated.locations)) {
                        migrated.locations.forEach((l: string) => locs.push(String(l).trim()));
                    }
-                   if (typeof migrated.location === 'string') {
-                       locs.push(migrated.location.trim());
+                   if (typeof (migrated as any).location === 'string') {
+                       locs.push((migrated as any).location.trim());
                    }
-                   delete migrated.location;
+                   delete (migrated as any).location;
                    
                    migrated.locations = Array.from(new Set(locs.filter(Boolean)));
                    
@@ -163,7 +245,7 @@ export default function App() {
                requiredCategories.forEach((cat, idx) => {
                    if (!loadedSos.gear.some((g: EmergencyGear) => normalizeGearName(g.name) === cat) && !loadedSos.deletedGear.some((d: string) => normalizeGearName(d) === cat)) {
                        loadedSos.gear.push({
-                           id: `g_new_${idx}_${Date.now()}`,
+                           id: createUuid(),
                            name: cat,
                            checked: false,
                            count: 0,
@@ -208,7 +290,7 @@ export default function App() {
            }
 
            const loadedArchives = Array.isArray(saved.archives)
-             ? saved.archives.map((archive: Archive) => {
+             ? saved.archives.map((archive: any) => {
                  if (archive && archive.id && archive.summary) return archive;
 
                  const legacyYear = Number(archive?.year || new Date().getFullYear());
@@ -219,7 +301,7 @@ export default function App() {
                  const legacyTotalEur = Number(archive?.totalEur || 0);
 
                  return {
-                   id: `archive-year-${legacyYear}-${Date.now()}`,
+                   id: createUuid(),
                    type: 'year',
                    name: String(legacyYear),
                    year: legacyYear,
@@ -250,6 +332,12 @@ export default function App() {
              subcategories: loadedSubcategories,
              exchangeRates: saved.exchangeRates || INITIAL_STATE.exchangeRates,
              sos: loadedSos 
+           });
+        } else {
+           // No saved state means first launch. Assign a new vehicleId to the INITIAL_STATE
+           setState({
+             ...INITIAL_STATE,
+             vehicleId: createUuid()
            });
         }
       } catch (err) {
@@ -313,12 +401,14 @@ export default function App() {
 
     const timer = setTimeout(() => {
       // Lokal speichern (IndexedDB)
-      initDB().then(db => db.put('store', state, 'state')).then(() => {
-        setToastVisible(true);
-        setTimeout(() => setToastVisible(false), 1500);
+      import('./lib/syncRepository').then(({ saveStateFromAutosave }) => {
+        saveStateFromAutosave(state).then(() => {
+          setToastVisible(true);
+          setTimeout(() => setToastVisible(false), 1500);
 
-        // Parallel auf Google Drive hochladen (wenn eingeloggt)
-        uploadState(state).catch(err => console.warn('Drive sync:', err));
+          // Parallel auf Google Drive hochladen (wenn eingeloggt)
+          uploadState(state).catch(err => console.warn('Drive sync:', err));
+        });
       });
     }, 700);
 
@@ -488,9 +578,7 @@ export default function App() {
       <header className="h-[60px] px-4 bg-[var(--bg-input)] border-b-2 border-[var(--accent)] sticky top-0 z-40 flex justify-between items-center no-print overflow-hidden gap-4">
         <div className="flex items-center gap-2 flex-shrink-0">
           <ShieldCheck className="text-[var(--accent)]" size={20} />
-          <span className="brand-title whitespace-nowrap">
-            <span className="brand-big">G</span>uard<span className="brand-big">4</span>Campers
-          </span>
+          <img className="brand-logo" src="/g4c-header-tp.png" alt="Guard4Campers" />
         </div>
         <div className="flex items-center justify-end min-w-0 gap-3">
           {!showSos && (

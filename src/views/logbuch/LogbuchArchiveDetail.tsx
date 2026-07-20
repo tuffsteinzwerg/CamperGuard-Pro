@@ -154,7 +154,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'tank' && (
                         <div className="space-y-3">
-                            {selectedArchive.fuelLog.map((entry: FuelEntry) => (
+                            {selectedArchive.fuelLog.map((entry: any) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="flex justify-between items-start gap-3">
                                         <div className="space-y-1">
@@ -188,7 +188,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'trip' && (
                         <div className="space-y-3">
-                            {selectedArchive.tripLog.map((entry: FuelEntry) => (
+                            {selectedArchive.tripLog.map((entry: any) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 border-l-2 !border-l-[var(--accent)] !mb-0">
                                     <div className="flex justify-between items-start gap-3">
                                         <div className="space-y-1">
@@ -230,7 +230,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'business' && (
                         <div className="space-y-3">
-                            {selectedArchive.businessTripLog.map((entry: FuelEntry) => (
+                            {selectedArchive.businessTripLog.map((entry: any) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-start gap-3">
@@ -278,7 +278,7 @@ export function LogbuchArchiveDetail({
 
                     {archiveViewTab === 'spots' && (
                         <div className="space-y-3">
-                            {selectedArchive.spots.map((entry: FuelEntry) => (
+                            {selectedArchive.spots.map((entry: any) => (
                                 <div key={entry.id} className="cg-master-card-small !p-3 !mb-0">
                                     <div className="space-y-1">
                                         <div className="typo-body-dim">

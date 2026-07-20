@@ -335,15 +335,15 @@ export function LogbuchArchiveCreate(props: LogbuchArchiveCreateProps) {
                       <div className="grid grid-cols-3 gap-2 text-center mt-3">
                           <div>
                               <div className="typo-label text-[var(--text-muted)]">Distanz</div>
-                              <div className="typo-value-normal">{formatNumber(a.summary?.totalKm ?? a.totalKm, 0)} <span className="typo-label ml-0.5">KM</span></div>
+                              <div className="typo-value-normal">{formatNumber(a.summary?.totalKm , 0)} <span className="typo-label ml-0.5">KM</span></div>
                           </div>
                           <div>
                               <div className="typo-label text-[var(--text-muted)]">Liter</div>
-                              <div className="typo-value-normal">{formatNumber(a.summary?.totalLiters ?? a.totalLiters, 1)} <span className="typo-label ml-0.5">L</span></div>
+                              <div className="typo-value-normal">{formatNumber(a.summary?.totalLiters , 1)} <span className="typo-label ml-0.5">L</span></div>
                           </div>
                           <div>
                               <div className="typo-label text-[var(--text-muted)]">Kosten</div>
-                              <div className="typo-value-normal text-[var(--accent)]">{formatNumber(a.summary?.totalEur ?? a.totalEur, 2)} <span className="typo-label ml-0.5">€</span></div>
+                              <div className="typo-value-normal text-[var(--accent)]">{formatNumber(a.summary?.totalEur , 2)} <span className="typo-label ml-0.5">€</span></div>
                           </div>
                       </div>
                   </button>

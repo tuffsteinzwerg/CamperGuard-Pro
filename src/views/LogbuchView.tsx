@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AppState, FuelEntry, Archive } from '../../types';
+import type { AppState, FuelEntry, Archive } from '../types';
 import { Plus, Printer } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
@@ -53,7 +53,7 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
           </div>
           <div className="text-center">
               <div className="typo-label">Verbrauch</div>
-              <div className="typo-value-normal">{formatNumber(lb.result?.consumption || 0, 1)} L</div>
+              <div className="typo-value-normal">{lb.result?.consumption != null ? `${formatNumber(lb.result.consumption, 1)} L/100km` : '—'}</div>
           </div>
       </div>
 

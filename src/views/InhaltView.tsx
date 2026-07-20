@@ -1,17 +1,35 @@
-import { useState, useMemo } from 'react';
-import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } from '../../types';
-import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { createUuid } from "../lib/uuid.ts";
+import React, { useState, useMemo } from 'react';
+import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } from '../types';
+import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
+import { dispatchInventoryEvent } from '../lib/syncRepository';
+import { openAppDatabase } from '../lib/appDatabase';
 
 // --- TAB: INHALT ---
 
 interface InhaltViewProps {
   state: AppState;
-  setState: React.Dispatch<React.SetStateAction<AppState>>;
+  setState: React.Dispatch<any>;
 }
 
 export function InhaltView({ state, setState }: InhaltViewProps) {
+    const [showHistory, setShowHistory] = useState(false);
+  const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+  const [deviceId, setDeviceId] = useState<string>('');
+
+  const openHistory = async () => {
+    const db = await openAppDatabase();
+    const logs = await db.getAll('eventLog');
+    const dId = await db.get('appMeta', 'deviceId');
+    db.close();
+    logs.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+    setHistoryLogs(logs.slice(0, 100));
+    setDeviceId(dId);
+    setShowHistory(true);
+  };
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("Küche");
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -70,9 +88,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     const term = searchTerm.toLowerCase();
     
     const inventoryResults = state.inventory.filter((item: InventoryItem) => 
-        (item.name && item.name.toLowerCase().includes(term)) || 
+        !item.deletedAt &&
+        ((item.name && item.name.toLowerCase().includes(term)) || 
         (item.subcategory && item.subcategory.toLowerCase().includes(term)) ||
-        (item.category && item.category.toLowerCase().includes(term))
+        (item.category && item.category.toLowerCase().includes(term)))
     );
 
     const gearResults = (state.sos?.gear || [])
@@ -127,7 +146,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   }, [state.inventory, state.sos, searchTerm]);
 
   const filteredItems = state.inventory.filter((item: InventoryItem) => 
-    item.category === activeCategory
+    !item.deletedAt && item.category === activeCategory
   );
 
   const groupedBySub = useMemo(() => {
@@ -147,7 +166,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-end mb-4 px-2 no-print">
           <h1 className="typo-section-title">INHALT</h1>
-          <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
+          <div className="flex items-center gap-2">
+            <button onClick={openHistory} className="cg-master-button !py-1.5 !px-3"><History size={14}/></button>
+            <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
+          </div>
       </div>
 
       <div className="relative no-print mb-4">
@@ -221,7 +243,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                       <span className="typo-value-small ml-1">{formatUnit(item.unit)}</span>
                                   </div>
                                   <div className="flex justify-end items-center gap-3 no-print flex-shrink-0 w-16">
-                                      {!item.sourceType && (
+                                      {!(item as any).sourceType && (
                                           <>
                                               <button onClick={() => { setActiveCategory(item.category); setItemForm({ name: item.name, quantity: item.quantity.toString(), unit: formatUnit(item.unit), weight: item.weight !== undefined && item.weight !== null && !isNaN(item.weight) ? item.weight.toString() : '', weightUnit: formatUnit(item.weightUnit || 'kg'), subcategory: item.subcategory }); setEditingItem(item); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14} /></button>
                                               <button onClick={() => setDeletingItem(item)} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14} /></button>
@@ -309,8 +331,8 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <h2 className="typo-section-title mb-4">Neuer Artikel</h2>
                     <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
-                        const newItem = { 
-                            id: Date.now().toString(), 
+                        const newItemId = createUuid();
+                        const payload = { 
                             name: itemForm.name, 
                             quantity: parseFloat(itemForm.quantity) || 0, 
                             unit: itemForm.unit, 
@@ -319,8 +341,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
                             weightUnit: itemForm.weightUnit
                         };
-                        setState({...state, inventory: [...state.inventory, newItem]});
-                        setIsAddingItem(false);
+                        dispatchInventoryEvent(state, 'item_created', newItemId, payload).then(newState => {
+                            setState(newState);
+                            setIsAddingItem(false);
+                        });
                     }}>
                         <div className="space-y-3">
                             <input required value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} placeholder="Name" className="cg-master-input w-full" />
@@ -342,7 +366,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             </div>
                             <select required value={itemForm.subcategory} onChange={e => setItemForm({...itemForm, subcategory: e.target.value})} className="cg-master-input w-full">
                                 <option value="" disabled>Lagerort wählen...</option>
-                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: SpotEntry) => <option key={s} value={s}>{s}</option>)}
+                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: any) => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="flex gap-3 mt-6"><button type="button" onClick={() => setIsAddingItem(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button><button type="submit" className="cg-master-button flex-1 !p-3">Speichern</button></div>
@@ -359,18 +383,37 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <h2 className="typo-section-title mb-4">Artikel bearbeiten</h2>
                     <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
-                        const updatedItem = {
-                            ...editingItem,
+                        const updatePayload = {
                             name: itemForm.name, 
-                            quantity: parseFloat(itemForm.quantity) || 0, 
                             unit: itemForm.unit, 
                             subcategory: itemForm.subcategory,
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
                             weightUnit: itemForm.weightUnit
                         };
-                        const newInv = state.inventory.map((i: InventoryItem) => i.id === editingItem.id ? updatedItem : i);
-                        setState({...state, inventory: newInv});
-                        setEditingItem(null);
+                        const oldQuantity = editingItem.quantity || 0;
+                        const newQuantity = parseFloat(itemForm.quantity) || 0;
+                        const delta = newQuantity - oldQuantity;
+
+                        const hasFieldChanges = editingItem.name !== updatePayload.name || 
+                                                editingItem.unit !== updatePayload.unit || 
+                                                editingItem.subcategory !== updatePayload.subcategory || 
+                                                editingItem.weight !== updatePayload.weight || 
+                                                editingItem.weightUnit !== updatePayload.weightUnit;
+
+                        let promise = Promise.resolve(state);
+                        if (hasFieldChanges) {
+                            promise = promise.then(s => dispatchInventoryEvent(s, 'item_updated', editingItem.id, updatePayload, editingItem.version));
+                        }
+                        if (delta !== 0) {
+                            promise = promise.then(s => dispatchInventoryEvent(s, 'quantity_delta', editingItem.id, { delta }, editingItem.version));
+                        }
+                        promise.then(newState => {
+                            setState(newState);
+                            setEditingItem(null);
+                        }).catch(err => {
+                            console.error(err);
+                            alert('Fehler beim Speichern: ' + err.message);
+                        });
                     }}>
                         <div className="space-y-3">
                             <input required value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} placeholder="Name" className="cg-master-input w-full" />
@@ -392,7 +435,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             </div>
                             <select required value={itemForm.subcategory} onChange={e => setItemForm({...itemForm, subcategory: e.target.value})} className="cg-master-input w-full">
                                 <option value="" disabled>Lagerort wählen...</option>
-                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: SpotEntry) => <option key={s} value={s}>{s}</option>)}
+                                {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: any) => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="flex gap-3 mt-6">
@@ -414,9 +457,13 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <div className="flex gap-3 mt-6">
                         <button onClick={() => setDeletingItem(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
-                            const newInv = state.inventory.filter((i: InventoryItem) => i.id !== deletingItem.id);
-                            setState({...state, inventory: newInv});
-                            setDeletingItem(null);
+                            dispatchInventoryEvent(state, 'item_removed', deletingItem.id, undefined, deletingItem.version).then(newState => {
+                                setState(newState);
+                                setDeletingItem(null);
+                            }).catch(err => {
+                                console.error(err);
+                                alert('Fehler: ' + err.message);
+                            });
                         }} className="cg-master-button-danger flex-1 py-3">Löschen</button>
                     </div>
                 </div>
@@ -447,10 +494,24 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                         <button onClick={() => {
                             if(editingSub.new && editingSub.new !== editingSub.old) {
                                 const newSubs = Array.from(new Set((state.subcategories[activeCategory]||[]).map((s:string) => s === editingSub.old ? editingSub.new : s)));
-                                const newInv = state.inventory.map((i: InventoryItem) => i.category === activeCategory && i.subcategory === editingSub.old ? { ...i, subcategory: editingSub.new } : i);
-                                setState({...state, subcategories: {...state.subcategories, [activeCategory]: newSubs}, inventory: newInv});
+                                
+                                const itemsToUpdate = state.inventory.filter((i: InventoryItem) => i.category === activeCategory && i.subcategory === editingSub.old);
+                                
+                                let promise = Promise.resolve(state);
+                                for (const item of itemsToUpdate) {
+                                    promise = promise.then(s => dispatchInventoryEvent(s, 'item_updated', item.id, { subcategory: editingSub.new }, item.version));
+                                }
+                                
+                                promise.then(newState => {
+                                    setState({...newState, subcategories: {...newState.subcategories, [activeCategory]: newSubs}});
+                                    setEditingSub(null);
+                                }).catch(err => {
+                                    console.error(err);
+                                    alert('Fehler: ' + err.message);
+                                });
+                            } else {
+                                setEditingSub(null);
                             }
-                            setEditingSub(null);
                         }} className="cg-master-button flex-1 !p-3">Speichern</button>
                     </div>
                 </div>
@@ -468,9 +529,21 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                         <button onClick={() => setDeletingSub(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
                             const newSubs = (state.subcategories[activeCategory]||[]).filter((s:string) => s !== deletingSub);
-                            const newInv = state.inventory.filter((i: InventoryItem) => !(i.category === activeCategory && i.subcategory === deletingSub));
-                            setState({...state, subcategories: {...state.subcategories, [activeCategory]: newSubs}, inventory: newInv});
-                            setDeletingSub(null);
+                            
+                            const itemsToDelete = state.inventory.filter((i: InventoryItem) => i.category === activeCategory && i.subcategory === deletingSub);
+                            
+                            let promise = Promise.resolve(state);
+                            for (const item of itemsToDelete) {
+                                promise = promise.then(s => dispatchInventoryEvent(s, 'item_removed', item.id, undefined, item.version));
+                            }
+                            
+                            promise.then(newState => {
+                                setState({...newState, subcategories: {...newState.subcategories, [activeCategory]: newSubs}});
+                                setDeletingSub(null);
+                            }).catch(err => {
+                                console.error(err);
+                                alert('Fehler: ' + err.message);
+                            });
                         }} className="cg-master-button-danger flex-1 py-3">Löschen</button>
                     </div>
                 </div>
@@ -507,11 +580,21 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <div className="flex gap-3 mt-6">
                         <button onClick={() => setDeletingMainCategory(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
-                            const newSubs = { ...state.subcategories };
-                            delete newSubs[deletingMainCategory];
-                            setState({...state, subcategories: newSubs});
-                            setActiveCategory("Küche");
-                            setDeletingMainCategory(null);
+                            const itemsToDelete = state.inventory.filter((i: InventoryItem) => i.category === deletingMainCategory);
+                            let promise = Promise.resolve(state);
+                            for (const item of itemsToDelete) {
+                                promise = promise.then(s => dispatchInventoryEvent(s, 'item_removed', item.id, undefined, item.version));
+                            }
+                            promise.then(newState => {
+                                const newSubs = { ...newState.subcategories };
+                                delete newSubs[deletingMainCategory];
+                                setState({...newState, subcategories: newSubs});
+                                setActiveCategory("Küche");
+                                setDeletingMainCategory(null);
+                            }).catch(err => {
+                                console.error(err);
+                                alert('Fehler: ' + err.message);
+                            });
                         }} className="cg-master-button-danger flex-1 py-3">Löschen</button>
                     </div>
                 </div>
@@ -574,7 +657,44 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
             </motion.div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
+            <div className="cg-master-card-small w-full max-w-sm max-h-[80vh] flex flex-col">
+              <h2 className="typo-section-title mb-4">Änderungen</h2>
+              <div className="overflow-y-auto flex-1 space-y-2 mb-4 pr-1">
+                {historyLogs.length === 0 ? (
+                  <p className="typo-body">Noch keine Änderungen.</p>
+                ) : historyLogs.map((log) => {
+                  const e = log.event;
+                  const p = e?.payload;
+                  let text = '';
+                  if (e?.type === 'item_created') text = 'Angelegt: ' + (p?.name ?? '');
+                  else if (e?.type === 'item_updated') text = 'Geändert: ' + (p?.name ?? String(e.itemId).slice(0,8));
+                  else if (e?.type === 'quantity_delta') text = 'Menge ' + (p?.delta > 0 ? '+' : '') + p?.delta;
+                  else if (e?.type === 'item_removed') text = 'Entfernt';
+                  else if (e?.type === 'item_restored') text = 'Wiederhergestellt';
+                  else text = String(e?.type ?? 'Änderung');
+                  const wer = e?.deviceId && e.deviceId === deviceId ? 'Dieses Gerät' : 'Anderes Gerät';
+                  return (
+                    <div key={e?.eventId ?? Math.random()} className="cg-master-card-small !p-3">
+                      <div className="typo-card-title">{text}</div>
+                      <div className="typo-body-dim text-[var(--text-tertiary)]">
+                        {wer} · {new Date(log.recordedAt).toLocaleString('de-DE')}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-3 mt-auto shrink-0">
+                <button onClick={() => setShowHistory(false)} className="cg-master-button flex-1 !p-3">Schließen</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-

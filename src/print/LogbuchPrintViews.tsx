@@ -150,7 +150,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-left-pad2"><span className="cg-print-icon-sm">📝</span> Notiz</div>
                  </div>
                  <div>
-                     {printTripLog.map((t: TripEntry) => {
+                     {printTripLog.map((t: any) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          return (
                              <div key={t.id} className="reise-print-row cg-print-row">
@@ -204,7 +204,7 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                      <div className="cg-print-align-left">📌 Notiz / Route</div>
                  </div>
                  <div>
-                     {printBusinessTripLog.map((t: TripEntry) => {
+                     {printBusinessTripLog.map((t: any) => {
                          const strecke = (t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : null;
                          const addrParts = [t.street, t.houseNumber].filter(Boolean).join(' ');
                          const plzOrt = [t.zip, t.city].filter(Boolean).join(' ');
@@ -241,15 +241,15 @@ export function LogbuchPrintViews(props: LogbuchPrintViewsProps) {
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🚐</span> Gesamtstrecke</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.reduce((acc: number, t: any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">💼</span> Dienstlich</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category === 'Dienstlich').reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category === 'Dienstlich').reduce((acc: number, t: any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                          <div>
                              <div className="cg-print-summary-label"><span className="cg-print-icon-sm">🏠</span> Privat / Arbeitsweg</div>
-                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category !== 'Dienstlich').reduce((acc: number, t: TripEntry) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
+                             <div className="cg-print-summary-value">{Number(currentBusinessTripLog.filter((t: BusinessTripEntry) => t.category !== 'Dienstlich').reduce((acc: number, t: any) => acc + ((t.toKm != null && t.fromKm != null && !isNaN(t.toKm - t.fromKm)) ? t.toKm - t.fromKm : 0), 0)).toLocaleString('de-DE')} km</div>
                          </div>
                      </div>
                  </div>

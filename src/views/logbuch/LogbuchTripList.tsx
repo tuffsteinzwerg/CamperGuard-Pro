@@ -38,7 +38,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
 
         {tripLogMode === 'flex' && (
             <div className="space-y-3">
-                {currentTripLog.slice(0, displayedTripsCount).map((entry: FuelEntry) => (
+                {currentTripLog.slice(0, displayedTripsCount).map((entry: any) => (
                     <div key={entry.id} className="cg-master-card-small !p-3">
                         <div className="flex justify-between items-start gap-3">
                             <div className="space-y-1">
@@ -47,7 +47,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
                                 {entry.fromKm != null && entry.toKm != null && <div className="typo-body-dim text-xs text-[var(--accent)]">{formatNumber(entry.toKm - entry.fromKm, 0)} km</div>}
                                 {entry.note && <div className="typo-body-dim italic text-xs">{entry.note}</div>}
                             </div>
-                            <button onClick={() => { setTripForm(entry); setEditingTripId(entry.id); setIsAdding(true); }} className="p-2 text-[var(--text-muted)] hover:text-[var(--accent)]"><Edit2 size={16}/></button>
+                            <button onClick={() => { setTripForm({...entry, fromKm: String(entry.toKm ?? '')}); setEditingTripId(entry.id); setIsAdding(true); }} className="p-2 text-[var(--text-muted)] hover:text-[var(--accent)]"><Edit2 size={16}/></button>
                         </div>
                     </div>
                 ))}
@@ -63,7 +63,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
                 <div className="cg-master-card-small !mb-0 !p-3 border border-orange-500/20 bg-orange-500/5">
                     <div className="typo-body-dim text-orange-400">Das Fahrtenbuch dient dem Nachweis geschäftlicher Fahrten gegenüber dem Finanzamt. Bitte wenden Sie sich zur rechtlichen Prüfung an Ihren Steuerberater.</div>
                 </div>
-                {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry: FuelEntry) => (
+                {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry: any) => (
                     <div key={entry.id} className="cg-master-card-small !p-3">
                         <div className="flex justify-between items-start gap-3">
                             <div className="space-y-1">

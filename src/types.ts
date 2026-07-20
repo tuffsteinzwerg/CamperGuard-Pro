@@ -15,6 +15,86 @@ export interface InventoryItem {
   subcategory: string;
   weight?: number;
   weightUnit?: 'kg' | 'g' | 'gr';
+  deletedAt?: string;
+}
+
+export interface SyncableInventoryItem extends InventoryItem {
+  version: number;
+  deletedAt?: string;
+}
+
+export interface InventoryEventBase {
+  eventId: string;
+  vehicleId: string;
+  itemId: string;
+  actorId: string;
+  deviceId: string;
+  clientCreatedAt: string;
+  schemaVersion: 1;
+  baseItemVersion?: number;
+}
+
+export type ItemCreatedEvent = InventoryEventBase & {
+  type: 'item_created';
+  payload: Omit<InventoryItem, 'id' | 'version' | 'deletedAt'>;
+};
+
+export type ItemUpdatedEvent = InventoryEventBase & {
+  type: 'item_updated';
+  payload: Partial<Omit<InventoryItem, 'id' | 'quantity' | 'version' | 'deletedAt'>>;
+};
+
+export type QuantityDeltaEvent = InventoryEventBase & {
+  type: 'quantity_delta';
+  payload: {
+    delta: number;
+  };
+};
+
+export type ItemRemovedEvent = InventoryEventBase & {
+  type: 'item_removed';
+};
+
+export type ItemRestoredEvent = InventoryEventBase & {
+  type: 'item_restored';
+};
+
+export type InventoryEvent =
+  | ItemCreatedEvent
+  | ItemUpdatedEvent
+  | QuantityDeltaEvent
+  | ItemRemovedEvent
+  | ItemRestoredEvent;
+
+export interface InventoryEventRecord {
+  event: InventoryEvent;
+  source: "local" | "remote";
+  recordedAt: string;
+}
+
+export interface OutboxEntry {
+  event: InventoryEvent;
+  status: "pending" | "uploading" | "failed";
+  retryCount: number;
+  nextRetryAt?: string;
+  lastError?: string;
+  leaseExpiresAt?: string;
+}
+
+export interface AppliedEventRecord {
+  eventId: string;
+  appliedAt: string;
+}
+
+export interface LocalSyncState {
+  providerId: string;
+  remoteCursor?: string;
+  lastSuccessfulSyncAt?: string;
+  lastAttemptAt?: string;
+  initializationState:
+    | "disabled"
+    | "ready"
+    | "requires_initialization";
 }
 
 export type FuelType = 'Diesel' | 'Benzin' | 'Super E10' | 'Super E5';
@@ -28,7 +108,7 @@ export interface FuelEntry {
   price: number; // original price in currency
   vollgetankt: boolean;
   currency: Currency;
-  exchangeRateToEur: number; // multiplier to get EUR
+  exchangeRateToEur: number; // Fremdwaehrungseinheiten pro 1 EUR -- Betrag wird durch diesen Wert GETEILT, um EUR zu erhalten
   fuelType: FuelType;
   total?: number | string;
 }
@@ -192,8 +272,12 @@ export interface ProfileData {
 }
 
 export interface AppState {
+  inventoryRevision?: number;
+  vehicleId?: string;
+  idMigrationVersion?: number;
+  syncModelVersion?: number;
   profile: ProfileData;
-  inventory: InventoryItem[];
+  inventory: SyncableInventoryItem[];
   subcategories: Record<string, string[]>;
   fuelLog: FuelEntry[];
   tripLog: TripEntry[];
@@ -215,6 +299,9 @@ const DEFAULT_TIRES: TirePressures = {
 };
 
 export const INITIAL_STATE: AppState = {
+  vehicleId: '',
+  idMigrationVersion: 2,
+  syncModelVersion: 1,
   profile: {
     vehicleName: "",
     plate: "",

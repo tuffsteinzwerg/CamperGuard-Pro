@@ -39,7 +39,7 @@ export function OnboardingOverlay({ onNavigate, state }: OnboardingOverlayProps)
 
         {/* Logo */}
         <img
-          src="/CGP2DLogo.png"
+          src="/g4c-emblem-rund-tp.png"
           alt="Guard4Campers"
           className="w-[160px] h-[160px] object-contain mb-4"
         />
