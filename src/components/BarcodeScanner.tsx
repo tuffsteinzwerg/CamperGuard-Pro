@@ -9,22 +9,26 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const onDetectedRef = useRef(onDetected);
   const [error, setError] = useState<string | null>(null);
 
+  // Callback immer aktuell halten, OHNE den Kamera-Effekt neu zu starten
+  useEffect(() => { onDetectedRef.current = onDetected; }, [onDetected]);
+
   useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
     const reader = new BrowserMultiFormatReader();
     let controls: any = null;
     let done = false;
-
-    const video = videoRef.current;
-    if (!video) return;
 
     reader
       .decodeFromVideoDevice(undefined, video, (result: any) => {
         if (result && !done) {
           done = true;
           try { if (controls) controls.stop(); } catch { /* egal */ }
-          onDetected(result.getText());
+          onDetectedRef.current(result.getText());
         }
       })
       .then((c: any) => {
@@ -39,7 +43,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       done = true;
       try { if (controls) controls.stop(); } catch { /* egal */ }
     };
-  }, [onDetected]);
+  }, []); // nur EINMAL starten -> kein Flackern durch Neustarts
 
   return (
     <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center p-4">
