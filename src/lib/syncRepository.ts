@@ -1,7 +1,9 @@
 import { openDB } from 'idb';
 import { openAppDatabase } from './appDatabase';
+import { normalizeAppState } from './normalizeState';
 import { AppState, InventoryEvent, SyncableInventoryItem } from '../types';
 import { reduceInventoryEvent } from './inventoryReducer';
+import { isStructureEvent, reduceStructureEvent } from './structureReducer';
 
 const DB_NAME = 'Guard4CampersDB_V1';
 
@@ -29,6 +31,23 @@ export async function processInventoryEvent(event: InventoryEvent): Promise<AppS
         const state: AppState = await storeTx.get('state');
         if (!state) {
           throw new Error("No state found in DB");
+        }
+
+        if (isStructureEvent(event)) {
+          const structResult = reduceStructureEvent(state.subcategories, event);
+          if (structResult.status !== 'applied') {
+            throw new Error('Event application failed: ' + structResult.reason);
+          }
+          state.subcategories = structResult.subcategories;
+          state.inventoryRevision = (state.inventoryRevision || 0) + 1;
+          await storeTx.put(state, 'state');
+          await eventLogTx.put({ event, source: 'local', recordedAt: new Date().toISOString() });
+          await outboxTx.put({ event, status: 'pending', retryCount: 0 });
+          await appliedEventsTx.put({ eventId: event.eventId, appliedAt: new Date().toISOString() });
+          await tx.done;
+          db.close();
+          resolve(state);
+          return;
         }
 
         const inventory = state.inventory || [];
@@ -139,6 +158,7 @@ export async function importState(backupData: AppState): Promise<AppState> {
   return new Promise((resolve, reject) => {
     writeQueue = writeQueue.then(async () => {
       try {
+        backupData = normalizeAppState(backupData);
         const db = await openAppDatabase();
         
         // Preserve deviceId and actorId
@@ -188,17 +208,18 @@ export async function importState(backupData: AppState): Promise<AppState> {
              backupData.syncModelVersion = 1;
         }
 
-        // Reset sync state
-        await db.put('appMeta', {
-           providerId: 'google_drive',
-           initializationState: 'requires_initialization'
-        }, 'syncState');
-
-        // Clear event queues
-        const tx = db.transaction(['store', 'eventLog', 'outbox', 'appliedEvents'], 'readwrite');
+        // Ereignis-Warteschlangen UND Sync-Buchhaltung zuruecksetzen.
+        // Wichtig: syncState ist ein EIGENER Store (nicht appMeta).
+        const tx = db.transaction(
+          ['store', 'eventLog', 'outbox', 'appliedEvents', 'syncState', 'deferredEvents', 'syncConflicts'],
+          'readwrite'
+        );
         await tx.objectStore('eventLog').clear();
         await tx.objectStore('outbox').clear();
         await tx.objectStore('appliedEvents').clear();
+        await tx.objectStore('syncState').clear();
+        await tx.objectStore('deferredEvents').clear();
+        await tx.objectStore('syncConflicts').clear();
         
         backupData.inventoryRevision = (backupData.inventoryRevision || 0) + 1;
         await tx.objectStore('store').put(backupData, 'state');

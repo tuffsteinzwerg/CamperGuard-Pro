@@ -1,16 +1,22 @@
+import { APP_VERSION } from '../version';
 import React, { useState, useEffect } from 'react';
 import { importState } from '../lib/syncRepository';
+import { stopSync } from '../lib/syncRuntime';
 import type { AppState, MaintenanceItem } from '../types';
-import { Search, Droplet, Fuel, Download, Upload, AlertTriangle, Cloud, CloudOff, RefreshCw, LogOut } from 'lucide-react';
+import { Search, Droplet, Fuel, Download, Upload, AlertTriangle, Cloud, CloudOff, RefreshCw, LogOut, ChevronDown, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import type { TireProfile } from '../types';
 import { getInitialAuthState, signIn, signOut, type GoogleAuthState } from '../lib/googleAuth';
 import { uploadState } from '../lib/syncService';
+import { listSnapshots } from '../lib/snapshots';
+import type { SnapshotRecord } from '../lib/snapshots';
+import { getLastBackupAt, markBackupDone, daysSince } from '../lib/backupStatus';
+import { fetchJoinCode, requestJoin, getJoinStatus, getPendingRequestId, setPendingRequestId } from '../lib/groupClient';
 
 const faqData = [
   {q: "Warum Medikationsdaten?", a: "Im Notfall zählen Sekunden. Rettungskräfte sehen sofort lebenswichtige Infos im Safety Hub."},
-  {q: "Wo werden meine Daten gespeichert?", a: "Alle Daten bleiben lokal auf deinem Gerät (IndexedDB). Optional kannst du sie per Google Drive synchronisieren."},
+  {q: "Wo werden meine Daten gespeichert?", a: "Alle Daten bleiben lokal auf deinem Gerät. Optional kannst du zusätzlich eine Sicherungskopie in deiner eigenen Google Drive ablegen."},
   {q: "Was ist der ICE 2 Kontakt?", a: "Ein zweiter Notfallkontakt für den Fall, dass die primäre Kontaktperson nicht erreichbar ist."},
   {q: "Wofür dienen die Fahrzeugdaten?", a: "Sie helfen bei der Berechnung von Verbräuchen und erinnern an wichtige Service-Intervalle."},
   {q: "Was bedeuten Heading und Elevation?", a: "Heading zeigt deine Kompassrichtung, Elevation deine aktuelle Höhe über dem Meeresspiegel."},
@@ -42,11 +48,29 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
+  const [showRestorePanel, setShowRestorePanel] = useState(false);
+  const [snapshots, setSnapshots] = useState<SnapshotRecord[]>([]);
+  const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [joinInput, setJoinInput] = useState('');
+  const [joinStatus, setJoinStatus] = useState<string | null>(null);
+  const [pendingRequestId, setPendingRequestIdState] = useState<string | null>(null);
 
   // Google Drive Sync State
   const [authState, setAuthState] = useState<GoogleAuthState>(getInitialAuthState);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [syncMessage, setSyncMessage] = useState<string>('');
+
+  useEffect(() => { getLastBackupAt().then(setLastBackupAt); }, []);
+  useEffect(() => {
+    getPendingRequestId().then((id) => {
+      setPendingRequestIdState(id);
+      if (id) getJoinStatus(id).then((r) => setJoinStatus(r.status)).catch(() => {});
+    });
+  }, []);
 
   const handleGoogleSignIn = () => {
     signIn((newState) => {
@@ -68,11 +92,13 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
   const handleManualSync = async () => {
     setSyncStatus('syncing');
-    setSyncMessage('Synchronisiere...');
+    setSyncMessage('Sichere...');
     const result = await uploadState(state);
     if (result.success) {
       setSyncStatus('success');
-      setSyncMessage('Synchronisiert um ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
+      markBackupDone();
+      setLastBackupAt(new Date().toISOString());
+      setSyncMessage('Gesichert um ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }));
       setTimeout(() => setSyncStatus('idle'), 3000);
     } else {
       setSyncStatus('error');
@@ -93,30 +119,110 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
     return () => clearInterval(interval);
   }, [authState.expiresAt]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
       const exportPayload = {
         _meta: {
           app: 'Guard4Campers',
-          version: '0.2.1-dev',
+          version: APP_VERSION,
           exportDate: new Date().toISOString(),
           format: 1
         },
         data: state
       };
-      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `guard4campers-backup.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const json = JSON.stringify(exportPayload, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const fileName = 'guard4campers-backup.json';
+      const nav: any = navigator;
+
+      let shared = false;
+      try {
+        const file = new File([blob], fileName, { type: 'application/json' });
+        if (nav.canShare && nav.canShare({ files: [file] }) && nav.share) {
+          await nav.share({ files: [file], title: 'Guard4Campers Sicherung' });
+          shared = true;
+        }
+      } catch (err: any) {
+        if (err && err.name === 'AbortError') return; // Nutzer hat abgebrochen
+        shared = false;
+      }
+
+      if (!shared) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      await markBackupDone();
+      setLastBackupAt(new Date().toISOString());
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (e) {
       console.error('Export failed:', e);
+    }
+  };
+
+
+    const toggleSharePanel = async () => {
+    const next = !showSharePanel;
+    setShowSharePanel(next);
+    if (next && !joinCode && state.vehicleId) {
+      setShareBusy(true);
+      setShareError(null);
+      try {
+        const code = await fetchJoinCode(state.vehicleId);
+        setJoinCode(code);
+      } catch (e: any) {
+        setShareError(e && e.message ? e.message : 'Code konnte nicht geladen werden');
+      } finally {
+        setShareBusy(false);
+      }
+    }
+  };
+
+  const handleJoinRequest = async () => {
+    const code = joinInput.trim().toUpperCase();
+    if (!code) return;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      const result = await requestJoin(code, 'Handy');
+      setJoinStatus(result.status);
+      if (result.requestId) setPendingRequestIdState(result.requestId);
+      setJoinInput('');
+    } catch (e: any) {
+      setShareError(e && e.message ? e.message : 'Beitritt fehlgeschlagen');
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    await setPendingRequestId(null);
+    setPendingRequestIdState(null);
+    setJoinStatus(null);
+  };
+
+  const toggleRestorePanel = () => {
+    const next = !showRestorePanel;
+    setShowRestorePanel(next);
+    if (next) listSnapshots().then(setSnapshots).catch(() => setSnapshots([]));
+  };
+
+  const restoreSnapshot = (s: SnapshotRecord) => {
+    try {
+      const data = JSON.parse(s.json);
+      setImportError(null);
+      setImportData({ _meta: { app: 'Guard4Campers', exportDate: s.createdAt, source: 'snapshot' }, data });
+      setShowRestorePanel(false);
+      setShowImportConfirm(true);
+    } catch {
+      setImportError('Rückkehrpunkt konnte nicht gelesen werden.');
     }
   };
 
@@ -156,7 +262,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
   const confirmImport = () => {
     if (!importData?.data) return;
-    
+    stopSync();
     importState(importData.data).then(newState => {
         setState(newState);
         setShowImportConfirm(false);
@@ -204,6 +310,14 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
       return [s, "", ""];
   };
   const [p1, p2, p3] = parsePlate(state.profile.plate);
+
+  const backupDays = daysSince(lastBackupAt);
+  const backupWarn = backupDays === null || backupDays > 30;
+  const backupLabel =
+    backupDays === null ? 'Noch nie ausserhalb des Geräts gesichert'
+    : backupDays === 0 ? 'Zuletzt gesichert: heute'
+    : backupDays === 1 ? 'Zuletzt gesichert: vor 1 Tag'
+    : `Zuletzt gesichert: vor ${backupDays} Tagen`;
 
   return (
     <div className="space-y-6 pb-12">
@@ -551,11 +665,11 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
       {/* --- CLOUD SYNC --- */}
       <div className="cg-master-card p-4 mt-6">
-          <h2 className="typo-section-title mb-4">Cloud-Synchronisation</h2>
+          <h2 className="typo-section-title mb-4">Cloud</h2>
           <div className="space-y-3">
               {!authState.isSignedIn ? (
                   <>
-                      <p className="typo-body-dim">Verbinde dein Google-Konto, um Daten automatisch zu synchronisieren und mit anderen zu teilen.</p>
+                      <p className="typo-body-dim">Verbinde dein Google-Konto, um zusätzlich eine Sicherungskopie in deiner eigenen Google Drive abzulegen. Geteilt wird damit nichts.</p>
                       <button onClick={handleGoogleSignIn} className="cg-master-button w-full flex items-center justify-center gap-2 py-3">
                           <Cloud size={16} />
                           <span className="typo-label">Mit Google verbinden</span>
@@ -585,7 +699,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                           className="cg-master-button w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50"
                       >
                           <RefreshCw size={16} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
-                          <span className="typo-label">{syncStatus === 'syncing' ? 'Synchronisiere...' : 'Jetzt synchronisieren'}</span>
+                          <span className="typo-label">{syncStatus === 'syncing' ? 'Sichere...' : 'Jetzt sichern'}</span>
                       </button>
 
                       {syncMessage && (
@@ -600,6 +714,71 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                   </>
               )}
           </div>
+
+          <div className="mt-4 pt-4 border-t border-[var(--border)]">
+            <button onClick={toggleSharePanel} className="cg-master-button w-full flex items-center justify-center gap-2 py-3">
+              <Users size={16} />
+              <span className="typo-label">Fahrzeug teilen</span>
+              <ChevronDown size={14} className={`transition-transform ${showSharePanel ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+              {showSharePanel && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-3 pt-3">
+
+                    <div className="cg-master-inset p-3 space-y-2">
+                      <div className="typo-label text-[var(--text-muted)]">Dein Fahrzeug-Code</div>
+                      {shareBusy && !joinCode ? (
+                        <div className="typo-body-dim">Wird geladen…</div>
+                      ) : joinCode ? (
+                        <div className="typo-value-normal tracking-widest">{joinCode}</div>
+                      ) : (
+                        <div className="typo-body-dim">Noch kein Code</div>
+                      )}
+                      <div className="typo-body-dim">Gib diesen Code an Mitfahrer weiter. Sie sehen danach denselben Fahrzeug-Inhalt.</div>
+                    </div>
+
+                    <div className="cg-master-inset p-3 space-y-2">
+                      <div className="typo-label text-[var(--text-muted)]">Einem Fahrzeug beitreten</div>
+                      {pendingRequestId && joinStatus === 'pending' ? (
+                        <>
+                          <div className="typo-body">Anfrage läuft – warte auf Freigabe durch das Hauptgerät.</div>
+                          <button onClick={handleCancelRequest} className="cg-master-button w-full !py-2">Anfrage verwerfen</button>
+                        </>
+                      ) : joinStatus === 'rejected' ? (
+                        <>
+                          <div className="typo-body text-[var(--status-danger)]">Die Anfrage wurde abgelehnt.</div>
+                          <button onClick={handleCancelRequest} className="cg-master-button w-full !py-2">Neu versuchen</button>
+                        </>
+                      ) : joinStatus === 'approved' ? (
+                        <div className="typo-body text-[var(--status-success)]">Freigegeben ✓</div>
+                      ) : (
+                        <>
+                          <input
+                            value={joinInput}
+                            onChange={(e) => setJoinInput(e.target.value)}
+                            placeholder="Code eingeben (z. B. ABCD-1234)"
+                            className="cg-master-input w-full tracking-widest"
+                          />
+                          <button onClick={handleJoinRequest} disabled={shareBusy} className="cg-master-button w-full !py-2 disabled:opacity-50">
+                            {shareBusy ? 'Sende…' : 'Beitritt anfragen'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {shareError && <div className="typo-body text-[var(--status-danger)] text-center">{shareError}</div>}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
       </div>
 
       {/* --- BACKUP / EXPORT --- */}
@@ -612,11 +791,56 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
               </button>
               {exportSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Export erfolgreich</div>}
 
-              <label className="cg-master-button w-full flex items-center justify-center gap-2 py-3 cursor-pointer">
+              <div className={`text-center typo-body pt-1 ${backupWarn ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
+                {backupLabel}
+                {backupWarn && <div className="typo-body-dim">Sichere die Datei ausserhalb des Handys – sonst ist bei Verlust alles weg.</div>}
+              </div>
+
+              <button onClick={toggleRestorePanel} className="cg-master-button w-full flex items-center justify-center gap-2 py-3">
                   <Upload size={16} />
                   <span className="typo-label">Daten importieren</span>
-                  <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
-              </label>
+                  <ChevronDown size={14} className={`transition-transform ${showRestorePanel ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showRestorePanel && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-2 pt-2">
+                      <label className="cg-master-card-small !p-3 flex items-center gap-2 cursor-pointer">
+                        <Upload size={14} />
+                        <span className="typo-body">Aus Datei wählen…</span>
+                        <input type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+                      </label>
+
+                      <div className="typo-label text-[var(--text-muted)] pt-2">Automatische Rückkehrpunkte</div>
+
+                      {snapshots.length === 0 ? (
+                        <p className="typo-body-dim">Noch keine Rückkehrpunkte vorhanden.</p>
+                      ) : (
+                        snapshots.map((s) => (
+                          <button
+                            key={s.id}
+                            onClick={() => restoreSnapshot(s)}
+                            className="cg-master-card-small !p-3 w-full text-left"
+                          >
+                            <div className="typo-card-title">
+                              {new Date(s.createdAt).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div className="typo-body-dim text-[var(--text-tertiary)]">
+                              {s.kind === 'weekly' ? 'Wochen-Punkt' : 'Tages-Punkt'} · {Math.round((s.size || 0) / 1024)} KB
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               {importError && <div className="text-center typo-body text-[var(--status-danger)] py-1">{importError}</div>}
               {importSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Import erfolgreich — Daten wiederhergestellt</div>}
           </div>
@@ -634,10 +858,14 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                      <p className="typo-body-dim">Alle aktuellen Daten werden durch das Backup ersetzt. Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
                      {importData?._meta && (
                          <div className="cg-master-inset p-3 space-y-1">
-                             <div className="typo-label text-[var(--text-muted)]">Backup vom</div>
+                             <div className="typo-label text-[var(--text-muted)]">{importData._meta.source === 'snapshot' ? 'Rückkehrpunkt vom' : 'Backup vom'}</div>
                              <div className="typo-value-normal">{new Date(importData._meta.exportDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-                             <div className="typo-label text-[var(--text-muted)] mt-2">App-Version</div>
-                             <div className="typo-value-normal">{importData._meta.version}</div>
+                             {importData._meta.version && (
+                               <>
+                                 <div className="typo-label text-[var(--text-muted)] mt-2">App-Version</div>
+                                 <div className="typo-value-normal">{importData._meta.version}</div>
+                               </>
+                             )}
                          </div>
                      )}
                      <div className="flex gap-3">

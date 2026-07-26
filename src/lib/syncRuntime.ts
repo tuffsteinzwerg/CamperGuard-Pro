@@ -1,11 +1,10 @@
-import { InMemoryLoopbackBackend, LoopbackSyncProvider } from './loopbackProvider';
+import { CloudflareSyncProvider } from './cloudflareProvider';
 import { IDBSyncStateRepository } from './syncRepositories';
 import { SyncCoordinator } from './syncCoordinator';
 import type { SyncStatus } from './syncCoordinator';
 import { openAppDatabase } from './appDatabase';
 
-const backend = new InMemoryLoopbackBackend();
-const provider = new LoopbackSyncProvider(backend);
+const provider = new CloudflareSyncProvider();
 const stateRepository = new IDBSyncStateRepository();
 
 export const syncCoordinator = new SyncCoordinator(provider, stateRepository);
@@ -25,8 +24,8 @@ export async function startSync(): Promise<void> {
     if (!vehicleId) { started = false; return; }
 
     const init = await provider.initializeRemoteStore({ vehicleId });
-    await stateRepository.update('loopback', (current) => ({
-      providerId: 'loopback',
+    await stateRepository.update(provider.providerId, (current) => ({
+      providerId: provider.providerId,
       remoteCursor: current?.remoteCursor ?? init.initialCursor,
       lastSuccessfulSyncAt: current?.lastSuccessfulSyncAt,
       lastAttemptAt: current?.lastAttemptAt,
@@ -35,7 +34,10 @@ export async function startSync(): Promise<void> {
 
     await syncCoordinator.runSync();
     if (!timer) {
-      timer = setInterval(() => { syncCoordinator.runSync().catch(() => {}); }, 8000);
+      timer = setInterval(() => {
+        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+        syncCoordinator.runSync().catch(() => {});
+      }, 8000);
     }
   } catch {
     started = false;
@@ -53,4 +55,9 @@ export async function countPendingOutbox(): Promise<number> {
     db.close();
     return n;
   } catch { return 0; }
+}
+
+export function stopSync(): void {
+  if (timer) { clearInterval(timer); timer = null; }
+  started = false;
 }

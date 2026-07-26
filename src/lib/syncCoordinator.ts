@@ -8,6 +8,7 @@ export interface DatabaseProvider {
 import { SyncProvider, SyncStateRepository } from './syncTypes';
 import { OutboxEntry, LocalSyncState, AppState } from '../types';
 import { reduceInventoryEvent } from './inventoryReducer';
+import { isStructureEvent, reduceStructureEvent } from './structureReducer';
 import { runSerializedAppWrite } from './syncRepository';
 
 export type SyncStatus = 
@@ -171,7 +172,25 @@ export class SyncCoordinator {
           }
 
           result.selectedCount++;
-          
+
+          if (isStructureEvent(entry.event)) {
+            const structResult = reduceStructureEvent(localState.subcategories, entry.event);
+            if (structResult.status === 'applied') {
+              localState.subcategories = structResult.subcategories;
+              stateChanged = true;
+              await tx.objectStore('eventLog').put({ event: entry.event, source: 'remote', recordedAt: this.clock.nowIso() });
+              await tx.objectStore('appliedEvents').put({ eventId: entry.event.eventId, appliedAt: this.clock.nowIso() });
+              await tx.objectStore('deferredEvents').delete(entry.event.eventId);
+              result.appliedCount++;
+            } else {
+              entry.status = 'permanent_failure';
+              entry.reason = structResult.reason;
+              await tx.objectStore('deferredEvents').put(entry);
+              result.permanentFailureCount++;
+            }
+            continue;
+          }
+
           const itemIndex = inventory.findIndex((i) => i.id === entry.event.itemId);
           const currentItem = itemIndex >= 0 ? inventory[itemIndex] : undefined;
           
@@ -578,6 +597,18 @@ export class SyncCoordinator {
                   continue;
                 }
 
+                if (isStructureEvent(remoteEvent.event)) {
+                  const structResult = reduceStructureEvent(localState.subcategories, remoteEvent.event);
+                  if (structResult.status === 'applied') {
+                    localState.subcategories = structResult.subcategories;
+                    localState.inventoryRevision = (localState.inventoryRevision || 0) + 1;
+                    await tx.objectStore('eventLog').put({ event: remoteEvent.event, source: 'remote', recordedAt: this.clock.nowIso() });
+                    await tx.objectStore('appliedEvents').put({ eventId: remoteEvent.event.eventId, appliedAt: this.clock.nowIso() });
+                    pageAppliedCount++;
+                  }
+                  continue;
+                }
+                
                 const inventory = localState.inventory || [];
                 const itemIndex = inventory.findIndex(i => i.id === remoteEvent.event.itemId);
                 const currentItem = itemIndex >= 0 ? inventory[itemIndex] : undefined;

@@ -85,13 +85,9 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     [newSubs[index], newSubs[targetIndex]] = [newSubs[targetIndex], newSubs[index]];
 
-    setState({
-      ...state,
-      subcategories: {
-        ...state.subcategories,
-        [activeCategory]: newSubs
-      }
-    });
+    dispatchInventoryEvent(state, 'subcategory_reordered', 'struct:' + activeCategory, { category: activeCategory, order: newSubs })
+      .then(setState)
+      .catch(err => { console.error(err); alert('Fehler: ' + err.message); });
   };
 
   const fixedCategories = ["Küche", "Wohnen", "Bad", "Garage", "Technik"];
@@ -302,7 +298,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                       }
                                       return acc;
                                   }, 0);
-                                  return formatWeight(totalKg);
+                                  return totalKg > 0 ? formatWeight(totalKg) : '0 kg';
                               })()}
                           </span>
                       </div>
@@ -501,7 +497,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                 <div className="cg-master-card-small w-full max-w-sm">
                     <h2 className="typo-section-title mb-4">Neuer Lagerort</h2>
                     <input value={newSubName} onChange={e => setNewSubName(e.target.value)} placeholder="Name" className="cg-master-input w-full" />
-                    <div className="flex gap-3 mt-6"><button onClick={() => setIsAddingSub(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button><button onClick={() => { if(newSubName){ setState({...state, subcategories: {...state.subcategories, [activeCategory]: Array.from(new Set([...(state.subcategories[activeCategory]||[]), newSubName]))}}); setNewSubName(""); setIsAddingSub(false); } }} className="cg-master-button flex-1 !p-3">Speichern</button></div>
+                    <div className="flex gap-3 mt-6"><button onClick={() => setIsAddingSub(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button><button onClick={() => { if(newSubName){ dispatchInventoryEvent(state, 'subcategory_added', 'struct:' + activeCategory, { category: activeCategory, name: newSubName }).then(newState => { setState(newState); setNewSubName(""); setIsAddingSub(false); }).catch(err => { console.error(err); alert('Fehler: ' + err.message); }); } }} className="cg-master-button flex-1 !p-3">Speichern</button></div>
                 </div>
             </motion.div>
         )}
@@ -517,17 +513,16 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                         <button onClick={() => setEditingSub(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
                             if(editingSub.new && editingSub.new !== editingSub.old) {
-                                const newSubs = Array.from(new Set((state.subcategories[activeCategory]||[]).map((s:string) => s === editingSub.old ? editingSub.new : s)));
-                                
                                 const itemsToUpdate = state.inventory.filter((i: InventoryItem) => i.category === activeCategory && i.subcategory === editingSub.old);
-                                
+
                                 let promise = Promise.resolve(state);
                                 for (const item of itemsToUpdate) {
                                     promise = promise.then(s => dispatchInventoryEvent(s, 'item_updated', item.id, { subcategory: editingSub.new }, item.version));
                                 }
-                                
+                                promise = promise.then(s => dispatchInventoryEvent(s, 'subcategory_renamed', 'struct:' + activeCategory, { category: activeCategory, from: editingSub.old, to: editingSub.new }));
+
                                 promise.then(newState => {
-                                    setState({...newState, subcategories: {...newState.subcategories, [activeCategory]: newSubs}});
+                                    setState(newState);
                                     setEditingSub(null);
                                 }).catch(err => {
                                     console.error(err);
@@ -552,17 +547,16 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <div className="flex gap-3 mt-6">
                         <button onClick={() => setDeletingSub(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                         <button onClick={() => {
-                            const newSubs = (state.subcategories[activeCategory]||[]).filter((s:string) => s !== deletingSub);
-                            
                             const itemsToDelete = state.inventory.filter((i: InventoryItem) => i.category === activeCategory && i.subcategory === deletingSub);
-                            
+
                             let promise = Promise.resolve(state);
                             for (const item of itemsToDelete) {
                                 promise = promise.then(s => dispatchInventoryEvent(s, 'item_removed', item.id, undefined, item.version));
                             }
-                            
+                            promise = promise.then(s => dispatchInventoryEvent(s, 'subcategory_removed', 'struct:' + activeCategory, { category: activeCategory, name: deletingSub }));
+
                             promise.then(newState => {
-                                setState({...newState, subcategories: {...newState.subcategories, [activeCategory]: newSubs}});
+                                setState(newState);
                                 setDeletingSub(null);
                             }).catch(err => {
                                 console.error(err);
@@ -584,10 +578,15 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <div className="flex gap-3 mt-6"><button onClick={() => setIsAddingMainCategory(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button>
                     <button onClick={() => { 
                         if(newMainCategoryName && !categories.includes(newMainCategoryName)){ 
-                            setState({...state, subcategories: {...state.subcategories, [newMainCategoryName]: []}}); 
-                            setActiveCategory(newMainCategoryName);
-                            setNewMainCategoryName(""); 
-                            setIsAddingMainCategory(false); 
+                            const neuerBereich = newMainCategoryName;
+                            dispatchInventoryEvent(state, 'category_added', 'struct:' + neuerBereich, { category: neuerBereich })
+                              .then(newState => {
+                                setState(newState);
+                                setActiveCategory(neuerBereich);
+                                setNewMainCategoryName(""); 
+                                setIsAddingMainCategory(false); 
+                              })
+                              .catch(err => { console.error(err); alert('Fehler: ' + err.message); });
                         } 
                     }} className="cg-master-button flex-1 !p-3">Speichern</button></div>
                 </div>
@@ -609,10 +608,9 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             for (const item of itemsToDelete) {
                                 promise = promise.then(s => dispatchInventoryEvent(s, 'item_removed', item.id, undefined, item.version));
                             }
+                            promise = promise.then(s => dispatchInventoryEvent(s, 'category_removed', 'struct:' + deletingMainCategory, { category: deletingMainCategory }));
                             promise.then(newState => {
-                                const newSubs = { ...newState.subcategories };
-                                delete newSubs[deletingMainCategory];
-                                setState({...newState, subcategories: newSubs});
+                                setState(newState);
                                 setActiveCategory("Küche");
                                 setDeletingMainCategory(null);
                             }).catch(err => {

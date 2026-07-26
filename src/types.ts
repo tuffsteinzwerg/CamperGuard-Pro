@@ -59,12 +59,48 @@ export type ItemRestoredEvent = InventoryEventBase & {
   type: 'item_restored';
 };
 
+export type SubcategoryAddedEvent = InventoryEventBase & {
+  type: 'subcategory_added';
+  payload: { category: string; name: string };
+};
+
+export type SubcategoryRenamedEvent = InventoryEventBase & {
+  type: 'subcategory_renamed';
+  payload: { category: string; from: string; to: string };
+};
+
+export type SubcategoryRemovedEvent = InventoryEventBase & {
+  type: 'subcategory_removed';
+  payload: { category: string; name: string };
+};
+
+export type SubcategoryReorderedEvent = InventoryEventBase & {
+  type: 'subcategory_reordered';
+  payload: { category: string; order: string[] };
+};
+
+export type CategoryAddedEvent = InventoryEventBase & {
+  type: 'category_added';
+  payload: { category: string };
+};
+
+export type CategoryRemovedEvent = InventoryEventBase & {
+  type: 'category_removed';
+  payload: { category: string };
+};
+
 export type InventoryEvent =
   | ItemCreatedEvent
   | ItemUpdatedEvent
   | QuantityDeltaEvent
   | ItemRemovedEvent
-  | ItemRestoredEvent;
+  | ItemRestoredEvent
+  | SubcategoryAddedEvent
+  | SubcategoryRenamedEvent
+  | SubcategoryRemovedEvent
+  | SubcategoryReorderedEvent
+  | CategoryAddedEvent
+  | CategoryRemovedEvent;
 
 export interface InventoryEventRecord {
   event: InventoryEvent;

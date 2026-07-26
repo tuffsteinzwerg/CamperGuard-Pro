@@ -3,6 +3,7 @@
 // Verwendet drive.file Scope (nur eigene Dateien der App)
 
 import { getValidToken } from './googleAuth';
+import { APP_VERSION } from '../version';
 
 const FOLDER_NAME = 'Guard4Campers';
 const FILE_NAME = 'guard4campers-sync.json';
@@ -70,7 +71,7 @@ export async function writeSyncFile(appState: any): Promise<void> {
   const payload = {
     _meta: {
       app: 'Guard4Campers',
-      version: '0.2.1-dev',
+      version: APP_VERSION,
       syncDate: new Date().toISOString(),
       format: 1
     },

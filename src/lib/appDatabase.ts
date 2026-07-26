@@ -1,7 +1,7 @@
 import { openDB, IDBPDatabase } from 'idb';
 
 export const APP_DB_NAME = 'Guard4CampersDB_V1';
-export const APP_DB_VERSION = 4;
+export const APP_DB_VERSION = 5;
 
 export function openAppDatabase(): Promise<IDBPDatabase> {
   return openAppDatabaseByName(APP_DB_NAME);
@@ -48,6 +48,11 @@ export function openAppDatabaseByName(databaseName: string): Promise<IDBPDatabas
           if (!store.indexNames.contains('status')) {
             store.createIndex('status', 'status');
           }
+        }
+      }
+      if (oldVersion < 5) {
+        if (!db.objectStoreNames.contains('snapshots')) {
+          db.createObjectStore('snapshots', { keyPath: 'id' });
         }
       }
     },

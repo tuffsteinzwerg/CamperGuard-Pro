@@ -372,11 +372,11 @@ describe('SyncCoordinator Upload', () => {
 
   it('20. IndexedDB-Version und Stores bleiben unverändert.', async () => {
     const db = await openAppDatabaseByName('test-upload-db');
-    expect(db.version).toBe(4);
+    expect(db.version).toBe(5);
     expect(db.objectStoreNames.contains('store')).toBe(true);
     expect(db.objectStoreNames.contains('outbox')).toBe(true);
     // no new stores
-    expect(db.objectStoreNames.length).toBe(8); 
+    expect(db.objectStoreNames.length).toBe(9); 
     db.close();
   });
 

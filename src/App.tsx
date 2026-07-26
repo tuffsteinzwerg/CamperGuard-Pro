@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { APP_VERSION_LABEL } from './version';
+import { createSnapshotIfDue, requestPersistentStorage } from './lib/snapshots';
 import { 
   ShieldCheck, HeartPulse, Settings, Map as MapIcon, BookOpen, Package, Activity, Wifi, WifiOff
 } from 'lucide-react';
@@ -19,8 +21,6 @@ import { ReiseView } from './views/ReiseView';
 import { CHANGELOG } from './data/changelog';
 import { OnboardingOverlay } from './components/OnboardingOverlay';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { uploadState, checkForRemoteUpdate } from './lib/syncService';
-import { getInitialAuthState } from './lib/googleAuth';
 import { createUuid } from './lib/uuid';
 
 
@@ -362,6 +362,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (loading) return;
+    requestPersistentStorage();
+    createSnapshotIfDue().catch(() => {});
+  }, [loading]);
+
+  useEffect(() => {
     let watchId: number | undefined;
     if (state.sos?.gpsEnabled !== false) {
       setGpsStatus('loading');
@@ -406,8 +412,7 @@ export default function App() {
           setToastVisible(true);
           setTimeout(() => setToastVisible(false), 1500);
 
-          // Parallel auf Google Drive hochladen (wenn eingeloggt)
-          uploadState(state).catch(err => console.warn('Drive sync:', err));
+
         });
       });
     }, 700);
@@ -631,7 +636,7 @@ export default function App() {
           className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
-          Guard4Campers v0.2.1-dev
+          Guard4Campers {APP_VERSION_LABEL}
         </div>
 
         {showChangelog && (
@@ -639,7 +644,7 @@ export default function App() {
             <div className="bg-[var(--bg-app)] rounded-xl border border-[var(--border)] max-w-2xl w-full text-[12px] text-white flex flex-col max-h-[90vh]">
               <div className="p-4 border-b border-[var(--border)] flex justify-between items-center sticky top-0 z-10 bg-[var(--bg-card)] rounded-t-xl cg-master-card-small">
                  <div>
-                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">Guard4Campers v0.2.1-dev</h2>
+                   <h2 className="text-lg font-bold text-[var(--primary)] mb-1">Guard4Campers {APP_VERSION_LABEL}</h2>
                    <p className="text-[var(--text-muted)] !mb-0">Stand: 22.05.2026</p>
                  </div>
                  <button 

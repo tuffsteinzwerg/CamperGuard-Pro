@@ -384,13 +384,13 @@ describe('SyncCoordinator Download', () => {
 
   it('24. IndexedDB-Version bleibt 4.', async () => {
     const db = await openAppDatabaseByName('test-download-db');
-    expect(db.version).toBe(4);
+    expect(db.version).toBe(5);
     db.close();
   });
 
   it('25. Es entstehen keine neuen IndexedDB-Stores.', async () => {
     const db = await openAppDatabaseByName('test-download-db');
-    expect(db.objectStoreNames.length).toBe(8); 
+    expect(db.objectStoreNames.length).toBe(9); 
     db.close();
   });
 
