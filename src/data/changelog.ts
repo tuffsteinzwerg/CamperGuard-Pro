@@ -6,6 +6,28 @@ export interface ChangelogVersion {
 
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    "version": "v0.3.0-dev",
+    "date": "21.07.2026",
+    "entries": [
+      "619. Lagerorte & Hauptbereiche werden mitsynchronisiert (eigene Ereignistypen).",
+      "618. Struktur-Umrechner mit 11 Tests abgesichert (137 Tests gesamt).",
+      "617. Sync-Kern versteht Struktur-Ereignisse (Lagerort anlegen/umbenennen/löschen/sortieren).",
+      "616. Fahrzeug teilen: Beitritts-Code anzeigen und per Code Beitritt anfragen (Profil → Cloud).",
+      "615. Beitritt zweistufig: Code allein gibt keinen Zugriff, Hauptnutzer muss freigeben.",
+      "614. Echter Cloud-Abgleich über Cloudflare statt Test-Rohr.",
+      "613. Sicherung: Export über das Teilen-Menü, Hinweis 'Zuletzt gesichert vor X Tagen'.",
+      "612. Alter Google-Drive-Auto-Upload entfernt (Datenverlust-Risiko); manuelle Sicherung bleibt.",
+      "611. Sicherer Import: alte Backups werden aufgefüllt, kein Absturz mehr.",
+      "610. Rückkehrpunkte: automatische Sicherungspunkte (11 Plätze) + Wiederherstellen.",
+      "609. Datenbank auf Version 5 (neuer Speicher für Sicherungspunkte).",
+      "608. Import setzt den Sync-Zeiger im richtigen Speicher zurück (verhinderte stille Datenlücken).",
+      "607. Sync-Status am Uhr-Symbol: grün = abgeglichen, rot = Abgleich läuft.",
+      "606. Gewichtssumme im Lagerort: unter 1 kg jetzt in Gramm statt 0 kg.",
+      "605. Änderungs-Liste: neuer Knopf im INHALT zeigt wer/was/wann.",
+      "604. Aufräumen: rund 76 alte Wegwerf-Skripte aus dem Projekt entfernt."
+    ]
+  },
+  {
     "version": "v0.2.1-dev",
     "date": "25.05.2026",
     "entries": [

@@ -1,0 +1,63 @@
+import { useEffect, useRef, useState } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
+import { X } from 'lucide-react';
+
+interface BarcodeScannerProps {
+  onDetected: (code: string) => void;
+  onClose: () => void;
+}
+
+export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reader = new BrowserMultiFormatReader();
+    let controls: any = null;
+    let done = false;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    reader
+      .decodeFromVideoDevice(undefined, video, (result: any) => {
+        if (result && !done) {
+          done = true;
+          try { if (controls) controls.stop(); } catch { /* egal */ }
+          onDetected(result.getText());
+        }
+      })
+      .then((c: any) => {
+        controls = c;
+        if (done && controls) { try { controls.stop(); } catch { /* egal */ } }
+      })
+      .catch(() => {
+        setError('Kamera nicht verfügbar. Bitte Kamerazugriff erlauben oder den Code von Hand eingeben.');
+      });
+
+    return () => {
+      done = true;
+      try { if (controls) controls.stop(); } catch { /* egal */ }
+    };
+  }, [onDetected]);
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="flex justify-between items-center mb-3">
+          <span className="typo-section-title text-white">Barcode scannen</span>
+          <button onClick={onClose} className="cg-master-button !p-2"><X size={16} /></button>
+        </div>
+        {error ? (
+          <div className="typo-body text-[var(--status-danger)] text-center py-8">{error}</div>
+        ) : (
+          <>
+            <video ref={videoRef} className="w-full rounded-lg bg-black aspect-square object-cover" playsInline muted />
+            <div className="typo-body-dim text-center mt-3">Halte den Barcode ruhig ins Bild.</div>
+          </>
+        )}
+        <button onClick={onClose} className="cg-master-button w-full !p-3 mt-4">Abbrechen</button>
+      </div>
+    </div>
+  );
+}

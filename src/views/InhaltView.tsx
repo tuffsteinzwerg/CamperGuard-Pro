@@ -1,7 +1,9 @@
 import { createUuid } from "../lib/uuid.ts";
 import React, { useState, useMemo, useEffect } from 'react';
+import { lookupProduct, saveProduct } from '../lib/productLookup';
+import { BarcodeScanner } from '../components/BarcodeScanner';
 import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } from '../types';
-import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp, History, ScanLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
 import { dispatchInventoryEvent } from '../lib/syncRepository';
@@ -59,6 +61,11 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
   const [isAddingMainCategory, setIsAddingMainCategory] = useState(false);
+  const [scanEan, setScanEan] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
+  const [lookupBusy, setLookupBusy] = useState(false);
+  const [lookupMsg, setLookupMsg] = useState<string | null>(null);
+  const [showGrossHint, setShowGrossHint] = useState(false);
   const [newMainCategoryName, setNewMainCategoryName] = useState("");
   const [deletingMainCategory, setDeletingMainCategory] = useState<string | null>(null);
   const [deletingMainCategoryError, setDeletingMainCategoryError] = useState<string | null>(null);
@@ -88,6 +95,34 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
     dispatchInventoryEvent(state, 'subcategory_reordered', 'struct:' + activeCategory, { category: activeCategory, order: newSubs })
       .then(setState)
       .catch(err => { console.error(err); alert('Fehler: ' + err.message); });
+  };
+
+
+  const handleLookup = async (eanArg?: string) => {
+    const ean = (eanArg ?? scanEan).trim();
+    if (!ean) return;
+    setLookupBusy(true); setLookupMsg(null); setShowGrossHint(false);
+    try {
+      const info = await lookupProduct(ean);
+      if (info.source === 'none' || (!info.name && info.grossWeight == null && info.netWeight == null)) {
+        setLookupMsg('Nicht gefunden – bitte von Hand eintragen. Deine Angaben helfen beim nächsten Mal.');
+      } else {
+        const w = info.grossWeight != null ? info.grossWeight : info.netWeight;
+        const u = info.grossWeight != null ? (info.grossUnit || 'g') : (info.netUnit || 'g');
+        setItemForm(f => ({
+          ...f,
+          name: info.name || f.name,
+          weight: (w != null && !isNaN(Number(w))) ? String(w) : f.weight,
+          weightUnit: (u === 'kg' ? 'kg' : 'g')
+        }));
+        if (info.grossWeight == null && info.netWeight != null) setShowGrossHint(true);
+        setLookupMsg(info.source === 'own' ? 'Gefunden (Camper-Datenbank)' : 'Gefunden (Open Food Facts)');
+      }
+    } catch {
+      setLookupMsg('Keine Verbindung – bitte von Hand eintragen.');
+    } finally {
+      setLookupBusy(false);
+    }
   };
 
   const fixedCategories = ["Küche", "Wohnen", "Bad", "Garage", "Technik"];
@@ -341,7 +376,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
 
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none px-4 flex items-center justify-center gap-3 z-40 no-print">
           <button onClick={() => setIsAddingSub(true)} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Lagerort</button>
-          <button onClick={() => { setItemForm({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '' }); setIsAddingItem(true); }} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Artikel</button>
+          <button onClick={() => { setItemForm({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '' }); setScanEan(''); setLookupMsg(null); setShowGrossHint(false); setIsAddingItem(true); }} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Artikel</button>
       </div>
 
       <AnimatePresence>
@@ -352,6 +387,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                     <form onSubmit={(e: React.FormEvent) => {
                         e.preventDefault();
                         const newItemId = createUuid();
+                        const eanTrim = scanEan.trim();
                         const payload = { 
                             name: itemForm.name, 
                             quantity: parseFloat(itemForm.quantity) || 0, 
@@ -359,14 +395,30 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             category: activeCategory, 
                             subcategory: itemForm.subcategory,
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
-                            weightUnit: itemForm.weightUnit
+                            weightUnit: itemForm.weightUnit,
+                            ean: eanTrim || undefined
                         };
                         dispatchInventoryEvent(state, 'item_created', newItemId, payload).then(newState => {
                             setState(newState);
                             setIsAddingItem(false);
+                            if (eanTrim) {
+                                saveProduct({
+                                    ean: eanTrim,
+                                    name: payload.name,
+                                    grossWeight: payload.weight,
+                                    grossUnit: payload.weightUnit
+                                });
+                            }
                         });
                     }}>
                         <div className="space-y-3">
+                            <div className="flex gap-2">
+                                <input value={scanEan} onChange={e => setScanEan(e.target.value)} inputMode="numeric" placeholder="EAN / Barcode (optional)" className="cg-master-input flex-1" />
+                                <button type="button" onClick={() => setShowScanner(true)} className="cg-master-button !px-3" title="Scannen"><ScanLine size={16} /></button>
+                                <button type="button" onClick={() => handleLookup()} disabled={lookupBusy || !scanEan.trim()} className="cg-master-button !px-4 disabled:opacity-50">{lookupBusy ? '…' : 'Suchen'}</button>
+                            </div>
+                            {lookupMsg && <div className="typo-body-dim">{lookupMsg}</div>}
+                            {showGrossHint && <div className="typo-body text-[var(--accent)]">Hinweis: Das gefundene Gewicht ist nur der Inhalt (z. B. Doseninhalt), nicht die volle Verpackung. Bitte einmal die volle Packung wiegen und das Gewicht anpassen – das hilft auch allen anderen.</div>}
                             <input required value={itemForm.name} onChange={e => setItemForm({...itemForm, name: e.target.value})} placeholder="Name" className="cg-master-input w-full" />
                             <div className="flex gap-3">
                                 <input required type="number" step={formatUnit(itemForm.unit) === 'stk' ? "1" : "0.01"} min={formatUnit(itemForm.unit) === 'stk' ? "1" : "0"} value={itemForm.quantity} onChange={e => setItemForm({...itemForm, quantity: e.target.value})} placeholder="Menge" className="cg-master-input w-24" />
@@ -395,6 +447,13 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
             </motion.div>
         )}
       </AnimatePresence>
+
+      {showScanner && (
+        <BarcodeScanner
+          onDetected={(code) => { setScanEan(code); setShowScanner(false); handleLookup(code); }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
 
       <AnimatePresence>
         {editingItem && (

@@ -15,6 +15,7 @@ export interface InventoryItem {
   subcategory: string;
   weight?: number;
   weightUnit?: 'kg' | 'g' | 'gr';
+  ean?: string;
   deletedAt?: string;
 }
 
