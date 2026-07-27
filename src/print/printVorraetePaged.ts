@@ -42,7 +42,7 @@ export function printVorraetePaged(state: AppState) {
     '<div class="hd"><img src="' + logoUrl + '" alt="Guard4Campers"><div class="t">Vorräte</div>' +
     '<div class="d"><div>' + esc(today) + '</div><div class="lbl">Ausdruck / Datum</div></div></div>' +
     rows +
-    '<script>window.onafterprint=function(){try{window.close();}catch(e){}};window.PagedConfig={auto:true,after:function(){try{window.focus();}catch(e){}setTimeout(function(){window.print();},80);}};</' + 'script>' +
+    '<script>window.PagedConfig={auto:true,after:function(){try{window.focus();}catch(e){}setTimeout(function(){window.print();},400);}};</' + 'script>' +
     '<script src="https://unpkg.com/pagedjs@0.4.3/dist/paged.polyfill.min.js"></' + 'script>' +
     '</body></html>';
 
