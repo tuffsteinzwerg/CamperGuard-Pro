@@ -57,7 +57,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   
   const [editingItem, setEditingItem] = useState<any>(null);
   const [deletingItem, setDeletingItem] = useState<any>(null);
-  const [itemForm, setItemForm] = useState({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '' });
+  const [itemForm, setItemForm] = useState({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '', consumable: false });
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
 
   const [isAddingMainCategory, setIsAddingMainCategory] = useState(false);
@@ -66,6 +66,19 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   const [lookupBusy, setLookupBusy] = useState(false);
   const [lookupMsg, setLookupMsg] = useState<string | null>(null);
   const [showGrossHint, setShowGrossHint] = useState(false);
+  const [printMenuOpen, setPrintMenuOpen] = useState(false);
+  const [printMode, setPrintMode] = useState<'all' | 'consumables'>('all');
+  const [pendingPrint, setPendingPrint] = useState(false);
+  useEffect(() => {
+    if (!pendingPrint) return;
+    window.print();
+    setPendingPrint(false);
+  }, [pendingPrint]);
+  const runPrint = (mode: 'all' | 'consumables') => {
+    setPrintMenuOpen(false);
+    setPrintMode(mode);
+    setPendingPrint(true);
+  };
   const [newMainCategoryName, setNewMainCategoryName] = useState("");
   const [deletingMainCategory, setDeletingMainCategory] = useState<string | null>(null);
   const [deletingMainCategoryError, setDeletingMainCategoryError] = useState<string | null>(null);
@@ -223,7 +236,18 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                 }
               />
             </button>
-            <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
+            <div className="relative">
+              <button onClick={() => setPrintMenuOpen(o => !o)} className="cg-master-button !py-1.5 !px-3 flex items-center gap-1"><Printer size={14}/><ChevronDown size={12}/></button>
+              {printMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setPrintMenuOpen(false)} />
+                  <div className="absolute right-0 mt-1 z-50 cg-master-card-small !p-1 min-w-[210px]">
+                    <button onClick={() => runPrint('all')} className="w-full text-left px-3 py-2 rounded typo-body hover:bg-[var(--bg-input)]">Ganzer Inhalt</button>
+                    <button onClick={() => runPrint('consumables')} className="w-full text-left px-3 py-2 rounded typo-body hover:bg-[var(--bg-input)]">Nur Verbrauchsmaterial</button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
       </div>
 
@@ -300,7 +324,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                   <div className="flex justify-end items-center gap-3 no-print flex-shrink-0 w-16">
                                       {!(item as any).sourceType && (
                                           <>
-                                              <button onClick={() => { setActiveCategory(item.category); setItemForm({ name: item.name, quantity: item.quantity.toString(), unit: formatUnit(item.unit), weight: item.weight !== undefined && item.weight !== null && !isNaN(item.weight) ? item.weight.toString() : '', weightUnit: formatUnit(item.weightUnit || 'kg'), subcategory: item.subcategory }); setEditingItem(item); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14} /></button>
+                                              <button onClick={() => { setActiveCategory(item.category); setItemForm({ name: item.name, quantity: item.quantity.toString(), unit: formatUnit(item.unit), weight: item.weight !== undefined && item.weight !== null && !isNaN(item.weight) ? item.weight.toString() : '', weightUnit: formatUnit(item.weightUnit || 'kg'), subcategory: item.subcategory, consumable: item.consumable ?? false }); setEditingItem(item); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14} /></button>
                                               <button onClick={() => setDeletingItem(item)} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14} /></button>
                                           </>
                                       )}
@@ -359,7 +383,7 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                       <span className="typo-value-small ml-1">{formatUnit(item.unit)}</span>
                                   </div>
                                   <div className="flex justify-end items-center gap-3 no-print flex-shrink-0 w-16">
-                                      <button onClick={() => { setItemForm({ name: item.name, quantity: item.quantity.toString(), unit: formatUnit(item.unit), weight: item.weight !== undefined && item.weight !== null && !isNaN(item.weight) ? item.weight.toString() : '', weightUnit: formatUnit(item.weightUnit || 'kg'), subcategory: item.subcategory }); setEditingItem(item); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14} /></button>
+                                      <button onClick={() => { setItemForm({ name: item.name, quantity: item.quantity.toString(), unit: formatUnit(item.unit), weight: item.weight !== undefined && item.weight !== null && !isNaN(item.weight) ? item.weight.toString() : '', weightUnit: formatUnit(item.weightUnit || 'kg'), subcategory: item.subcategory, consumable: item.consumable ?? false }); setEditingItem(item); }} className="cg-master-button !p-2 !rounded flex-shrink-0"><Edit2 size={14} /></button>
                                       <button onClick={() => setDeletingItem(item)} className="cg-master-button-danger !p-2 !rounded flex-shrink-0"><Trash2 size={14} /></button>
                                   </div>
                               </div>
@@ -372,11 +396,11 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
       )}
       </div>
 
-      <InhaltPrintView state={state} />
+      <InhaltPrintView state={state} printMode={printMode} />
 
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none px-4 flex items-center justify-center gap-3 z-40 no-print">
           <button onClick={() => setIsAddingSub(true)} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Lagerort</button>
-          <button onClick={() => { setItemForm({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '' }); setScanEan(''); setLookupMsg(null); setShowGrossHint(false); setIsAddingItem(true); }} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Artikel</button>
+          <button onClick={() => { setItemForm({ name: '', quantity: '1', unit: 'stk', weight: '', weightUnit: 'kg', subcategory: '', consumable: false }); setScanEan(''); setLookupMsg(null); setShowGrossHint(false); setIsAddingItem(true); }} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Artikel</button>
       </div>
 
       <AnimatePresence>
@@ -396,7 +420,8 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             subcategory: itemForm.subcategory,
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
                             weightUnit: itemForm.weightUnit,
-                            ean: eanTrim || undefined
+                            ean: eanTrim || undefined,
+                            consumable: itemForm.consumable
                         };
                         dispatchInventoryEvent(state, 'item_created', newItemId, payload).then(newState => {
                             setState(newState);
@@ -440,6 +465,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                 <option value="" disabled>Lagerort wählen...</option>
                                 {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: any) => <option key={s} value={s}>{s}</option>)}
                             </select>
+                            <label className="flex items-center gap-2 typo-body cursor-pointer select-none mt-3">
+                                <input type="checkbox" checked={itemForm.consumable} onChange={e => setItemForm({...itemForm, consumable: e.target.checked})} className="w-4 h-4 accent-[var(--accent)]" />
+                                Verbrauchsmaterial (für Nachfüllliste)
+                            </label>
                         </div>
                         <div className="flex gap-3 mt-6"><button type="button" onClick={() => setIsAddingItem(false)} className="cg-master-button flex-1 !p-3">Abbrechen</button><button type="submit" className="cg-master-button flex-1 !p-3">Speichern</button></div>
                     </form>
@@ -450,7 +479,24 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
 
       {showScanner && (
         <BarcodeScanner
-          onDetected={(code) => { setScanEan(code); setShowScanner(false); handleLookup(code); }}
+          onDetected={(code) => {
+            setShowScanner(false);
+            const eanTrim = code.trim();
+            const existing = eanTrim
+              ? state.inventory.find(it => !it.deletedAt && it.ean === eanTrim)
+              : undefined;
+            if (existing) {
+              dispatchInventoryEvent(state, 'quantity_delta', existing.id, { delta: 1 }, existing.version).then(newState => {
+                setState(newState);
+                setIsAddingItem(false);
+                alert('„' + existing.name + '" schon da → Menge +1 (jetzt ' + (existing.quantity + 1) + ')');
+              });
+            } else {
+              setScanEan(code);
+              setItemForm(f => ({ ...f, consumable: true }));
+              handleLookup(code);
+            }
+          }}
           onClose={() => setShowScanner(false)}
         />
       )}
@@ -467,7 +513,8 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                             unit: itemForm.unit, 
                             subcategory: itemForm.subcategory,
                             weight: itemForm.weight ? parseFloat(itemForm.weight) : undefined,
-                            weightUnit: itemForm.weightUnit
+                            weightUnit: itemForm.weightUnit,
+                            consumable: itemForm.consumable
                         };
                         const oldQuantity = editingItem.quantity || 0;
                         const newQuantity = parseFloat(itemForm.quantity) || 0;
@@ -477,7 +524,8 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                                 editingItem.unit !== updatePayload.unit || 
                                                 editingItem.subcategory !== updatePayload.subcategory || 
                                                 editingItem.weight !== updatePayload.weight || 
-                                                editingItem.weightUnit !== updatePayload.weightUnit;
+                                                editingItem.weightUnit !== updatePayload.weightUnit ||
+                                                (editingItem.consumable ?? false) !== updatePayload.consumable;
 
                         let promise = Promise.resolve(state);
                         if (hasFieldChanges) {
@@ -516,6 +564,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
                                 <option value="" disabled>Lagerort wählen...</option>
                                 {Array.from(new Set(state.subcategories[activeCategory] || [])).map((s: any) => <option key={s} value={s}>{s}</option>)}
                             </select>
+                            <label className="flex items-center gap-2 typo-body cursor-pointer select-none mt-3">
+                                <input type="checkbox" checked={itemForm.consumable} onChange={e => setItemForm({...itemForm, consumable: e.target.checked})} className="w-4 h-4 accent-[var(--accent)]" />
+                                Verbrauchsmaterial (für Nachfüllliste)
+                            </label>
                         </div>
                         <div className="flex gap-3 mt-6">
                             <button type="button" onClick={() => setEditingItem(null)} className="cg-master-button flex-1 !p-3">Abbrechen</button>

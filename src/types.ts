@@ -16,6 +16,7 @@ export interface InventoryItem {
   weight?: number;
   weightUnit?: 'kg' | 'g' | 'gr';
   ean?: string;
+  consumable?: boolean;
   deletedAt?: string;
 }
 

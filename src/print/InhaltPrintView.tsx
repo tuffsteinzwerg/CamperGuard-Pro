@@ -2,7 +2,7 @@ import React from 'react';
 import type { AppState, InventoryItem, EmergencyGear, PharmacyItem } from '../types';
 import { PrintHeader } from './PrintHeader';
 
-export function InhaltPrintView({ state }: { state: AppState }) {
+export function InhaltPrintView({ state, printMode = 'all' }: { state: AppState; printMode?: 'all' | 'consumables' }) {
     const fixedCategories = ["Küche", "Wohnen", "Bad", "Garage", "Technik"];
     const otherCategories = Object.keys(state.subcategories || {}).filter(c => !fixedCategories.includes(c));
     const allCategories = [...fixedCategories, ...otherCategories];
@@ -142,6 +142,50 @@ export function InhaltPrintView({ state }: { state: AppState }) {
     }, {});
 
     const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    if (printMode === 'consumables') {
+        const consumables = state.inventory.filter((i: InventoryItem) => i.consumable === true && !i.deletedAt);
+        return (
+            <div className="hidden print-only inhalt-print-wrapper bg-white">
+                <PrintHeader
+                    title="Verbrauchsmaterial"
+                    vehicleName={state.profile?.vehicleName}
+                    plate={state.profile?.plate}
+                    createdDate={today}
+                />
+                {allCategories.map(category => {
+                    const items = consumables.filter((i: InventoryItem) => i.category === category);
+                    if (items.length === 0) return null;
+                    return (
+                        <div key={category}>
+                            <div className="cg-print-section-title"><span className="cg-print-icon-sm">🛒</span> {category.toUpperCase()}</div>
+                            <div className="inv-col-header cg-print-col-header">
+                                <div className="cg-print-align-center">✓</div>
+                                <div className="cg-print-align-left-pad">Artikel</div>
+                                <div className="cg-print-align-right">Menge</div>
+                                <div className="cg-print-align-right">Gewicht</div>
+                            </div>
+                            {items.map((item: InventoryItem) => (
+                                <div className="inv-row cg-print-row" key={item.id}>
+                                    <div className="cg-print-cell-check">□</div>
+                                    <div className="cg-print-cell-name">{item.name}</div>
+                                    <div className="cg-print-cell-num">{item.quantity} {formatUnit(item.unit)}</div>
+                                    <div className="cg-print-cell-num">
+                                        {item.weight !== undefined && item.weight !== null
+                                            ? `${item.weight} ${formatUnit(item.weightUnit || 'kg')}`
+                                            : ''}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                })}
+                {consumables.length === 0 && (
+                    <div className="cg-print-location-title">Keine Verbrauchsmaterialien markiert.</div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="hidden print-only inhalt-print-wrapper bg-white">
