@@ -6,6 +6,7 @@ import type { AppState, SpotEntry, InventoryItem, EmergencyGear, PharmacyItem } 
 import { Plus, Trash2, Search, AlertTriangle, Printer, Edit2, ChevronDown, ChevronUp, History, ScanLine } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { InhaltPrintView } from '../print/InhaltPrintView';
+import { printVorraetePaged } from '../print/printVorraetePaged';
 import { dispatchInventoryEvent } from '../lib/syncRepository';
 import { openAppDatabase } from '../lib/appDatabase';
 import { formatWeight } from '../lib/formatters';
@@ -76,6 +77,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   }, [pendingPrint]);
   const runPrint = (mode: 'all' | 'consumables') => {
     setPrintMenuOpen(false);
+    if (mode === 'consumables') {
+      printVorraetePaged(state);
+      return;
+    }
     setPrintMode(mode);
     setPendingPrint(true);
   };
