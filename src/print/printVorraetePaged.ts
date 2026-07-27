@@ -25,7 +25,7 @@ export function printVorraetePaged(state: AppState) {
   const logoUrl = window.location.origin + '/g4c-druck-bunt-tp.png';
 
   const doc =
-    '<!doctype html><html lang="de"><head><meta charset="utf-8"><style>' +
+    '<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Vorräte</title><style>' +
     '@page { size: A4; margin: 14mm 15mm 16mm 15mm;' +
     ' @bottom-left { content: "Guard4Campers – Smart, sicher, unterwegs."; font: 9pt Arial, sans-serif; color: #999; }' +
     ' @bottom-right { content: "Seite " counter(page) " von " counter(pages); font: 9pt Arial, sans-serif; color: #999; } }' +
@@ -42,23 +42,13 @@ export function printVorraetePaged(state: AppState) {
     '<div class="hd"><img src="' + logoUrl + '" alt="Guard4Campers"><div class="t">Vorräte</div>' +
     '<div class="d"><div>' + esc(today) + '</div><div class="lbl">Ausdruck / Datum</div></div></div>' +
     rows +
-    '<script>window.PagedConfig={auto:true,after:function(){try{window.focus();}catch(e){}setTimeout(function(){window.print();},60);}};</' + 'script>' +
+    '<script>window.onafterprint=function(){try{window.close();}catch(e){}};window.PagedConfig={auto:true,after:function(){try{window.focus();}catch(e){}setTimeout(function(){window.print();},80);}};</' + 'script>' +
     '<script src="https://unpkg.com/pagedjs@0.4.3/dist/paged.polyfill.min.js"></' + 'script>' +
     '</body></html>';
 
-  const iframe = document.createElement('iframe');
-  iframe.setAttribute('aria-hidden', 'true');
-  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:210mm;height:297mm;border:0;';
-  document.body.appendChild(iframe);
-
-  const win = iframe.contentWindow;
-  if (!win) { document.body.removeChild(iframe); return; }
-  const idoc = win.document;
-  idoc.open();
-  idoc.write(doc);
-  idoc.close();
-
-  const cleanup = () => { setTimeout(() => { try { document.body.removeChild(iframe); } catch (e) { /* noop */ } }, 1500); };
-  win.addEventListener('afterprint', cleanup);
-  setTimeout(cleanup, 60000);
+  const win = window.open('', '_blank');
+  if (!win) { alert('Zum Drucken bitte Pop-ups für Guard4Campers erlauben.'); return; }
+  win.document.open();
+  win.document.write(doc);
+  win.document.close();
 }
