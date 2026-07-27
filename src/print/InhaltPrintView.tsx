@@ -148,9 +148,8 @@ export function InhaltPrintView({ state, printMode = 'all' }: { state: AppState;
         return (
             <div className="hidden print-only inhalt-print-wrapper bg-white">
                 <PrintHeader
-                    title="Verbrauchsmaterial"
-                    vehicleName={state.profile?.vehicleName}
-                    plate={state.profile?.plate}
+                    title="Vorräte"
+                    hideVehicle
                     createdDate={today}
                 />
                 {allCategories.map(category => {

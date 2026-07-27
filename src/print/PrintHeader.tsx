@@ -6,9 +6,10 @@ interface PrintHeaderProps {
     plate?: string;
     dateRange?: string;
     createdDate?: string;
+    hideVehicle?: boolean;
 }
 
-export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, createdDate }: PrintHeaderProps) {
+export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, createdDate, hideVehicle }: PrintHeaderProps) {
     const formattedVehicle = [
         vehicleName?.toUpperCase(),
         plate?.toUpperCase()
@@ -28,7 +29,7 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                 {/* Center Title and Vehicle Area */}
                 <div className="cg-print-header-center">
                     <div className="cg-print-header-title">{title}</div>
-                    <div className="cg-print-header-vehicle">{formattedVehicle}</div>
+                    {!hideVehicle && formattedVehicle && <div className="cg-print-header-vehicle">{formattedVehicle}</div>}
                 </div>
 
                 {/* Right Area — Zeitraum + Erstellt am */}
@@ -39,8 +40,8 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                             <div className="cg-print-header-meta-value">{dateRange}</div>
                         </>
                     )}
-                    <div className={`cg-print-header-meta-label${dateRange ? ' cg-print-header-meta-label-spaced' : ''}`}>Erstellt am:</div>
-                    <div className="cg-print-header-meta-value">{createdDate || today}</div>
+                    <div className={`cg-print-header-meta-value${dateRange ? ' cg-print-header-meta-label-spaced' : ''}`}>{createdDate || today}</div>
+                    <div className="cg-print-header-meta-label">Ausdruck / Datum</div>
                 </div>
             </div>
 
