@@ -69,22 +69,10 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
   const [lookupMsg, setLookupMsg] = useState<string | null>(null);
   const [showGrossHint, setShowGrossHint] = useState(false);
   const [printMenuOpen, setPrintMenuOpen] = useState(false);
-  const [printMode, setPrintMode] = useState<'all' | 'consumables'>('all');
-  const [pendingPrint, setPendingPrint] = useState(false);
-  useEffect(() => {
-    if (!pendingPrint) return;
-    window.print();
-    setPendingPrint(false);
-  }, [pendingPrint]);
   const runPrint = (mode: 'all' | 'consumables') => {
     setPrintMenuOpen(false);
-    if (mode === 'consumables') {
-      const html = renderToStaticMarkup(<InhaltPrintView state={state} printMode="consumables" />);
-      printElementViaPaged(html, 'Vorräte');
-      return;
-    }
-    setPrintMode(mode);
-    setPendingPrint(true);
+    const html = renderToStaticMarkup(<InhaltPrintView state={state} printMode={mode} />);
+    printElementViaPaged(html, mode === 'consumables' ? 'Vorräte' : 'Inventarliste');
   };
   const [newMainCategoryName, setNewMainCategoryName] = useState("");
   const [deletingMainCategory, setDeletingMainCategory] = useState<string | null>(null);
@@ -403,7 +391,6 @@ export function InhaltView({ state, setState }: InhaltViewProps) {
       )}
       </div>
 
-      <InhaltPrintView state={state} printMode={printMode} />
 
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-md lg:max-w-none px-4 flex items-center justify-center gap-3 z-40 no-print">
           <button onClick={() => setIsAddingSub(true)} className="cg-master-button rounded-full shadow-2xl flex-1 h-9 flex flex-row items-center justify-center gap-1.5 typo-label"><Plus size={14} /> Lagerort</button>
