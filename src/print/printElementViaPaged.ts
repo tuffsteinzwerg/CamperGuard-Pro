@@ -3,7 +3,7 @@ import printCssRaw from './print-styles.css?raw';
 
 export function printElementViaPaged(innerHtml: string, title: string) {
   const pageCss =
-    '.cg-print-footer{display:none !important;}' +
+    'body{padding-bottom:0 !important;} .cg-print-footer{display:none !important;}' +
     '@page{size:A4;margin:14mm 15mm 16mm 15mm;' +
     '@bottom-left{content:"Guard4Campers – Smart, sicher, unterwegs.";font:9pt Arial,sans-serif;color:#999;}' +
     '@bottom-right{content:"Seite " counter(page) " von " counter(pages);font:9pt Arial,sans-serif;color:#999;}}';
