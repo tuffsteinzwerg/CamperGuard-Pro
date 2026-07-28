@@ -15,9 +15,9 @@ export function printVorraetePaged(state: AppState) {
     const items = consumables.filter((i: InventoryItem) => i.category === cat);
     if (!items.length) return;
     rows += '<div class="sec">🛒 ' + esc(cat.toUpperCase()) + '</div>';
-    rows += '<div class="colh"><span class="chk">✓</span><span class="l">Artikel</span><span class="r">Menge</span></div>';
+    rows += '<div class="colh"><span class="chk">✓</span><span class="l">Artikel</span><span class="r">Menge</span><span class="r">Gewicht</span></div>';
     items.forEach((it: InventoryItem) => {
-      rows += '<div class="row"><span class="chk">☐</span><span class="l">' + esc(it.name) + '</span><span class="r">' + esc(it.quantity) + ' ' + esc(fmtUnit(it.unit)) + '</span></div>';
+      rows += '<div class="row"><span class="chk">☐</span><span class="l">' + esc(it.name) + '</span><span class="r">' + esc(it.quantity) + ' ' + esc(fmtUnit(it.unit)) + '</span><span class="r">' + (it.weight != null ? esc(it.weight) + ' ' + esc(fmtUnit(it.weightUnit || 'kg')) : '') + '</span></div>';
     });
   });
   if (!rows) rows = '<div class="empty">Keine Verbrauchsmaterialien markiert.</div>';
@@ -35,8 +35,8 @@ export function printVorraetePaged(state: AppState) {
     '.hd .t { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 16pt; font-weight: 900; color: #111; text-transform: uppercase; letter-spacing: 2px; line-height: 1.2; }' +
     '.hd .d { text-align: right; } .hd .d .val { font-size: 10pt; font-weight: 700; color: #111; } .hd .d .lbl { font-size: 9pt; color: #999; }' +
     '.sec { font-size: 10pt; font-weight: 700; color: #FF6600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4mm; margin-bottom: 1.5mm; padding-bottom: 1mm; border-bottom: 0.5pt solid #FF6600; }' +
-    '.colh { display: grid; grid-template-columns: 5% 75% 20%; align-items: center; min-height: 7mm; padding: 0 0 1.5mm 0; border-bottom: 0.6pt solid #777; font-size: 10pt; text-transform: uppercase; letter-spacing: 0.04em; color: #555; font-weight: 700; margin-top: 3mm; }' +
-    '.row { display: grid; grid-template-columns: 5% 75% 20%; align-items: center; min-height: 6mm; padding: 1mm 0; border-bottom: 0.25pt solid #ddd; font-size: 11pt; page-break-inside: avoid; }' +
+    '.colh { display: grid; grid-template-columns: 5% 55% 20% 20%; align-items: center; min-height: 7mm; padding: 0 0 1.5mm 0; border-bottom: 0.6pt solid #777; font-size: 10pt; text-transform: uppercase; letter-spacing: 0.04em; color: #555; font-weight: 700; margin-top: 3mm; }' +
+    '.row { display: grid; grid-template-columns: 5% 55% 20% 20%; align-items: center; min-height: 6mm; padding: 1mm 0; border-bottom: 0.25pt solid #ddd; font-size: 11pt; page-break-inside: avoid; }' +
     '.chk { text-align: center; } .l { text-align: left; padding-left: 2mm; } .r { text-align: right; font-variant-numeric: tabular-nums; }' +
     '.row .chk { font-size: 11pt; color: #ccc; } .row .l { font-weight: 600; color: #111; } .row .r { color: #444; }' +
     '.empty { color: #666; font-size: 11pt; padding: 6mm 0; }' +
