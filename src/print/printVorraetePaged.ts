@@ -43,7 +43,7 @@ export function printVorraetePaged(state: AppState) {
     '<div class="d"><div>' + esc(today) + '</div><div class="lbl">Ausdruck / Datum</div></div></div>' +
     rows +
     '<script>window.PagedConfig={auto:true,after:function(){try{window.focus();}catch(e){}setTimeout(function(){window.print();},400);}};</' + 'script>' +
-    '<script src="https://unpkg.com/pagedjs@0.4.3/dist/paged.polyfill.min.js"></' + 'script>' +
+    '<script src="' + window.location.origin + '/paged.polyfill.min.js"></' + 'script>' +
     '</body></html>';
 
   const win = window.open('', '_blank');
