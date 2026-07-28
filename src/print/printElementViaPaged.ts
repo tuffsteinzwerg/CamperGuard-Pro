@@ -1,6 +1,11 @@
 // @ts-ignore - Vite raw-Import: print-styles.css als Text (einzige CSS-Quelle)
 import printCssRaw from './print-styles.css?raw';
 
+export function printBySelector(selector: string, title: string) {
+  const el = document.querySelector(selector);
+  if (el) printElementViaPaged(el.outerHTML, title);
+}
+
 export function printElementViaPaged(innerHtml: string, title: string) {
   const pageCss =
     'body{padding-bottom:0 !important;} .cg-print-footer{display:none !important;}' +

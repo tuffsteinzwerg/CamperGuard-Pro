@@ -4,6 +4,7 @@ import { Plus, Printer } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { formatNumber } from '../lib/formatters';
 import { LogbuchPrintViews } from '../print/LogbuchPrintViews';
+import { printBySelector } from '../print/printElementViaPaged';
 import { LogbuchArchiveDetail } from './logbuch/LogbuchArchiveDetail';
 import { LogbuchArchiveCreate } from './logbuch/LogbuchArchiveCreate';
 import { LogbuchTankList } from './logbuch/LogbuchTankList';
@@ -39,7 +40,7 @@ export function LogbuchView({ state, setState }: LogbuchViewProps) {
               <div className={`w-[7px] h-[7px] rounded-full ${state.sos?.gpsEnabled !== false ? 'bg-[#00ff9c] shadow-[0_0_6px_rgba(0,255,156,0.5)]' : 'bg-[var(--accent)] shadow-[0_0_6px_rgba(255,102,0,0.4)]'}`} />
               <span className={`text-[12px] font-bold tracking-[0.1em] uppercase ${state.sos?.gpsEnabled !== false ? 'text-[#00ff9c]/80' : 'text-[var(--accent)]/80'}`}>GPS</span>
           </button>
-          <button onClick={() => window.print()} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
+          <button onClick={() => printBySelector('.logbuch-print-wrapper', 'Logbuch')} className="cg-master-button !py-1.5 !px-3"><Printer size={14}/></button>
       </div>
 
       <div className="cg-master-inset p-3 flex justify-between items-center sticky top-[-10px] z-20">

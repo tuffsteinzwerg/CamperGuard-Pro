@@ -3,6 +3,7 @@ import { Archive, CheckCircle, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatNumber } from '../../lib/formatters';
 import type { Archive as ArchiveType, FuelEntry } from '../../types';
+import { printBySelector } from '../../print/printElementViaPaged';
 
 interface LogbuchArchiveDetailProps {
   selectedArchive: ArchiveType | null;
@@ -65,7 +66,7 @@ export function LogbuchArchiveDetail({
                                 </button>
 
                                 <button
-                                    onClick={() => window.print()}
+                                    onClick={() => printBySelector('.logbuch-print-wrapper', 'Logbuch')}
                                     className="cg-master-button !p-2"
                                 >
                                     Drucken
