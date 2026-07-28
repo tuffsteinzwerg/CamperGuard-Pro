@@ -306,19 +306,11 @@ export function InhaltPrintView({ state, printMode = 'all' }: { state: AppState;
             )}
             
             {totalWeightKg > 0 && (
-                <div className="inv-weight-footer cg-print-summary-wrapper">
-                    <div>
-                        <div className="cg-print-summary-label"><span className="cg-print-icon-sm">⚖️</span> Gesamtgewicht</div>
-                        <div className="cg-print-summary-value">
-                            {totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g` : `${totalWeightKg.toFixed(2)} kg`}
-                        </div>
-                    </div>
-                    <div className="inv-article-count">
-                        <div className="cg-print-summary-label"><span className="cg-print-icon-sm">📋</span> Artikel gesamt</div>
-                        <div className="cg-print-summary-value">
-                            {state.inventory.length + printableGear.length + pharmacyFilter.length}
-                        </div>
-                    </div>
+                <div className="cg-print-totals-row">
+                    <div></div>
+                    <div className="cg-print-total-label">Gesamt</div>
+                    <div className="cg-print-total-num">{state.inventory.length + printableGear.length + pharmacyFilter.length}</div>
+                    <div className="cg-print-total-num">{totalWeightKg < 1 ? `${Math.round(totalWeightKg * 1000)} g` : `${totalWeightKg.toFixed(2)} kg`}</div>
                 </div>
             )}
         </div>
