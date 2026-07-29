@@ -61,7 +61,7 @@ export function LogbuchTripList(props: LogbuchTripListProps) {
         {tripLogMode === 'strict' && (
             <div className="space-y-3">
                 <div className="cg-master-card-small !mb-0 !p-3 border border-orange-500/20 bg-orange-500/5">
-                    <div className="typo-body-dim text-orange-400">Das Fahrtenbuch dient dem Nachweis geschäftlicher Fahrten gegenüber dem Finanzamt. Bitte wenden Sie sich zur rechtlichen Prüfung an Ihren Steuerberater.</div>
+                    <div className="typo-body-dim text-[#FF6600]">Das Fahrtenbuch dient dem Nachweis geschäftlicher Fahrten gegenüber dem Finanzamt. Bitte wenden Sie sich zur rechtlichen Prüfung an Ihren Steuerberater.</div>
                 </div>
                 {currentBusinessTripLog.slice(0, displayedBusinessTripsCount).map((entry: any) => (
                     <div key={entry.id} className="cg-master-card-small !p-3">

@@ -524,7 +524,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
     <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
       {orientationPermission === 'prompt' && (
         <div className="mx-4 mb-4 p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--accent)]/30">
-          <p className="text-sm text-gray-300 mb-3">
+          <p className="text-sm text-[#CCCCCC] mb-3">
             Um Kompass und Wasserwaage nutzen zu können, wird Zugriff auf die Bewegungssensoren benötigt.
           </p>
           <button 

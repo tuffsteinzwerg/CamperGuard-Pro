@@ -660,7 +660,7 @@ export default function App() {
                     <h3 className={`font-bold mb-2 ${vIdx === 0 ? 'text-[var(--accent)]' : ''}`}>
                       Änderungen {ver.version}:
                     </h3>
-                    <ul className="space-y-1 text-gray-300 mb-6">
+                    <ul className="space-y-1 text-[#CCCCCC] mb-6">
                       {ver.entries.map((entry, eIdx) => (
                         <li key={eIdx}>{entry}</li>
                       ))}

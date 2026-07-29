@@ -176,7 +176,7 @@ export function WeightGauge({ totalWeight, remainingWeight, state, setState, wat
               </div>
               <div className="flex justify-between items-center px-3 py-2 cg-inset rounded border border-white/5">
                   <span className="cg-technical-label">Frischwasser</span>
-                  <span className="instrument-value text-sm text-blue-400">+ {formatWeight(waterWeightImpact)}</span>
+                  <span className="instrument-value text-sm text-[#3B82F6]">+ {formatWeight(waterWeightImpact)}</span>
               </div>
               <div className="flex justify-between items-center px-3 py-2 cg-inset rounded border border-white/5">
                   <span className="cg-technical-label">Abwasser</span>
@@ -184,7 +184,7 @@ export function WeightGauge({ totalWeight, remainingWeight, state, setState, wat
               </div>
               <div className="flex justify-between items-center px-3 py-2 cg-inset rounded border border-white/5">
                   <span className="cg-technical-label">Diesel</span>
-                  <span className="instrument-value text-sm text-orange-400">+ {formatWeight(dieselWeight)}</span>
+                  <span className="instrument-value text-sm text-[#FF6600]">+ {formatWeight(dieselWeight)}</span>
               </div>
               <div className="flex justify-between items-center px-3 py-2 cg-inset rounded border border-white/5">
                   <span className="cg-technical-label">Inventar</span>
