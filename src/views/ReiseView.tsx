@@ -64,6 +64,29 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   // --- GPS-Live-Position für Karte (von App.tsx als Prop) ---
   const liveGps = gpsCoords;
 
+  // --- Bildschirm wachhalten, solange die Reise-/Wasserwaage-Ansicht offen ist ---
+  useEffect(() => {
+    let wakeLock: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (err) {
+        console.warn('Wake Lock nicht verfuegbar:', err);
+      }
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') requestWakeLock();
+    };
+    requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+    };
+  }, []);
+
   // --- Heimatadresse geocoden (einmalig) ---
   useEffect(() => {
     const sos = state.sos;
