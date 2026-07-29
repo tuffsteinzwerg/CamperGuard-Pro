@@ -633,7 +633,7 @@ export default function App() {
           </motion.div>
         </AnimatePresence>
         <div 
-          className="mt-8 mb-4 text-center text-[10px] text-[var(--text-muted)] opacity-50 no-print cursor-pointer"
+          className="mt-8 mb-4 text-center text-[10px] text-[#CCCCCC] no-print cursor-pointer"
           onClick={() => setShowChangelog(true)}
         >
           Guard4Campers {APP_VERSION_LABEL}
