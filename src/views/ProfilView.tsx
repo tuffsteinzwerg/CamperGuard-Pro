@@ -372,7 +372,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                       style={{ border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent', fontSize: '14px', padding: '6px 2px' }} 
                       placeholder="—"
                   />
-                  <span className="text-[9px] text-[#555] mt-0.5 block">cm</span>
+                  <span className="text-[9px] text-[#999999] mt-0.5 block">cm</span>
                   {isInvalid && <span className="text-[var(--status-danger)] text-[10px] uppercase font-bold mt-1 block">Ungültiger Wert</span>}
               </div>
           )})}
@@ -390,7 +390,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                   return (
                       <div key={d.k} className={`cg-master-card-small p-3 text-center ${isEmpty ? 'animate-pulse-border' : ''} ${isInvalid ? '!border-[var(--status-danger)]' : ''}`}>
                           <span className="typo-label mb-0.5 block">{d.l}</span>
-                          <span className="text-[9px] text-[#666] block mb-1">{d.hint}</span>
+                          <span className="text-[9px] text-[#999999] block mb-1">{d.hint}</span>
                           <input
                               type="text"
                               inputMode="numeric"
@@ -407,7 +407,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                               style={{ border: 'none', borderBottom: isInvalid ? '1px solid var(--status-danger)' : '1px solid var(--border)', borderRadius: 0, backgroundColor: 'transparent' }}
                               placeholder="—"
                           />
-                          <span className="text-[9px] text-[#555] mt-0.5 block">cm</span>
+                          <span className="text-[9px] text-[#999999] mt-0.5 block">cm</span>
                           {isInvalid && <span className="text-[var(--status-danger)] text-[10px] uppercase font-bold mt-1 block">Ungültiger Wert</span>}
                       </div>
                   );
@@ -533,7 +533,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                               </div>
                               <div className="flex items-baseline gap-1 flex-shrink-0">
                                   <span className="cg-master-value !text-xl leading-none" style={{ textShadow: `0 0 20px ${d.shadowColor}, 0 2px 4px rgba(0,0,0,0.8)` }}>{level}<span className="text-xs opacity-50 ml-[1px]">%</span></span>
-                                  <span className="text-[10px] text-white/30 font-semibold whitespace-nowrap">({formatNumber(liters, 0)} L)</span>
+                                  <span className="text-[10px] text-[#999999] font-semibold whitespace-nowrap">({formatNumber(liters, 0)} L)</span>
                               </div>
                           </div>
                       

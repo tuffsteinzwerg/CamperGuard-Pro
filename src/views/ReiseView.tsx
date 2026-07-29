@@ -687,12 +687,12 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                           <div className="absolute bottom-0 left-[20%] w-[60%] h-[3px] blur-[1px] pointer-events-none" style={{ background: val === 0 ? '#00ff9c' : '#ff5a00', boxShadow: `0 -2px 8px ${val === 0 ? '#00ff9c' : '#ff5a00'}` }} />
                       </div>
                       <div className="absolute -top-5 w-full text-center z-40">
-                          <div className="text-[10px] text-[#555] font-bold tracking-[0.2em] uppercase">HORIZONTAL</div>
+                          <div className="text-[10px] text-[#999999] font-bold tracking-[0.2em] uppercase">HORIZONTAL</div>
                       </div>
                       <div className="relative z-30 flex flex-col items-center justify-center w-full h-full pt-2">
                           <div className="flex items-baseline justify-center translate-x-[4px] mb-[2px]">
                               <span className="text-4xl leading-none font-mono font-bold" style={valStyle}>{val}</span>
-                              <span className="text-[12px] text-[#444] ml-0.5">°</span>
+                              <span className="text-[12px] text-[#999999] ml-0.5">°</span>
                           </div>
                           <div style={{ color: val === 0 ? '#00ff9c' : '#ff5a00', filter: `drop-shadow(0 0 4px ${val === 0 ? '#00ff9c' : '#ff5a00'}80)` }}>
                               <ArrowLeftRight size={14} />
@@ -723,12 +723,12 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                           <div className="absolute bottom-0 left-[20%] w-[60%] h-[3px] blur-[1px] pointer-events-none" style={{ background: val === 0 ? '#00ff9c' : '#ff5a00', boxShadow: `0 -2px 8px ${val === 0 ? '#00ff9c' : '#ff5a00'}` }} />
                       </div>
                       <div className="absolute -top-5 w-full text-center z-40">
-                          <div className="text-[10px] text-[#555] font-bold tracking-[0.2em] uppercase">VERTIKAL</div>
+                          <div className="text-[10px] text-[#999999] font-bold tracking-[0.2em] uppercase">VERTIKAL</div>
                       </div>
                       <div className="relative z-30 flex flex-col items-center justify-center w-full h-full pt-2">
                           <div className="flex items-baseline justify-center translate-x-[4px] mb-[2px]">
                               <span className="text-4xl leading-none font-mono font-bold" style={valStyle}>{val}</span>
-                              <span className="text-[12px] text-[#444] ml-0.5">°</span>
+                              <span className="text-[12px] text-[#999999] ml-0.5">°</span>
                           </div>
                           <div style={{ color: val === 0 ? '#00ff9c' : '#ff5a00', filter: `drop-shadow(0 0 4px ${val === 0 ? '#00ff9c' : '#ff5a00'}80)` }}>
                               <ArrowUpDown size={14} />
@@ -815,14 +815,14 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                             <>
                               <div className="flex flex-col gap-6 text-left z-10">
                                  <div>
-                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Links</div>
+                                   <div className="text-[8px] text-[#999999] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Links</div>
                                    <div className="flex items-baseline">
                                      <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFL)}>{vFL}</span>
                                      <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                    </div>
                                  </div>
                                  <div>
-                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Links</div>
+                                   <div className="text-[8px] text-[#999999] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Links</div>
                                    <div className="flex items-baseline">
                                      <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHL)}>{vHL}</span>
                                      <span className="text-[12px] cg-master-muted ml-1">cm</span>
@@ -832,14 +832,14 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
                               
                               <div className="flex flex-col gap-6 text-right z-10">
                                  <div>
-                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Rechts</div>
+                                   <div className="text-[8px] text-[#999999] font-bold tracking-[1.5px] uppercase mb-0.5">Vorne Rechts</div>
                                    <div className="flex items-baseline justify-end">
                                      <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vFR)}>{vFR}</span>
                                      <span className="text-[12px] cg-master-muted ml-1">cm</span>
                                    </div>
                                  </div>
                                  <div>
-                                   <div className="text-[8px] text-[#666] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Rechts</div>
+                                   <div className="text-[8px] text-[#999999] font-bold tracking-[1.5px] uppercase mb-0.5">Hinten Rechts</div>
                                    <div className="flex items-baseline justify-end">
                                      <span className="text-[24px] leading-none font-mono font-bold tabular-nums" style={getStyle(vHR)}>{vHR}</span>
                                      <span className="text-[12px] cg-master-muted ml-1">cm</span>

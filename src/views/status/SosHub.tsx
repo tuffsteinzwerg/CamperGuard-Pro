@@ -114,7 +114,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                      <div className="absolute bottom-0 left-[20%] w-[60%] h-[3px] blur-[1px] pointer-events-none bg-[#ff3b30] shadow-[0_-2px_8px_#ff3b30]" />
                                  </div>
                                  <div className="relative z-30 flex flex-col items-center justify-center w-full h-full pt-1">
-                                     <div className="text-[10px] text-[#555] opacity-80 font-bold tracking-widest mb-0.5 uppercase">Notruf</div>
+                                     <div className="text-[10px] text-[#999999] opacity-80 font-bold tracking-widest mb-0.5 uppercase">Notruf</div>
                                      <div className="flex items-baseline justify-center">
                                          <span className="text-3xl leading-none font-mono font-bold text-white tracking-tight drop-shadow-md">112</span>
                                      </div>
@@ -130,7 +130,7 @@ export function SosHub({ state, setState, showSos, setShowSos, sosTab, setSosTab
                                      <div className="absolute bottom-0 left-[20%] w-[60%] h-[3px] blur-[1px] pointer-events-none bg-[#ff9a3c] shadow-[0_-2px_8px_#ff9a3c]" />
                                  </div>
                                  <div className="relative z-30 flex flex-col items-center justify-center w-full h-full pt-1 px-4">
-                                     <div className="text-[10px] text-[#555] opacity-80 font-bold tracking-widest mb-0.5 uppercase">ICE</div>
+                                     <div className="text-[10px] text-[#999999] opacity-80 font-bold tracking-widest mb-0.5 uppercase">ICE</div>
                                      <div className="flex items-baseline justify-center w-full overflow-hidden">
                                          <span className="text-sm leading-tight font-bold text-white tracking-tight drop-shadow-md truncate text-center w-full">
                                              {(state.sos.ice1Name || 'Kontakt').substring(0, 16)}

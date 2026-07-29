@@ -139,7 +139,7 @@ export function WeightGauge({ totalWeight, remainingWeight, state, setState, wat
                       </div>
                   </div>
                   
-                  <div className="text-[10px] uppercase font-bold tracking-widest text-[#666] mt-1 relative z-10" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
+                  <div className="text-[10px] uppercase font-bold tracking-widest text-[#999999] mt-1 relative z-10" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}>
                       Max {formatNumber(state.profile.maxWeight || 3500, 0)} kg
                   </div>
               </div>
@@ -150,7 +150,7 @@ export function WeightGauge({ totalWeight, remainingWeight, state, setState, wat
                       <CheckCircle size={20} className="filter drop-shadow-[0_0_8px_rgba(0,255,156,0.3)]" />
                       <div className="flex flex-col items-start leading-tight">
                          <span className="instrument-value-success text-[11px] font-bold tracking-widest uppercase">IM SICHEREN BEREICH</span>
-                         <span className="cg-technical-label text-white/40 mt-0.5">noch {formatNumber(remainingWeight, 0)} kg frei</span>
+                         <span className="cg-technical-label text-[#999999] mt-0.5">noch {formatNumber(remainingWeight, 0)} kg frei</span>
                       </div>
                   </div>
               ) : (

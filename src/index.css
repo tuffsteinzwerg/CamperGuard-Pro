@@ -24,8 +24,9 @@
   --accent: #FF6600;
   --accent-dark: #CC5200;
   --text-primary: #FFFFFF;
-  --text-secondary: rgba(255,255,255,0.85);
-  --text-tertiary: rgba(255,255,255,0.68);
+  --text-secondary: #CCCCCC;
+  --text-muted: #999999;
+  --text-tertiary: #999999;
   --status-ok: #4ADE80;
   --status-warn: #FBBF24;
   --status-danger: #EF4444;
@@ -649,7 +650,7 @@ option {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
 }
 
