@@ -8,7 +8,7 @@
   --color-card: #2C2E30;
   --color-input: #111111;
   --color-border: #3d3d3d;
-  --color-text-muted: #888888;
+  --color-text-muted: #AAAAAA;
   --color-success: #4ADE80;
   --color-danger: #EF4444;
   --color-warning: #FBBF24;
@@ -24,8 +24,8 @@
   --accent: #FF6600;
   --accent-dark: #CC5200;
   --text-primary: #FFFFFF;
-  --text-secondary: rgba(255,255,255,0.5);
-  --text-tertiary: rgba(255,255,255,0.3);
+  --text-secondary: rgba(255,255,255,0.85);
+  --text-tertiary: rgba(255,255,255,0.68);
   --status-ok: #4ADE80;
   --status-warn: #FBBF24;
   --status-danger: #EF4444;
