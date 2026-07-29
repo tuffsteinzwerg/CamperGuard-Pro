@@ -273,16 +273,12 @@
 
     /* --- H) ZUSAMMENFASSUNGSBOX --- */
     .cg-print-summary-wrapper {
-        position: fixed !important;
-        bottom: 12mm !important;
-        left: 0 !important;
-        right: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
+        margin-top: 5mm !important;
+        padding-top: 2.5mm !important;
+        border-top: 1pt solid #ccc !important;
         page-break-inside: avoid !important;
         font-family: Arial, Helvetica, sans-serif !important;
         background: white !important;
-        z-index: 50 !important;
     }
 
     .cg-print-summary-title {
