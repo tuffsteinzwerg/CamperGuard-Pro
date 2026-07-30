@@ -1,6 +1,8 @@
 {
   "name": "CamperGuard Pro",
   "description": "Premium-Begleiter für Camper: Wasserwaage, Bestandsmanagement, Fahrtenbuch und Reiseplanung.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": [
+    "geolocation"
+  ],
   "majorCapabilities": []
 }

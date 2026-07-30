@@ -117,8 +117,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
     return () => { controller.abort(); clearTimeout(timer); };
   }, [state.sos?.street, state.sos?.houseNumber, state.sos?.zipCode, state.sos?.city, state.sos?.country]);
   const [isAudioAssistActive, setIsAudioAssistActive] = useState(false);
-  const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');
-  const [soundTestIndex, setSoundTestIndex] = useState(0);
+  const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('speech+tone');
   const audioCtxRef = useRef<AudioContext | null>(null);
   const latestDirectionRef = useRef<string>('level');
   const latestIntensityRef = useRef<number>(0);
@@ -131,7 +130,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
   const prevTiltRef = useRef<number>(99);
   const prevRingRef = useRef<number>(5);
   const lastSpeakTimeRef = useRef<number>(0);
-  const audioModeRef = useRef<string>('tone');
+  const audioModeRef = useRef<string>('speech+tone');
 
   const calibratedPitch = (orientation?.pitch || 0) - (state.profile.pitchOffset || 0);
   const calibratedRoll = (orientation?.roll || 0) - (state.profile.rollOffset || 0);
@@ -172,7 +171,7 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
       if (!ctx) return;
       const now = ctx.currentTime;
       const chordGain = ctx.createGain();
-      chordGain.gain.setValueAtTime(0.25, now);
+      chordGain.gain.setValueAtTime(0.5, now);
       chordGain.connect(ctx.destination);
       [523.25, 659.25, 783.99].forEach((freq, i) => {
           const osc = ctx.createOscillator();
@@ -506,22 +505,14 @@ export function ReiseView({ state, setState, orientation, orientationPermission,
               osc.start(ctx.currentTime);
               osc.stop(ctx.currentTime + 0.5);
 
-              setAudioMode('tone');
+              setAudioMode('speech+tone');
               setIsAudioAssistActive(true);
           } catch (e) {
               console.warn("AudioContext creation failed:", e);
           }
       } else {
-          // Durchschalten: Ton → Sprache+Ton → Sprache → Aus
-          if (audioMode === 'tone') {
-              setAudioMode('speech+tone');
-          } else if (audioMode === 'speech+tone') {
-              setAudioMode('speech');
-          } else {
-              // Sprache → Aus
-              setIsAudioAssistActive(false);
-              setAudioMode('tone');
-          }
+          // An → Aus
+          setIsAudioAssistActive(false);
       }
   };
 

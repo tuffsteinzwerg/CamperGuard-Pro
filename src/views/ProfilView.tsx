@@ -680,7 +680,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                       <div className="cg-master-inset p-3 space-y-2">
                           <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                  <Cloud size={14} className="text-[var(--status-success)]" />
+                                  <Cloud size={14} className="text-[var(--status-ok)]" />
                                   <span className="typo-body">Verbunden</span>
                               </div>
                               <button onClick={handleGoogleSignOut} className="flex items-center gap-1 text-[var(--text-muted)] hover:text-white transition-colors">
@@ -704,7 +704,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
 
                       {syncMessage && (
                           <div className={`text-center typo-body py-1 ${
-                              syncStatus === 'success' ? 'text-[var(--status-success)]' :
+                              syncStatus === 'success' ? 'text-[var(--status-ok)]' :
                               syncStatus === 'error' ? 'text-[var(--status-danger)]' :
                               'text-[var(--text-muted)]'
                           }`}>
@@ -757,7 +757,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                           <button onClick={handleCancelRequest} className="cg-master-button w-full !py-2">Neu versuchen</button>
                         </>
                       ) : joinStatus === 'approved' ? (
-                        <div className="typo-body text-[var(--status-success)]">Freigegeben ✓</div>
+                        <div className="typo-body text-[var(--status-ok)]">Freigegeben ✓</div>
                       ) : (
                         <>
                           <input
@@ -789,7 +789,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                   <Download size={16} />
                   <span className="typo-label">Daten exportieren</span>
               </button>
-              {exportSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Export erfolgreich</div>}
+              {exportSuccess && <div className="text-center typo-body text-[var(--status-ok)] py-1">✓ Export erfolgreich</div>}
 
               <div className={`text-center typo-body pt-1 ${backupWarn ? 'text-[var(--status-danger)]' : 'text-[var(--text-muted)]'}`}>
                 {backupLabel}
@@ -842,7 +842,7 @@ export function ProfilView({ state, setState }: ProfilViewProps) {
                 )}
               </AnimatePresence>
               {importError && <div className="text-center typo-body text-[var(--status-danger)] py-1">{importError}</div>}
-              {importSuccess && <div className="text-center typo-body text-[var(--status-success)] py-1">✓ Import erfolgreich — Daten wiederhergestellt</div>}
+              {importSuccess && <div className="text-center typo-body text-[var(--status-ok)] py-1">✓ Import erfolgreich — Daten wiederhergestellt</div>}
           </div>
       </div>
 

@@ -1,39 +1,45 @@
 const fs = require('fs');
-let content = fs.readFileSync('/app/applet/src/views/InhaltView.tsx', 'utf8');
+let content = fs.readFileSync('src/views/ReiseView.tsx', 'utf8');
 
-const target1 = `  const [printMode, setPrintMode] = useState<'all' | 'consumables'>('all');
-  const [pendingPrint, setPendingPrint] = useState(false);
-  useEffect(() => {
-    if (!pendingPrint) return;
-    window.print();
-    setPendingPrint(false);
-  }, [pendingPrint]);
-  const runPrint = (mode: 'all' | 'consumables') => {
-    setPrintMenuOpen(false);
-    if (mode === 'consumables') {
-      const html = renderToStaticMarkup(<InhaltPrintView state={state} printMode="consumables" />);
-      printElementViaPaged(html, 'Vorräte');
-      return;
-    }
-    setPrintMode(mode);
-    setPendingPrint(true);
-  };`;
+content = content.replace(
+  "const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');",
+  "const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('speech+tone');"
+);
 
-const repl1 = `  const runPrint = (mode: 'all' | 'consumables') => {
-    setPrintMenuOpen(false);
-    const html = renderToStaticMarkup(<InhaltPrintView state={state} printMode={mode} />);
-    printElementViaPaged(html, mode === 'consumables' ? 'Vorräte' : 'Inventarliste');
-  };`;
+content = content.replace(
+  "  const [soundTestIndex, setSoundTestIndex] = useState(0);\n",
+  ""
+);
 
-const target2 = `      <InhaltPrintView state={state} printMode={printMode} />\n`;
-const repl2 = ``;
+content = content.replace(
+  "const audioModeRef = useRef<string>('tone');",
+  "const audioModeRef = useRef<string>('speech+tone');"
+);
 
-if(content.includes(target1) && content.includes(target2)) {
-    content = content.replace(target1, repl1).replace(target2, repl2);
-    fs.writeFileSync('/app/applet/src/views/InhaltView.tsx', content, 'utf8');
-    console.log("Success");
-} else {
-    console.log("Failed to match");
-    console.log("T1", content.includes(target1));
-    console.log("T2", content.includes(target2));
-}
+const einschaltStr = `              setAudioMode('tone');
+              setIsAudioAssistActive(true);`;
+const einschaltRepl = `              setAudioMode('speech+tone');
+              setIsAudioAssistActive(true);`;
+content = content.replace(einschaltStr, einschaltRepl);
+
+const elseBlockStr = `          // Durchschalten: Ton → Sprache+Ton → Sprache → Aus
+          if (audioMode === 'tone') {
+              setAudioMode('speech+tone');
+          } else if (audioMode === 'speech+tone') {
+              setAudioMode('speech');
+          } else {
+              // Sprache → Aus
+              setIsAudioAssistActive(false);
+              setAudioMode('tone');
+          }`;
+const elseBlockRepl = `          // An → Aus
+          setIsAudioAssistActive(false);`;
+content = content.replace(elseBlockStr, elseBlockRepl);
+
+content = content.replace(
+  "chordGain.gain.setValueAtTime(0.25, now);",
+  "chordGain.gain.setValueAtTime(0.5, now);"
+);
+
+fs.writeFileSync('src/views/ReiseView.tsx', content, 'utf8');
+console.log('Done');

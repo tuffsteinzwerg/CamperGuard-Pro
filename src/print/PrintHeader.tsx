@@ -23,7 +23,7 @@ export function PrintHeader({ title, vehicleName = "Camper", plate, dateRange, c
                 
                 {/* Logo Area */}
                 <div className="cg-print-header-logo-area">
-                    <img src="/g4c-druck-bunt-tp.png" alt="Guard4Campers" className="cg-print-logo" />
+                    <img src="/g4c-druck-l.png" alt="Guard4Campers" className="cg-print-logo" />
                 </div>
                 
                 {/* Center Title and Vehicle Area */}
