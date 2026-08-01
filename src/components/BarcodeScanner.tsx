@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import { DecodeHintType, BarcodeFormat } from '@zxing/library';
 import { X } from 'lucide-react';
 
 interface BarcodeScannerProps {
@@ -19,7 +20,12 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    const reader = new BrowserMultiFormatReader();
+    const hints = new Map();
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.CODE_128,
+    ]);
+    const reader = new BrowserMultiFormatReader(hints);
     let controls: any = null;
     let done = false;
 

@@ -1,45 +1,20 @@
 const fs = require('fs');
-let content = fs.readFileSync('src/views/ReiseView.tsx', 'utf8');
+let content = fs.readFileSync('src/components/BarcodeScanner.tsx', 'utf8');
 
 content = content.replace(
-  "const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('tone');",
-  "const [audioMode, setAudioMode] = useState<'tone' | 'speech+tone' | 'speech'>('speech+tone');"
+  "import { BrowserMultiFormatReader } from '@zxing/browser';",
+  "import { BrowserMultiFormatReader } from '@zxing/browser';\nimport { DecodeHintType, BarcodeFormat } from '@zxing/library';"
 );
 
-content = content.replace(
-  "  const [soundTestIndex, setSoundTestIndex] = useState(0);\n",
-  ""
-);
+const readerStr = "    const reader = new BrowserMultiFormatReader();";
+const readerRepl = `    const hints = new Map();
+    hints.set(DecodeHintType.TRY_HARDER, true);
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+      BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.CODE_128,
+    ]);
+    const reader = new BrowserMultiFormatReader(hints);`;
 
-content = content.replace(
-  "const audioModeRef = useRef<string>('tone');",
-  "const audioModeRef = useRef<string>('speech+tone');"
-);
+content = content.replace(readerStr, readerRepl);
 
-const einschaltStr = `              setAudioMode('tone');
-              setIsAudioAssistActive(true);`;
-const einschaltRepl = `              setAudioMode('speech+tone');
-              setIsAudioAssistActive(true);`;
-content = content.replace(einschaltStr, einschaltRepl);
-
-const elseBlockStr = `          // Durchschalten: Ton → Sprache+Ton → Sprache → Aus
-          if (audioMode === 'tone') {
-              setAudioMode('speech+tone');
-          } else if (audioMode === 'speech+tone') {
-              setAudioMode('speech');
-          } else {
-              // Sprache → Aus
-              setIsAudioAssistActive(false);
-              setAudioMode('tone');
-          }`;
-const elseBlockRepl = `          // An → Aus
-          setIsAudioAssistActive(false);`;
-content = content.replace(elseBlockStr, elseBlockRepl);
-
-content = content.replace(
-  "chordGain.gain.setValueAtTime(0.25, now);",
-  "chordGain.gain.setValueAtTime(0.5, now);"
-);
-
-fs.writeFileSync('src/views/ReiseView.tsx', content, 'utf8');
+fs.writeFileSync('src/components/BarcodeScanner.tsx', content, 'utf8');
 console.log('Done');
